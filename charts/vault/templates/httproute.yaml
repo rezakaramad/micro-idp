@@ -1,0 +1,26 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  labels:
+    external-dns-create: "true"
+  name: vault
+  namespace: vault
+spec:
+  hostnames:
+  - vault.fluxdojo.local
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: default-traefik
+    namespace: platform-resources
+  rules:
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: vault
+      port: 8200
+      weight: 1
+    matches:
+    - path:
+        type: PathPrefix
+        value: /

@@ -1,0 +1,23 @@
+{{- range .Values.namespaces }}
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .name }}
+  labels:
+    {{- with $.Values.commonLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- with .extraLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  annotations:
+    {{- with $.Values.commonAnnotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- with .extraAnnotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+---
+
+{{- end }}

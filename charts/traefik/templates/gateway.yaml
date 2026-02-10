@@ -1,0 +1,28 @@
+{{- $certificateName := printf "%s-cert-traefik" (include "certificateName" .Values.defaultGateway.hostname) -}}
+
+#
+# Generate a default Gateway resource in 'platform-resources' namespace
+###########################################################################################
+
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: default-traefik
+  namespace: platform-resources
+  annotations:
+    cert-manager.io/cluster-issuer: "root-ca"
+spec:
+  gatewayClassName: traefik
+  listeners:
+    - name: https
+      hostname: {{ .Values.defaultGateway.hostname | quote }}
+      port: 8443
+      protocol: HTTPS
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - group: ''
+            kind: Secret
+            name: {{ $certificateName | quote }}
+      allowedRoutes:
+{{- toYaml .Values.defaultGateway.allowedRoutes | nindent 8 }}

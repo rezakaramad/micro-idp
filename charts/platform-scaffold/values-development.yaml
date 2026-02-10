@@ -1,0 +1,4 @@
+namespaces:
+  - name: platform-resources
+    extraLabels: {}
+    extraAnnotations: {}

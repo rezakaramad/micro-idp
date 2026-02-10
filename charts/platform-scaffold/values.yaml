@@ -1,0 +1,6 @@
+commonLabels:
+  platform.fluxdojo.local/owner: platform
+
+commonAnnotations: {}
+
+namespaces: []

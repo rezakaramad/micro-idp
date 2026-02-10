@@ -1,0 +1,91 @@
+vault:
+  server:
+    standalone:
+      enabled: true
+
+    postStart:
+      - /bin/sh
+      - -c
+      - |
+        export VAULT_ADDR=http://127.0.0.1:8200
+
+        echo "=== Vault bootstrap starting ==="
+
+        INIT_FILE=/vault/data/init.txt
+
+        ########################################
+        # 1. Initialize (only once)
+        ########################################
+
+        if [ ! -f "$INIT_FILE" ]; then
+          echo "Initializing Vault..."
+
+          until vault operator init -key-shares=1 -key-threshold=1 > "$INIT_FILE" 2>/dev/null; do
+            sleep 2
+          done
+
+          echo "Vault initialized"
+        else
+          echo "Vault already initialized"
+        fi
+
+        ########################################
+        # 2. Read keys
+        ########################################
+
+        UNSEAL_KEY=$(grep "Unseal Key 1:" "$INIT_FILE" | awk '{print $4}')
+        ROOT_TOKEN=$(grep "Initial Root Token:" "$INIT_FILE" | awk '{print $4}')
+
+        ########################################
+        # 3. Unseal
+        ########################################
+
+        echo "Unsealing Vault..."
+
+        until vault operator unseal "$UNSEAL_KEY" >/dev/null 2>&1; do
+          sleep 2
+        done
+
+        echo "Vault unsealed"
+
+        ########################################
+        # 4. Authenticated configuration
+        ########################################
+
+        export VAULT_TOKEN="$ROOT_TOKEN"
+
+        echo "Configuring Kubernetes auth..."
+
+        vault auth enable kubernetes 2>/dev/null || true
+
+        vault write auth/kubernetes/config \
+          token_reviewer_jwt="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \
+          kubernetes_host="https://${KUBERNETES_PORT_443_TCP_ADDR}:443" \
+          kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+
+        echo "Writing ESO policy..."
+
+        vault policy write eso-policy - <<EOF
+        path "local/data/*" {
+          capabilities = ["read", "create", "update"]
+        }
+        EOF
+
+        echo "Creating ESO role..."
+
+        vault write auth/kubernetes/role/external-secrets \
+          bound_service_account_names=external-secrets \
+          bound_service_account_namespaces=platform-resources \
+          policies=eso-policy \
+          ttl=1h
+
+        ########################################
+        # 5. Enable secrets engines
+        ########################################
+
+        echo "Ensuring KV engines exist..."
+
+        vault secrets list | grep -q '^local/' || \
+          vault secrets enable -path=local kv-v2
+
+        echo "=== Vault bootstrap complete ==="

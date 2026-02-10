@@ -1,0 +1,53 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: platform-application-folder
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: gitops-system
+  source:
+    repoURL: https://github.com/rezakaramad/micro-idp
+    targetRevision: HEAD
+    path: argocd-applications/
+    directory:
+      recurse: true
+  destination:
+    name:  in-cluster
+    namespace: argocd
+  ignoreDifferences:
+    - group: argoproj.io
+      kind: Application
+      jsonPointers:
+        - /spec/syncPolicy/automated
+        - /spec/source/targetRevision
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - RespectIgnoreDifferences=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: gitops-system
+  namespace: argocd
+spec:
+  description: Root project for App/AppSet/AppProject in the app folder
+  sourceRepos:
+    - https://github.com/rezakaramad/micro-idp
+  destinations:
+  - name:  in-cluster
+    namespace: argocd
+  namespaceResourceWhitelist:
+  - group: argoproj.io
+    kind: AppProject
+  - group: argoproj.io
+    kind: Application
+  - group: argoproj.io
+    kind: ApplicationSet
+
+---

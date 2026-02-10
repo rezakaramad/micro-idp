@@ -1,0 +1,15 @@
+version: '3'
+runner: bash
+
+tasks:
+  up:
+    desc: "Run Micro IDP"
+    cmds:
+      - ./bootstrap/check-dependencies.sh
+      - ./bootstrap/start-minikube-clusters.sh
+      - ./bootstrap/install-platform-charts.sh
+      - ./bootstrap/setup-environment.sh
+  down:
+    desc: "Tear down everything"
+    cmds:
+      - ./bootstrap/destroy.sh

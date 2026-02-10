@@ -1,0 +1,10 @@
+namespaces:
+  - name: platform-resources
+    extraLabels: {}
+    extraAnnotations: {}
+  - name: argocd
+    extraLabels: {}
+    extraAnnotations: {}
+  - name: vault
+    extraLabels: {}
+    extraAnnotations: {}
