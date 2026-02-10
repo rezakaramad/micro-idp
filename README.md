@@ -1,2 +1,2 @@
-# tiny-idp
-A tiny but practical Internal Developer Platform running on local Kubernetes.
+# micro-idp
+A micro Internal Developer Platform for local Kubernetes.
