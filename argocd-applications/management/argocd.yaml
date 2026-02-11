@@ -6,7 +6,7 @@ metadata:
 spec:
   project: platform-system
   source:
-    repoURL: https://github.com/rezakaramad/micro-dp
+    repoURL: https://github.com/rezakaramad/micro-idp
     targetRevision: HEAD
     path: charts/argocd
   destination:
