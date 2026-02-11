@@ -5,10 +5,7 @@ defaultGateway:
   # to platform-owned default Gateway in 'platform-resources' namespace.
   allowedRoutes:
     namespaces:
-      from: Selector
-      selector:
-        matchLabels:
-          platform.jysk.tech/owner: platform
+      from: ALL
 
 traefik:
   deployment:
