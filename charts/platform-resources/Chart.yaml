@@ -1,0 +1,4 @@
+apiVersion: v2
+name: platform-resources
+description: Deploys the platform-resources namespace and related resources.
+version: 0.0.1

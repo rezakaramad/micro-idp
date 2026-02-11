@@ -1,0 +1,10 @@
+[private]
+default:
+  @just --list
+
+chart-version := `yq '.dependencies[] | select(.name=="external-secrets") | .version' Chart.yaml`
+
+# Download the CRDs matching the External Secret chart version.
+get-crds:
+  mkdir -p crds
+  curl -L https://raw.githubusercontent.com/external-secrets/external-secrets/refs/tags/v{{chart-version}}/deploy/crds/bundle.yaml -o ./crds/bundle.yaml

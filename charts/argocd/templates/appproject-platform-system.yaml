@@ -1,0 +1,20 @@
+# This AppProject is used by platform-managed applications to deploy control-plane components.
+{{- if .Capabilities.APIVersions.Has "argoproj.io/v1alpha1/AppProject" }}
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: platform-system
+spec:
+  description: Project for resources provisioned for each cluster.
+  sourceRepos:
+    - https://github.com/rezakaramad/micro-idp
+  destinations:
+  - namespace: '*'
+    server: '*'
+  clusterResourceWhitelist:
+  - group: '*'
+    kind: '*'
+  namespaceResourceWhitelist:
+  - group: '*'
+    kind: '*'
+{{- end }}

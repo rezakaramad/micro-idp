@@ -1,0 +1,16 @@
+{{- if .Capabilities.APIVersions.Has "cert-manager.io/v1/Certificate" }}
+
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: root-ca
+  namespace: platform-resources
+spec:
+  isCA: true
+  commonName: root-ca
+  secretName: root-ca-secret
+  issuerRef:
+    name: selfsigned
+    kind: ClusterIssuer
+
+{{- end }}

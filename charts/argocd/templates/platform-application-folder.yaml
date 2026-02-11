@@ -1,0 +1,59 @@
+# Root Argo CD application that manages and deploys all child applications.
+{{- if .Capabilities.APIVersions.Has "argoproj.io/v1alpha1/Application" }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: platform-application-folder
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: gitops-system
+  source:
+    repoURL: https://github.com/rezakaramad/micro-idp
+    targetRevision: HEAD
+    path: argocd-applications/
+    directory:
+      recurse: true
+  destination:
+    name:  in-cluster
+    namespace: argocd
+  ignoreDifferences:
+    - group: argoproj.io
+      kind: Application
+      jsonPointers:
+        - /spec/syncPolicy/automated
+        - /spec/source/targetRevision
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - RespectIgnoreDifferences=true
+
+{{- end }}
+
+---
+
+# This AppProject is only used by the root application created above.
+{{- if .Capabilities.APIVersions.Has "argoproj.io/v1alpha1/AppProject" }}
+
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: gitops-system
+spec:
+  description: Root project for App/AppSet/AppProject in the app folder
+  sourceRepos:
+    - https://github.com/rezakaramad/micro-idp
+  destinations:
+  - name:  in-cluster
+    namespace: {{ .Release.Namespace }}
+  namespaceResourceWhitelist:
+  - group: argoproj.io
+    kind: AppProject
+  - group: argoproj.io
+    kind: Application
+  - group: argoproj.io
+    kind: ApplicationSet
+
+{{- end }}
