@@ -7,7 +7,7 @@ spec:
   project: platform-system
   source:
     repoURL: https://github.com/rezakaramad/micro-idp
-    targetRevision: dev
+    targetRevision: HEAD
     path: charts/vault
   destination:
     name: in-cluster
