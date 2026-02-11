@@ -1,0 +1,19 @@
+
+external-secrets:
+
+  # If set, install and upgrade CRDs through helm chart.
+  installCRDs: false
+
+  fullnameOverride: external-secrets
+
+  # Enable leader election so only one replica actively reconciles resources (avoids noisy parallel reconciles)
+  leaderElect: true
+
+  # When true, it adds extra labels to Prometheus metrics
+  extendedMetricLabels: true
+
+  # Webhook configuration for validating and converting External Secrets CRDs
+  # Kubernetes API server → (HTTPS) → external-secrets webhook service
+  webhook:
+    # How many old ReplicaSets of the webhook Deployment Kubernetes should keep
+    revisionHistoryLimit: 5

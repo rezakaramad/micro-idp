@@ -1,0 +1,108 @@
+# -------------------------------------------------------------------------------
+# -- Global configs
+# -------------------------------------------------------------------------------
+global:
+  logging:
+    format: json
+    level: warn
+
+# -------------------------------------------------------------------------------
+# -- Argo CD configs
+# -------------------------------------------------------------------------------
+
+argocd:
+  # Argo CD Commit server
+  commitServer:
+    enabled: true
+  
+  # -- Argo CD server
+  server:
+    # -- Server metrics service configuration
+    metrics:
+      enabled: true
+
+    # -- Enable HTTPRoute resource for Argo CD server (Gateway API)
+    httproute:
+      enabled: true
+      labels:
+        external-dns-create: "true"
+      hostnames:
+        - argocd.fluxdojo.local
+      parentRefs:
+        - group: gateway.networking.k8s.io
+          kind: Gateway
+          name: default-traefik
+          namespace: platform-resources
+      rules:
+        - matches:
+            - path:
+                type: PathPrefix
+                value: /
+          backendRefs:
+            - name: argocd-server
+              port: 80
+
+    # -- Enable GRPCRoute resource for Argo CD server (Gateway API)
+    grpcroute:
+      enabled: false
+      labels:
+        external-dns-create: "true"
+      hostnames:
+        - argocd.fluxdojo.local
+      parentRefs:
+        - name: traefik-gateway
+          namespace: platform-resources
+      rules:
+        - backendRefs:
+            - name: argocd-server
+              port: 80
+
+  # -- Enable ApplicationSet in any namespace feature
+  applicationSet:
+    allowAnyNamespace: true
+
+  # General Argo CD configuration
+  # Any values you put under `.configs.cm` are passed to argocd-cm ConfigMap.
+  configs:
+    params:
+      # -- Create the argocd-cmd-params-cm configmap
+      create: true
+
+      # -- Run Argo CD server in insecure mode: Gateway ⇆ (HTTP) ⇆ Argo CD Server
+      server.insecure: "true"
+
+      # -- Allow Argo CD to discover and reconcile Application resources in argocd and all argocd-* namespaces
+      application.namespaces: argocd, argocd-*
+
+      # -- Allow Argo CD to discover and reconcile ApplicationSet resources in argocd and all argocd-* namespaces
+      applicationsetcontroller.namespaces: argocd, argocd-*
+
+      # -- # Required when ApplicationSets are watched outside the argocd namespace
+      applicationsetcontroller.allowed.scm.providers: github
+
+    cm:
+      # -- Create 'argocd-cm' ConfigMap for core Argo CD configuration
+      create: true
+
+      # -- External Argo CD URL used by the UI, CLI, and notifications.
+      url: https://argocd.fluxdojo.local
+
+      # -- Disable built-in local 'admin' user
+      admin.enabled: true
+
+      # -- Disable exec into application pods from the Argo CD UI/CLI for security.
+      exec.enabled: false
+
+      # -- Track resources via annotations instead of labels to avoid label collisions.
+      application.resourceTrackingMethod: annotation
+
+    rbac:
+      # -- Default role for authenticated users when no explicit RBAC rule matches.
+      # -- Leave empty to give no permissions by default (recommended with SSO).
+      policy.default: ""
+      # -- Additional RBAC policies and group-to-role mappings in Casbin CSV format.
+      # p, <subject>, <resource>, <action>, <object>, <effect>
+      # g, EntraID Group ID, role: ArgoCD Role
+      # 'policy.csv' lives in argocd-rbac-cm
+      policy.csv: |
+        g, "ACL.GCP.PLT.Administrators", role:admin

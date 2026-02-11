@@ -1,0 +1,13 @@
+infisical:
+  image:
+    repository: infisical/infisical
+    tag: "v0.158.2"
+    pullPolicy: IfNotPresent
+  replicaCount: 2
+
+ingress:
+  enabled: true
+  hostName: "infisical.fluxdojo.com"
+  ingressClassName: nginx
+  nginx:
+    enabled: true

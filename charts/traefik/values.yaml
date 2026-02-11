@@ -1,0 +1,64 @@
+defaultGateway:
+  # The hostname for defeault gateway resource in management cluster
+  hostname: '*.fluxdojo.local'
+  # In tenant environments, we don't allow tenants to send traffic
+  # to platform-owned default Gateway in 'platform-resources' namespace.
+  allowedRoutes:
+    namespaces:
+      from: Selector
+      selector:
+        matchLabels:
+          platform.jysk.tech/owner: platform
+
+traefik:
+  deployment:
+    replicas: 1
+    
+    # -- Additional deployment labels (e.g. for filtering deployment by custom labels)
+    labels:
+      app.kubernetes.io/component: gateway
+    # Required label on gateway controller pods to allow ingress traffic via NetworkPolicies.
+    podLabels:
+      app.kubernetes.io/component: gateway
+
+  # Create a default IngressClass for Traefik
+  ingressClass:
+    enabled: false
+
+  # When providers.kubernetesGateway.enabled, deploy a default gateway
+  gateway:
+    enabled: false
+
+  # Enable the dashboard
+  api:
+    dashboard: false
+
+  # Only dashboard & healthcheck IngressRoute are supported. It's recommended to create workloads CR outside of this Chart.
+  ingressRoute:
+    dashboard:
+      # Create an IngressRoute for the dashboard
+      enabled: false
+
+  providers:
+    # Load Kubernetes IngressRoute provider
+    kubernetesCRD:
+      enabled: false
+
+    # Load Kubernetes Ingress provider
+    kubernetesIngress:
+      enabled: false
+
+    # Enable Traefik Gateway provider for Gateway API
+    kubernetesGateway:
+      enabled: true
+      # -- Defines whether to use Native Kubernetes load-balancing mode by default.
+      nativeLBByDefault: false
+
+  logs:
+    general:
+      # Set [logs format](https://doc.traefik.io/traefik/observability/logs/#format)
+      format: "json"
+      # By default, the level is set to INFO.
+      # Alternative logging levels are TRACE, DEBUG, INFO, WARN, ERROR, FATAL, and PANIC.
+      level: "WARN"
+
