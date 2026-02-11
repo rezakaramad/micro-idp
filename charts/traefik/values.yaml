@@ -5,7 +5,7 @@ defaultGateway:
   # to platform-owned default Gateway in 'platform-resources' namespace.
   allowedRoutes:
     namespaces:
-      from: ALL
+      from: All
 
 traefik:
   deployment:
