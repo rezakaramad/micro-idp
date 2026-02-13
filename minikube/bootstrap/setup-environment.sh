@@ -3,15 +3,15 @@ set -euo pipefail
 
 # -----------------------------------------------------------------------------
 # Discover tenant clusters dynamically.
-# "minikube-mgmt" = management cluster (tunnel only)
+# "minikube-management" = management cluster (tunnel only)
 # other "minikube-*" profiles = tenants (proxies + Argo CD cluster registration)
 # -----------------------------------------------------------------------------
 
-MGMT_PROFILE="minikube-mgmt"
+MANAGEMENT_PROFILE="minikube-management"
 
 get_tenant_profiles() {
   minikube profile list -o json \
-    | jq -r --arg mgmt "$MGMT_PROFILE" '
+    | jq -r --arg mgmt "$MANAGEMENT_PROFILE" '
         .valid[].Name
         | select(startswith("minikube-") and . != $mgmt)
       '
@@ -31,8 +31,8 @@ BASE_PORT=9001
 start_minikube_tunnel() {
   echo "🚇 Ensuring minikube tunnel is running..."
 
-  if ! pgrep -f "minikube tunnel -p minikube-mgmt" >/dev/null; then
-    minikube tunnel -p minikube-mgmt >/dev/null 2>&1 &
+  if ! pgrep -f "minikube tunnel -p $MANAGEMENT_PROFILE" >/dev/null; then
+    minikube tunnel -p $MANAGEMENT_PROFILE >/dev/null 2>&1 &
     sleep 5
   else
     echo "Tunnel already running"

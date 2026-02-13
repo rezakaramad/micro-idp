@@ -9,10 +9,12 @@ set -euo pipefail
 
 K8S_VERSION="v1.35.0"
 
+MANAGEMENT_PROFILE="minikube-management"
+
 # profile → "cpu memory"
 declare -A CLUSTERS=(
-  [minikube-mgmt]="4 4096"
-  [minikube-wl]="2 2048"
+  [$MANAGEMENT_PROFILE]="4 4096"
+  [minikube-workload]="2 2048"
 )
 
 start_cluster () {
@@ -47,8 +49,8 @@ echo ""
 echo "✅ All clusters ready!"
 
 # Switch to mgmt only if it exists
-if minikube status -p minikube-mgmt >/dev/null 2>&1; then
-  kubectl config use-context minikube-mgmt
+if minikube status -p $MANAGEMENT_PROFILE >/dev/null 2>&1; then
+  kubectl config use-context $MANAGEMENT_PROFILE
 fi
 
 minikube profile list
