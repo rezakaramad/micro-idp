@@ -1,0 +1,8 @@
+apiVersion: v2
+name: keycloak
+description: Keycloak is an identity and access management system.
+version: 0.0.1
+dependencies:
+- name: keycloak
+  version: 25.2.0
+  repository: https://charts.bitnami.com/bitnami
