@@ -9,6 +9,9 @@ spec:
     repoURL: https://github.com/rezakaramad/micro-idp
     targetRevision: HEAD
     path: charts/platform-scaffold
+    helm:
+      valueFiles:
+        - values-management.yaml
   destination:
     name: in-cluster
   syncPolicy:

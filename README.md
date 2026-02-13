@@ -49,6 +49,15 @@ Nothing fancy. Just enough to get you up and running quickly.
 
 In the future, additional approaches may be added for cloud environments.
 
+
+## Minikube Driver
+### Why KVM instead of Docker?
+
+The Docker driver isolates each Minikube profile in separate bridge networks, which breaks direct cluster-to-cluster routing and requires networking workarounds.
+Using the KVM (kvm2) driver runs each profile as a VM on a shared network, enabling native L3 routing and predictable multi-cluster behavior — closer to real infrastructure.
+
+👉 [KVM installation guide](https://help.ubuntu.com/community/KVM/Installation)
+
 ## 🚀 Getting started
 
 Check dependencies:
@@ -87,7 +96,6 @@ printf %s "$ARGOCD_ADMIN_PASSWORD" | xclip -selection clipboard
 ```bash
 task --dir minikube down
 ```
-
 
 # 📚 Further details
 

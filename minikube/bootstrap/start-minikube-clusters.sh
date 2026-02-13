@@ -14,7 +14,7 @@ MANAGEMENT_PROFILE="minikube-management"
 # profile → "cpu memory"
 declare -A CLUSTERS=(
   [$MANAGEMENT_PROFILE]="4 4096"
-  [minikube-workload]="2 2048"
+  [minikube-workload]="4 4096"
 )
 
 start_cluster () {
@@ -30,7 +30,8 @@ start_cluster () {
   fi
 
   minikube start -p "$profile" \
-    --driver=docker \
+    --driver=kvm2 \
+    --network=micro-idp \
     --kubernetes-version="$K8S_VERSION" \
     --cpus="$cpus" \
     --memory="$memory"
