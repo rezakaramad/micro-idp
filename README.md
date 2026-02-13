@@ -53,8 +53,18 @@ In the future, additional approaches may be added for cloud environments.
 ## Minikube Driver
 ### Why KVM instead of Docker?
 
-The Docker driver isolates each Minikube profile in separate bridge networks, which breaks direct cluster-to-cluster routing and requires networking workarounds.
-Using the KVM (kvm2) driver runs each profile as a VM on a shared network, enabling native L3 routing and predictable multi-cluster behavior — closer to real infrastructure.
+This setup runs multiple Kubernetes clusters (management and workload) that need to talk to each other reliably.
+
+The Docker driver is easy to start with, but each Minikube profile runs in its own isolated Docker network. This makes cross-cluster communication difficult and often requires extra workarounds like port forwarding, tunnels, or custom routing.
+
+The **KVM** (`kvm2`) driver runs each cluster as a small virtual machine on the same shared network. This gives us:
+- simple, direct networking between clusters
+- predictable IP addresses
+- no Docker NAT or hidden firewall rules
+- behavior closer to real infrastructure
+- fewer hacks and special setup
+
+In short: **Docker is great for single clusters, KVM is better for multi-cluster setups.**
 
 👉 [KVM installation guide](https://help.ubuntu.com/community/KVM/Installation)
 
@@ -88,6 +98,8 @@ Prefer not to print secrets? Copy them directly to your clipboard:
 
 ```bash
 printf %s "$VAULT_ROOT_TOKEN" | xclip -selection clipboard
+```
+```bash
 printf %s "$ARGOCD_ADMIN_PASSWORD" | xclip -selection clipboard
 ```
 
