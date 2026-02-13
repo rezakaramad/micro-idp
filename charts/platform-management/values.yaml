@@ -7,3 +7,4 @@
 clusterCredentials:
   - name: minikube-workload
     environmentPrefix: wl
+
