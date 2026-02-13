@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: keycloak
+  namespace: argocd
+spec:
+  project: platform-system
+  source:
+    repoURL: https://github.com/rezakaramad/micro-idp
+    targetRevision: HEAD
+    path: charts/keycloak
+  destination:
+    name: in-cluster
+    namespace: keycloak
+  syncPolicy:
+    syncOptions:
+    - ServerSideApply=true
+    - ApplyOutOfSyncOnly=true

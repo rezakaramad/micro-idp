@@ -8,3 +8,6 @@ namespaces:
   - name: vault
     extraLabels: {}
     extraAnnotations: {}
+  - name: keycloak
+    extraLabels: {}
+    extraAnnotations: {}
