@@ -17,13 +17,6 @@ get_tenant_profiles() {
       '
 }
 
-# Base port for kubectl API proxies.
-# We expose each tenant cluster locally as:
-#   9001 → first tenant
-#   9002 → second tenant
-# so Argo CD can talk to multiple clusters at once.
-BASE_PORT=9001
-
 # ----------------------------------------------------------------------------
 # Networking
 # ----------------------------------------------------------------------------
@@ -61,35 +54,6 @@ update_hosts() {
     echo "$LB_IP argocd.fluxdojo.local"
     echo "$LB_IP vault.fluxdojo.local"
   } | sudo tee -a /etc/hosts >/dev/null
-}
-
-start_proxy() {
-  local PROFILE=$1
-  local PORT=$2
-
-  if ss -ltnp 2>/dev/null | grep -q "kubectl.*:$PORT"; then
-    echo "Proxy already running on port $PORT"
-    return
-  fi
-
-  echo "🚇 Starting proxy for $PROFILE on port $PORT"
-
-  kubectl --context "$PROFILE" proxy \
-    --address=0.0.0.0 \
-    --accept-hosts='.*' \
-    --port="$PORT" \
-    >/dev/null 2>&1 &
-
-  sleep 2
-}
-
-start_cluster_proxies() {
-  local port=$BASE_PORT
-
-  for profile in $(get_tenant_profiles); do
-    start_proxy "$profile" "$port"
-    ((port++))
-  done
 }
 
 # ----------------------------------------------------------------------------
@@ -145,24 +109,24 @@ create_github_app_secret() {
 register_clusters() {
   echo "🔐 Writing Argo CD clusters credentials..."
 
-  local port=$BASE_PORT
-
   for profile in $(get_tenant_profiles); do
-    echo "🚀 Cluster $profile → http://host.minikube.internal:$port"
+    IP=$(minikube ip -p "$profile")
+    SERVER="https://${IP}:8443"
 
-    kubectl --context "$profile" create serviceaccount argocd-manager -n kube-system || true
-    kubectl --context "$profile" create clusterrolebinding argocd-manager \
-      --clusterrole=cluster-admin \
-      --serviceaccount=kube-system:argocd-manager || true
+  echo "🚀 Cluster $profile → $SERVER"
 
-    TOKEN=$(kubectl --context "$profile" -n kube-system create token argocd-manager)
-    SERVER="http://host.minikube.internal:$port"
+  kubectl --context "$profile" create serviceaccount argocd-manager -n kube-system 2>/dev/null || true
 
-    vault kv put local/management/argocd/clusters/"$profile" \
-      server="$SERVER" \
-      token="$TOKEN"
+  kubectl --context "$profile" create clusterrolebinding argocd-manager \
+    --clusterrole=cluster-admin \
+    --serviceaccount=kube-system:argocd-manager 2>/dev/null || true
 
-    ((port++))
+  TOKEN=$(kubectl --context "$profile" -n kube-system create token argocd-manager)
+
+  vault kv put local/management/argocd/clusters/"$profile" \
+    server="$SERVER" \
+    token="$TOKEN"
+
   done
 }
 
@@ -172,7 +136,6 @@ register_clusters() {
 
 main() {
   start_minikube_tunnel
-  # start_cluster_proxies 
   update_hosts
   vault_login
   create_github_app_secret

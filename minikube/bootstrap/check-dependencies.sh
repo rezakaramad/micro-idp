@@ -25,6 +25,7 @@ check() {
 # dependencies in start-minikube-clusters.sh
 check minikube
 check kubectl
+check virsh
 # dependencies in install-platform-charts.sh
 check helm
 check yq
