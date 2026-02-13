@@ -2,11 +2,19 @@ version: '3'
 runner: bash
 
 tasks:
-  up:
-    desc: "Run Micro IDP"
+  check:
+    desc: "Verify required dependencies are installed"
     cmds:
       - ./bootstrap/check-dependencies.sh
+  start:
+    desc: "Start Minikube clusters"
+    deps: [check]
+    cmds:
       - ./bootstrap/start-minikube-clusters.sh
+  up:
+    desc: "Run Micro IDP"
+    deps: [start]
+    cmds:
       - ./bootstrap/install-platform-charts.sh
       - ./bootstrap/setup-environment.sh
   down:
