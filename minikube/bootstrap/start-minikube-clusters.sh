@@ -12,7 +12,7 @@ K8S_VERSION="v1.35.0"
 # profile → "cpu memory"
 declare -A CLUSTERS=(
   [minikube-mgmt]="4 4096"
-  [minikube-dev]="2 2048"
+  [minikube-wl]="2 2048"
 )
 
 start_cluster () {
