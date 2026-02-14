@@ -53,6 +53,7 @@ update_hosts() {
   {
     echo "$LB_IP argocd.fluxdojo.local"
     echo "$LB_IP vault.fluxdojo.local"
+    echo "$LB_IP oidc.fluxdojo.local"
   } | sudo tee -a /etc/hosts >/dev/null
 }
 

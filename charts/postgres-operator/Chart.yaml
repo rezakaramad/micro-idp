@@ -1,0 +1,9 @@
+apiVersion: v2
+name: postgres-operator
+description: Platform wrapper chart for Zalando Postgres Operator
+type: application
+version: 0.0.1
+dependencies:
+  - name: postgres-operator
+    version: "1.15.1"
+    repository: "https://opensource.zalando.com/postgres-operator/charts/postgres-operator"

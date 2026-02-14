@@ -109,6 +109,18 @@ curl -fsSL \
 
 kubectl apply --server-side -f $CHART_PATH/crds/bundle.yaml
 
+# Install keycloak-operator CRDs
+CHART_PATH="$CHARTS_DIR/cert-manager"
+CHART_VERSION=$(yq '.dependencies[] | select(.name=="cert-manager") | .appVersion' $CHART_PATH/Chart.yaml)
+
+mkdir -p $CHART_PATH/crds
+curl -fsSL \
+  https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/$CHART_VERSION/kubernetes/keycloaks.k8s.keycloak.org-v1.yml \
+  https://raw.githubusercontent.com/keycloak/keycloak-k8s-resources/$CHART_VERSION/kubernetes/keycloakrealmimports.k8s.keycloak.org-v1.yml \
+  > "$CHART_PATH/crds/bundle.yaml"
+
+kubectl apply --server-side -f $CHART_PATH/crds/bundle.yaml
+
 # Install charts
 helm_install platform-scaffold platform-scaffold default \
   -f $CHARTS_DIR/platform-scaffold/values-management.yaml

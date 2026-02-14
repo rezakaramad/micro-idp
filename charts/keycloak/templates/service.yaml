@@ -26,3 +26,29 @@ spec:
   clusterIP: None
   type: ClusterIP
 ---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  labels:
+    external-dns-create: "true"
+  name: keycloak
+  namespace: keycloak
+spec:
+  hostnames:
+  - oidc.fluxdojo.local
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: default-traefik
+    namespace: platform-resources
+  rules:
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: keycloak
+      port: 8080
+      weight: 1
+    matches:
+    - path:
+        type: PathPrefix
+        value: /
