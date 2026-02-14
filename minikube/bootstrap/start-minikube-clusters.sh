@@ -13,7 +13,7 @@ MANAGEMENT_PROFILE="minikube-management"
 
 # profile → "cpu memory"
 declare -A CLUSTERS=(
-  [$MANAGEMENT_PROFILE]="4 4096"
+  [$MANAGEMENT_PROFILE]="6 8192"
   [minikube-workload]="4 4096"
 )
 

@@ -100,6 +100,9 @@ create_github_app_secret() {
     app-id="$APP_ID" \
     installation-id="$INSTALLATION_ID" \
     private-key="$PRIVATE_KEY"
+
+  echo "✅ Argo CD GitHub App secret written to Vault"
+
 }
 
 # ----------------------------------------------------------------------------
@@ -128,6 +131,47 @@ register_clusters() {
     token="$TOKEN"
 
   done
+
+  echo "✅ Argo CD cluster credentials written to Vault"
+}
+
+# ----------------------------------------------------------------------------
+# Keycloak credentials
+# ----------------------------------------------------------------------------
+
+create_keycloak_db_secret() {
+  echo "🔐 Generating Keycloak DB credentials..."
+
+  if vault kv get local/management/keycloak/database >/dev/null 2>&1; then
+    echo "⚠️  DB secret already exists. Skipping."
+    return
+  fi
+
+  DB_USERNAME="kc_$(openssl rand -hex 4)"
+  DB_PASSWORD="$(openssl rand -hex 16)"
+
+  vault kv put local/management/keycloak/database \
+    username="$DB_USERNAME" \
+    password="$DB_PASSWORD" > /dev/null
+
+  echo "✅ Keycloak DB credentials written to Vault"
+}
+
+create_keycloak_admin_secret() {
+  echo "🔐 Generating Keycloak admin credentials..."
+
+  if vault kv get local/management/keycloak/admin >/dev/null 2>&1; then
+    echo "⚠️  Admin secret already exists. Skipping."
+    return
+  fi
+
+  ADMIN_PASSWORD="$(openssl rand -hex 16)"
+
+  vault kv put local/management/keycloak/admin \
+    username="admin" \
+    password="$ADMIN_PASSWORD" > /dev/null
+
+  echo "✅ Keycloak admin credentials stored in Vault"
 }
 
 # ----------------------------------------------------------------------------
@@ -140,6 +184,8 @@ main() {
   vault_login
   create_github_app_secret
   register_clusters
+  create_keycloak_db_secret
+  create_keycloak_admin_secret
 
   echo "✅ Bootstrap complete"
 }
