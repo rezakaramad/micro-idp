@@ -3,6 +3,8 @@ kind: postgresql
 metadata:
   name: pg-keycloak
   namespace: keycloak
+  annotations:
+    argocd.argoproj.io/sync-wave: "-5"
 spec:
   teamId: "keycloak"
   numberOfInstances: 1
