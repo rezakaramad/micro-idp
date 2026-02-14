@@ -1,0 +1,53 @@
+apiVersion: k8s.keycloak.org/v2alpha1
+kind: KeycloakRealmImport
+metadata:
+  name: management-realm
+  namespace: keycloak
+spec:
+  keycloakCRName: keycloak
+
+  placeholders:
+    azure.clientSecret:
+      secret:
+        name: keycloak-azure-oidc
+        key: client-secret  
+  realm:
+    realm: management
+    enabled: true
+    roles:
+      realm:
+        - name: platform-admin
+    groups:
+      - name: platform-admins
+        realmRoles:
+          - platform-admin
+    identityProviders:
+      - alias: azure
+        providerId: oidc
+        enabled: true
+        syncMode: FORCE
+        config:
+          issuer: "https://login.microsoftonline.com/c6ba6fd6-0fdd-4458-ad98-0c292dd79188/v2.0"
+          clientId: "3bb8c767-9c1f-4ce2-823e-39e8fa6b907c"
+          clientSecret: "${azure.clientSecret}"
+          defaultScope: "openid profile email"
+    identityProviderMappers:
+      - name: azure-admins
+        identityProviderAlias: azure
+        identityProviderMapper: oidc-group-membership-mapper
+        config:
+          claim: "groups"
+          claim.value: "9b207afe-3824-482f-8985-e2337a7f7e9b"
+          group: "/platform-admins"
+      - name: username
+        identityProviderAlias: azure
+        identityProviderMapper: oidc-user-attribute-idp-mapper
+        config:
+          claim: email
+          user.attribute: username
+      - name: email
+        identityProviderAlias: azure
+        identityProviderMapper: oidc-user-attribute-idp-mapper
+        config:
+          claim: email
+          user.attribute: email

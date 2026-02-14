@@ -140,35 +140,37 @@ register_clusters() {
 # Keycloak credentials
 # ----------------------------------------------------------------------------
 
-create_keycloak_db_secret() {
-  echo "🔐 Generating Keycloak DB credentials..."
+create_keycloak_azure_secret() {
+  echo "🔐 Writing Entra ID App secret..."
 
-  if vault kv get local/management/keycloak/database >/dev/null 2>&1; then
-    echo "⚠️  DB secret already exists. Skipping."
-    return
+  VAULT_PATH="local/management/keycloak/azure/apps/fluxdojo-keycloak-management-idp"
+
+  CLIENT_SECRET=$(pass show private/azure/entra-id/apps/keycloak/client-secrets/fluxdojo-keycloak-management-idp/value | head -n1)
+
+  if [[ -z "$CLIENT_SECRET" ]]; then
+    echo "❌ Failed to read client secret from pass."
+    return 1
   fi
 
-  DB_USERNAME="kc_$(openssl rand -hex 4)"
-  DB_PASSWORD="$(openssl rand -hex 16)"
+  vault kv put local/management/keycloak/azure/apps/fluxdojo-keycloak-management-idp \
+    client-secret="$CLIENT_SECRET" \
 
-  vault kv put local/management/keycloak/database \
-    username="$DB_USERNAME" \
-    password="$DB_PASSWORD" > /dev/null
-
-  echo "✅ Keycloak DB credentials written to Vault"
+  echo "✅ Entra ID client secret stored in Vault"
 }
 
 create_keycloak_admin_secret() {
   echo "🔐 Generating Keycloak admin credentials..."
 
-  if vault kv get local/management/keycloak/admin >/dev/null 2>&1; then
+  VAULT_PATH="local/management/keycloak/initial-admin"
+
+  if vault kv get "$VAULT_PATH" >/dev/null 2>&1; then
     echo "⚠️  Admin secret already exists. Skipping."
     return
   fi
 
   ADMIN_PASSWORD="$(openssl rand -hex 16)"
 
-  vault kv put local/management/keycloak/initial-admin \
+  vault kv put "$VAULT_PATH" \
     username="admin" \
     password="$ADMIN_PASSWORD" > /dev/null
 
