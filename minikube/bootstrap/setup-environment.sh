@@ -168,7 +168,7 @@ create_keycloak_admin_secret() {
 
   ADMIN_PASSWORD="$(openssl rand -hex 16)"
 
-  vault kv put local/management/keycloak/admin \
+  vault kv put local/management/keycloak/initial-admin \
     username="admin" \
     password="$ADMIN_PASSWORD" > /dev/null
 

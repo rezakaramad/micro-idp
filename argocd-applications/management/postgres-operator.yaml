@@ -11,7 +11,7 @@ spec:
     path: charts/postgres-operator
   destination:
     name: in-cluster
-    namespace: postgres-system
+    namespace: postgres
   syncPolicy:
     syncOptions:
     - ServerSideApply=true

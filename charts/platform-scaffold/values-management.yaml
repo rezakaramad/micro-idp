@@ -8,9 +8,9 @@ namespaces:
   - name: vault
     extraLabels: {}
     extraAnnotations: {}
-  - name: keycloak-system
+  - name: keycloak
     extraLabels: {}
     extraAnnotations: {}
-  - name: postgres-system
+  - name: postgres
     extraLabels: {}
     extraAnnotations: {}

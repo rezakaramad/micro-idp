@@ -1,0 +1,28 @@
+apiVersion: k8s.keycloak.org/v2alpha1
+kind: Keycloak
+metadata:
+  name: keycloak
+  namespace: keycloak
+spec:
+  instances: 1
+  http:
+    httpEnabled: true
+  bootstrapAdmin:
+    user:
+      secret: keycloak-bootstrap-admin
+  hostname:
+    strict: false
+    hostname: oidc.fluxdojo.local
+  # Required if you're behind Traefik or Gateway API
+  proxy:
+    headers: xforwarded
+  db:
+    vendor: postgres
+    host: pg-keycloak
+    database: keycloak
+    usernameSecret:
+      name: keycloak.pg-keycloak.credentials.postgresql.acid.zalan.do
+      key: username
+    passwordSecret:
+      name: keycloak.pg-keycloak.credentials.postgresql.acid.zalan.do
+      key: password
