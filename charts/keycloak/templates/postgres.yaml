@@ -2,7 +2,7 @@ apiVersion: acid.zalan.do/v1
 kind: postgresql
 metadata:
   name: pg-keycloak
-  namespace: keycloak-system
+  namespace: keycloak
 spec:
   teamId: "keycloak"
   numberOfInstances: 1
