@@ -91,7 +91,7 @@ task --dir minikube up
 Load the Argo CD admin password and Vault token into your shell:
 
 ```bash
-source .env
+source .platform.env
 ```
 
 Prefer not to print secrets? Copy them directly to your clipboard:

@@ -212,7 +212,7 @@ CREDS_FILE="$REPO_ROOT/.platform-creds.env"
 cat > "$CREDS_FILE" <<EOF
 # ------------------------------------------------------------------
 # 🚨 AUTO-GENERATED FILE — DO NOT COMMIT
-# Run: source .platform-creds.env
+# Run: source .platform.env
 # ------------------------------------------------------------------
 
 export ARGOCD_ADMIN_PASSWORD="$ARGOCD_ADMIN_PASSWORD"
@@ -226,7 +226,7 @@ echo "✅ Credentials saved to:"
 echo "   $CREDS_FILE"
 echo ""
 echo "Next step:"
-echo "   source .env"
+echo "   source .platform.env"
 echo ""
 echo "Tip: add this file to .gitignore if not already:"
 echo "   .platform-creds.env"
