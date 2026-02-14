@@ -5,6 +5,9 @@ metadata:
   namespace: keycloak
 spec:
   instances: 1
+  # We use Gateway API
+  ingress:
+    enabled: false
   http:
     httpEnabled: true
   bootstrapAdmin:
