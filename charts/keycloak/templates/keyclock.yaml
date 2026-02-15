@@ -14,8 +14,8 @@ spec:
     user:
       secret: keycloak-initial-admin
   hostname:
-    url: https://oidc.fluxdojo.local
     strict: false
+    hostname: oidc.fluxdojo.local
   # Required if you're behind Traefik or Gateway API
   proxy:
     headers: xforwarded
