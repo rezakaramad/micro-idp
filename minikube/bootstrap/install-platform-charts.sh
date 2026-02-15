@@ -207,7 +207,7 @@ VAULT_ROOT_TOKEN=$(
 # Write credentials to local .env file
 # ----------------------------------------------------------------------------
 
-CREDS_FILE="$REPO_ROOT/.platform-creds.env"
+CREDS_FILE="$REPO_ROOT/.platform.env"
 
 cat > "$CREDS_FILE" <<EOF
 # ------------------------------------------------------------------
@@ -228,5 +228,3 @@ echo ""
 echo "Next step:"
 echo "   source .platform.env"
 echo ""
-echo "Tip: add this file to .gitignore if not already:"
-echo "   .platform-creds.env"
