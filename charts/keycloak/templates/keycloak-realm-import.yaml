@@ -25,7 +25,6 @@ spec:
       - alias: azure
         providerId: oidc
         enabled: true
-        syncMode: FORCE
         config:
           issuer: "https://login.microsoftonline.com/c6ba6fd6-0fdd-4458-ad98-0c292dd79188/v2.0"
           clientId: "3bb8c767-9c1f-4ce2-823e-39e8fa6b907c"
