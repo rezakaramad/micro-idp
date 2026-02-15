@@ -187,7 +187,7 @@ main() {
   vault_login
   create_github_app_secret
   register_clusters
-  create_keycloak_db_secret
+  create_keycloak_azure_secret
   create_keycloak_admin_secret
 
   echo "✅ Bootstrap complete"
