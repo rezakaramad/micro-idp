@@ -27,6 +27,7 @@ spec:
         enabled: true
         config:
           issuer: "https://login.microsoftonline.com/c6ba6fd6-0fdd-4458-ad98-0c292dd79188/v2.0"
+          useDiscovery: "true"
           clientId: "3bb8c767-9c1f-4ce2-823e-39e8fa6b907c"
           clientSecret: "${azure.clientSecret}"
           defaultScope: "openid profile email"
