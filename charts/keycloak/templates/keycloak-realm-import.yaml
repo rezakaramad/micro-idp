@@ -40,7 +40,6 @@ spec:
           syncMode: IMPORT
           defaultScope: "openid profile email"
           userInfoUrl: https://graph.microsoft.com/oidc/userinfo
-          validateSignature: "true"
           clientId: 3bb8c767-9c1f-4ce2-823e-39e8fa6b907c
           sendClientIdOnLogout: "false"
           metadataDescriptorUrl: https://login.microsoftonline.com/c6ba6fd6-0fdd-4458-ad98-0c292dd79188/v2.0/.well-known/openid-configuration
