@@ -44,10 +44,12 @@ spec:
           clientSecret: "${azure.clientSecret}"
           defaultScope: "openid profile email"
 
-        mappers:
-          - name: platform-admins
-            identityProviderMapper: oidc-advanced-group-idp-mapper
-            config:
-              syncMode: INHERIT
-              claims: '[{"key":"groups","value":"9b207afe-3824-482f-8985-e2337a7f7e9b"}]'
-              group: "/platform-admins"
+    identityProviderMappers:
+      - name: azure-platform-admins
+        identityProviderAlias: azure
+        identityProviderMapper: oidc-group-membership-mapper
+        config:
+          claim: "groups"
+          claim.value: "9b207afe-3824-482f-8985-e2337a7f7e9b"
+          group: "/platform-admins"
+
