@@ -1,5 +1,5 @@
 apiVersion: k8s.keycloak.org/v2alpha1
-kind: KeycloakRealmImport
+kind:   
 metadata:
   name: management-realm
   namespace: keycloak
@@ -17,6 +17,11 @@ spec:
     roles:
       realm:
         - name: platform-admin
+          composite: true
+          composites:
+            client:
+              realm-management:
+                - realm-admin
     groups:
       - name: platform-admins
         realmRoles:
@@ -26,32 +31,29 @@ spec:
         providerId: oidc
         enabled: true
         config:
-          authorizationUrl: "https://login.microsoftonline.com/c6ba6fd6-0fdd-4458-ad98-0c292dd79188/oauth2/v2.0/authorize"
-          tokenUrl: "https://login.microsoftonline.com/c6ba6fd6-0fdd-4458-ad98-0c292dd79188/oauth2/v2.0/token"
-          logoutUrl: "https://login.microsoftonline.com/c6ba6fd6-0fdd-4458-ad98-0c292dd79188/oauth2/v2.0/logout"
-
+          useDiscoveryEndpoint: "true"
+          discoveryEndpoint: "https://login.microsoftonline.com/c6ba6fd6-0fdd-4458-ad98-0c292dd79188/v2.0/.well-known/openid-configuration"
+          issuer: "https://login.microsoftonline.com/c6ba6fd6-0fdd-4458-ad98-0c292dd79188/v2.0"
+          clientId: "3bb8c767-9c1f-4ce2-823e-39e8fa6b907c"
+          clientSecret: "${azure.clientSecret}"
+          defaultScope: "openid profile email offline_access"
+    identityProviders:
+      - alias: azure
+        displayName: Azure AD
+        providerId: oidc
+        enabled: true
+        config:
+          useDiscoveryEndpoint: "true"
+          discoveryEndpoint: "https://login.microsoftonline.com/c6ba6fd6-0fdd-4458-ad98-0c292dd79188/v2.0/.well-known/openid-configuration"
+          issuer: "https://login.microsoftonline.com/c6ba6fd6-0fdd-4458-ad98-0c292dd79188/v2.0"
           clientId: "3bb8c767-9c1f-4ce2-823e-39e8fa6b907c"
           clientSecret: "${azure.clientSecret}"
           defaultScope: "openid profile email"
     identityProviderMappers:
-      - name: azure-admins
+      - name: platform-admins
         identityProviderAlias: azure
-        identityProviderMapper: oidc-group-membership-mapper
+        identityProviderMapper: oidc-advanced-group-idp-mapper
         config:
-          claim: "groups"
-          claim.value: "9b207afe-3824-482f-8985-e2337a7f7e9b"
+          syncMode: INHERIT
+          claims: '[{"key":"groups","value":"9b207afe-3824-482f-8985-e2337a7f7e9b"}]'
           group: "/platform-admins"
-
-      - name: username
-        identityProviderAlias: azure
-        identityProviderMapper: oidc-user-attribute-idp-mapper
-        config:
-          claim: preferred_username
-          user.attribute: username
-
-      - name: email
-        identityProviderAlias: azure
-        identityProviderMapper: oidc-user-attribute-idp-mapper
-        config:
-          claim: preferred_username
-          user.attribute: email
