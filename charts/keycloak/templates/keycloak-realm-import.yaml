@@ -37,32 +37,32 @@ spec:
         linkOnly: false
         hideOnLogin: false
         config:
-          acceptsPromptNoneForwardFromClient: false
+          acceptsPromptNoneForwardFromClient: "false"
           tokenUrl": https://login.microsoftonline.com/c6ba6fd6-0fdd-4458-ad98-0c292dd79188/oauth2/v2.0/token
-          isAccessTokenJWT: false
+          isAccessTokenJWT: "false"
           jwksUrl: https://login.microsoftonline.com/c6ba6fd6-0fdd-4458-ad98-0c292dd79188/discovery/v2.0/keys
           showInAccountConsole: ALWAYS
           issuer: https://login.microsoftonline.com/c6ba6fd6-0fdd-4458-ad98-0c292dd79188/v2.0
           clientAuthMethod: client_secret_post
           syncMode: IMPORT
-          requiresShortStateParameter: false
+          requiresShortStateParameter: "false"
           allowedClockSkew: 0
           defaultScope: "openid profile email"
           userInfoUrl: https://graph.microsoft.com/oidc/userinfo
-          validateSignature: true
+          validateSignature: "true"
           clientId: 3bb8c767-9c1f-4ce2-823e-39e8fa6b907c
-          uiLocales: false
-          disableNonce: false
+          uiLocales: "false"
+          disableNonce: "false"
           useJwksUrl: true
-          sendClientIdOnLogout: false
+          sendClientIdOnLogout: "false"
           metadataDescriptorUrl: https://login.microsoftonline.com/c6ba6fd6-0fdd-4458-ad98-0c292dd79188/v2.0/.well-known/openid-configuration
-          pkceEnabled: false
+          pkceEnabled: "false"
           authorizationUrl: https://login.microsoftonline.com/c6ba6fd6-0fdd-4458-ad98-0c292dd79188/oauth2/v2.0/authorize
-          disableUserInfo: false
+          disableUserInfo: "false"
           logoutUrl: https://login.microsoftonline.com/c6ba6fd6-0fdd-4458-ad98-0c292dd79188/oauth2/v2.0/logout
-          sendIdTokenOnLogout: true
-          passMaxAge: false
-          disableTypeClaimCheck: false
+          sendIdTokenOnLogout: "true"
+          passMaxAge: "false"
+          disableTypeClaimCheck: "false"
           clientSecret: "${azure.clientSecret}"
         types:
           - USER_AUTHENTICATION
