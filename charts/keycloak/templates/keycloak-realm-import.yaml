@@ -14,3 +14,15 @@ spec:
   realm:
     realm: management
     enabled: true
+    roles:
+      realm:
+        - name: platform-admin
+          composite: true
+          composites:
+            client:
+              realm-management:
+                - realm-admin
+    groups:
+      - name: platform-admins
+        realmRoles:
+          - platform-admin
