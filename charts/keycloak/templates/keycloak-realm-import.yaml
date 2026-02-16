@@ -33,7 +33,7 @@ spec:
         enabled: true
         trustEmail: false
         config:
-          tokenUrl": https://login.microsoftonline.com/c6ba6fd6-0fdd-4458-ad98-0c292dd79188/oauth2/v2.0/token
+          tokenUrl: https://login.microsoftonline.com/c6ba6fd6-0fdd-4458-ad98-0c292dd79188/oauth2/v2.0/token
           jwksUrl: https://login.microsoftonline.com/c6ba6fd6-0fdd-4458-ad98-0c292dd79188/discovery/v2.0/keys
           issuer: https://login.microsoftonline.com/c6ba6fd6-0fdd-4458-ad98-0c292dd79188/v2.0
           clientAuthMethod: client_secret_post
