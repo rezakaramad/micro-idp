@@ -11,9 +11,11 @@ spec:
       secret:
         name: keycloak-azure-oidc
         key: client-secret  
+
   realm:
     realm: management
     enabled: true
+
     roles:
       realm:
         - name: platform-admin
@@ -22,15 +24,18 @@ spec:
             client:
               realm-management:
                 - realm-admin
+
     groups:
       - name: platform-admins
         realmRoles:
           - platform-admin
+
     identityProviders:
       - alias: azure
         displayName: Azure AD
         providerId: oidc
         enabled: true
+
         config:
           useDiscoveryEndpoint: "true"
           discoveryEndpoint: "https://login.microsoftonline.com/c6ba6fd6-0fdd-4458-ad98-0c292dd79188/v2.0/.well-known/openid-configuration"
@@ -38,11 +43,11 @@ spec:
           clientId: "3bb8c767-9c1f-4ce2-823e-39e8fa6b907c"
           clientSecret: "${azure.clientSecret}"
           defaultScope: "openid profile email"
-    identityProviderMappers:
-      - name: platform-admins
-        identityProviderAlias: azure
-        identityProviderMapper: oidc-advanced-group-idp-mapper
-        config:
-          syncMode: INHERIT
-          claims: '[{"key":"groups","value":"9b207afe-3824-482f-8985-e2337a7f7e9b"}]'
-          group: "/platform-admins"
+
+        mappers:
+          - name: platform-admins
+            identityProviderMapper: oidc-advanced-group-idp-mapper
+            config:
+              syncMode: INHERIT
+              claims: '[{"key":"groups","value":"9b207afe-3824-482f-8985-e2337a7f7e9b"}]'
+              group: "/platform-admins"
