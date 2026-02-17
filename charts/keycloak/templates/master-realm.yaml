@@ -52,7 +52,8 @@ spec:
               done
               [ "$LOGIN_SUCCESS" != "true" ] && echo "ERROR: Keycloak not ready for authentication" && exit 1
 
-              echo "Ensuring breakglass user exists"
+              echo "Checking breakglass user existence"
+
               USER_ID=$(/opt/keycloak/bin/kcadm.sh get users \
                 -r master \
                 -q username="$BREAKGLASS_USER" \
@@ -61,16 +62,23 @@ spec:
 
               if [ -z "$USER_ID" ]; then
                 echo "Creating breakglass user"
-                CREATE_OUTPUT=$(/opt/keycloak/bin/kcadm.sh create users \
+
+                /opt/keycloak/bin/kcadm.sh create users \
                   -r master \
                   -s username="$BREAKGLASS_USER" \
-                  -s enabled=true 2>&1)
+                  -s email="$BREAKGLASS_EMAIL" \
+                  -s emailVerified=true \
+                  -s enabled=true
+
+                sleep 5
 
                 USER_ID=$(/opt/keycloak/bin/kcadm.sh get users \
                   -r master \
                   -q username="$BREAKGLASS_USER" \
                   --fields id \
                   --format csv --noquotes)
+              else;
+                echo "Breakglass user already exists"
               fi
 
               [ -z "$USER_ID" ] && echo "ERROR: Could not resolve breakglass USER_ID" && exit 1
@@ -108,6 +116,8 @@ spec:
                 secretKeyRef:
                   name: keycloak-breakglass
                   key: password
+            - name: BREAKGLASS_EMAIL
+              value: r.karamad@gmail.com
 
 # ---
 # apiVersion: batch/v1
