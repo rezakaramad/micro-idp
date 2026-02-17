@@ -36,6 +36,8 @@ check jq
 check vault
 check pass
 check ss
+# dependencies in setup-keycloak-master-realm.sh
+check kcadm.sh
 
 # -----------------------------------------------------------------------------
 # Result
