@@ -196,13 +196,21 @@ spec:
                 -s "config.clientSecret=$CLIENT_SECRET"
               )
 
-              # create-or-update pattern (safe for upgrades)
-              /opt/keycloak/bin/kcadm.sh create identity-provider/instances \
-                -r master \
-                -s alias=azure \
-                -s providerId=oidc \
-                "${IDP_CONFIG[@]}" >/dev/null 2>&1 || \
-              /opt/keycloak/bin/kcadm.sh update identity-provider/instances/azure -r master "${IDP_CONFIG[@]}"
+              echo "Reconciling Azure IdP"
+
+              if /opt/keycloak/bin/kcadm.sh get identity-provider/instances/azure -r master >/dev/null 2>&1; then
+                echo "Azure IdP exists — updating"
+                /opt/keycloak/bin/kcadm.sh update identity-provider/instances/azure \
+                  -r master \
+                  "${IDP_CONFIG[@]}"
+              else
+                echo "Azure IdP does not exist — creating"
+                /opt/keycloak/bin/kcadm.sh create identity-provider/instances \
+                  -r master \
+                  -s alias=azure \
+                  -s providerId=oidc \
+                  "${IDP_CONFIG[@]}"
+              fi
 
               echo "Ensure 'platform-admins' group exists (create if missing)"
               /opt/keycloak/bin/kcadm.sh create groups \
