@@ -233,13 +233,15 @@ spec:
 
               if ! /opt/keycloak/bin/kcadm.sh get identity-provider/instances/azure/mappers -r master \
                   --fields name --format csv --noquotes | grep -qx platform-admins; then
+
                 /opt/keycloak/bin/kcadm.sh create identity-provider/instances/azure/mappers \
                   -r master \
                   -s name=platform-admins \
-                  -s identityProviderMapper=oidc-group-membership-mapper \
-                  -s 'config.claim=groups' \
-                  -s 'config.claim.value='"$PLATFORM_ADMINS_GROUP_ID" \
-                  -s 'config.group=/platform-admins'
+                  -s identityProviderMapper=oidc-advanced-group-idp-mapper \
+                  -s "config.claim=groups" \
+                  -s "config.group=/platform-admins" \
+                  -s "config.claim.value=$PLATFORM_ADMINS_GROUP_ID" \
+                  -s "config.syncMode=INHERIT"
               fi
 
               echo "OIDC successfully configured"
