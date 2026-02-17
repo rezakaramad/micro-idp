@@ -19,7 +19,7 @@ spec:
             - /bin/bash
             - -ec
             - |
-              KC=http://keycloak:8080
+              KC=http://keycloak-service:8080
 
               until (echo > /dev/tcp/keycloak/8080) >/dev/null 2>&1; do sleep 5; done
               sleep 10
@@ -87,7 +87,7 @@ spec:
             - /bin/bash
             - -ec
             - |
-              KC=http://keycloak:8080
+              KC=http://keycloak-service:8080
               until (echo > /dev/tcp/keycloak/8080) >/dev/null 2>&1; do sleep 5; done
               sleep 10
 
@@ -184,7 +184,7 @@ spec:
             - /bin/bash
             - -ec
             - |
-              KC=http://keycloak:8080
+              KC=http://keycloak-service:8080
               until (echo > /dev/tcp/keycloak/8080) >/dev/null 2>&1; do sleep 5; done
               sleep 10
 

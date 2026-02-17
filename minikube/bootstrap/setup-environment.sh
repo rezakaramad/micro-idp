@@ -176,7 +176,7 @@ create_keycloak_azure_secret_master() {
   echo "✅ Entra ID client secret stored in Vault"
 }
 
-create_keycloak_admin_secret() {
+create_keycloak_bootstrap_secret() {
   echo "🔐 Generating Keycloak admin credentials..."
 
   VAULT_PATH="local/management/keycloak/bootstrap"
@@ -195,6 +195,25 @@ create_keycloak_admin_secret() {
   echo "✅ Keycloak bootstrap credentials stored in Vault"
 }
 
+create_keycloak_breakglass_secret() {
+  echo "🔐 Generating Keycloak admin credentials..."
+
+  VAULT_PATH="local/management/keycloak/breakglass"
+
+  if vault kv get "$VAULT_PATH" >/dev/null 2>&1; then
+    echo "⚠️  Breakglass user already exists. Skipping."
+    return
+  fi
+
+  BREAKGLASS_PASSWORD="$(openssl rand -hex 16)"
+
+  vault kv put "$VAULT_PATH" \
+    username="admin" \
+    password="$BREAKGLASS_PASSWORD" > /dev/null
+
+  echo "✅ Keycloak bootstrap credentials stored in Vault"
+}
+
 # ----------------------------------------------------------------------------
 # Main
 # ----------------------------------------------------------------------------
@@ -207,7 +226,8 @@ main() {
   register_clusters
   create_keycloak_azure_secret_management
   create_keycloak_azure_secret_master
-  create_keycloak_admin_secret
+  create_keycloak_bootstrap_secret
+  create_keycloak_breakglass_secret
 
   echo "✅ Bootstrap complete"
 }
