@@ -77,7 +77,7 @@ spec:
                   -q username="$BREAKGLASS_USER" \
                   --fields id \
                   --format csv --noquotes)
-              else;
+              else
                 echo "Breakglass user already exists"
               fi
 
