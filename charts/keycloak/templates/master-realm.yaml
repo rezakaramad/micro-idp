@@ -211,36 +211,44 @@ spec:
                   "${IDP_CONFIG[@]}"
               fi
 
-              echo "Ensure 'platform-admins' group exists (create if missing)"
+              echo "Ensure '$PLATFORM_ADMINS_GROUP_NAME' group exists (create if missing)"
               /opt/keycloak/bin/kcadm.sh create groups \
                 -r master \
-                -s name=platform-admins >/dev/null 2>&1 || true
+                -s name=$PLATFORM_ADMINS_GROUP_NAME >/dev/null 2>&1 || true
 
-              echo "Resolve 'platform-admins' ID"
+              echo "Resolve '$PLATFORM_ADMINS_GROUP_NAME' ID"
               GROUP_ID=$(/opt/keycloak/bin/kcadm.sh get groups \
                 -r master \
-                -q name='platform-admins' \
+                -q name='$PLATFORM_ADMINS_GROUP_NAME' \
                 --fields id \
                 --format csv --noquotes)
 
-              [ -z "$GROUP_ID" ] && echo "ERROR: platform-admins group not found" && exit 1
+              [ -z "$GROUP_ID" ] && echo "ERROR: $PLATFORM_ADMINS_GROUP_NAME group not found" && exit 1
 
-              echo "Assign 'admin' role to 'platform-admins'"
+              echo "Assign 'admin' role to '$PLATFORM_ADMINS_GROUP_NAME'"
               /opt/keycloak/bin/kcadm.sh add-roles \
                 -r master \
                 --gid "$GROUP_ID" \
                 --rolename admin || true
 
               
-              echo "Create IdP mapper"
+              cat <<EOF >"/tmp/${PLATFORM_ADMINS_GROUP_NAME}-mapper.json"
+              {
+                "name": "$PLATFORM_ADMINS_GROUP_NAME",
+                "identityProviderAlias": "azure",
+                "identityProviderMapper": "oidc-advanced-group-idp-mapper",
+                "config": {
+                  "claim": "groups",
+                  "claim.value": "$PLATFORM_ADMINS_GROUP_ID",
+                  "group": "/$PLATFORM_ADMINS_GROUP_NAME",
+                  "syncMode": "INHERIT"
+                }
+              }
+              EOF
+
               /opt/keycloak/bin/kcadm.sh create identity-provider/instances/azure/mappers \
                 -r master \
-                -s name=platform-admins \
-                -s identityProviderMapper=oidc-advanced-group-idp-mapper \
-                -s "config.claim=groups" \
-                -s "config.group=/platform-admins" \
-                -s "config.claim.value=$PLATFORM_ADMINS_GROUP_ID" \
-                -s "config.syncMode=INHERIT"
+                -f /tmp/platform-admins-mapper.json
 
               echo "OIDC successfully configured"
           env:
@@ -265,6 +273,8 @@ spec:
                   key: client-secret
             - name: PLATFORM_ADMINS_GROUP_ID
               value: 9b207afe-3824-482f-8985-e2337a7f7e9b
+            - name: PLATFORM_ADMINS_GROUP_NAME
+              value: platform-admins
 
 ---
 # apiVersion: batch/v1
