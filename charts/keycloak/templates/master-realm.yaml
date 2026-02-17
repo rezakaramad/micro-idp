@@ -70,7 +70,7 @@ spec:
                 --format csv --noquotes \
                 | grep -E ",$BREAKGLASS_USER$" \
                 | head -n 1 \
-                | cut -d',' -f1))
+                | cut -d',' -f1)
 
               if [ -z "$BREAKGLASS_USER" ]; then
                 echo "👤 Create breakglass user"
