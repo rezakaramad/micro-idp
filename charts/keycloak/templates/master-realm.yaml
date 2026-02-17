@@ -64,7 +64,7 @@ spec:
 
               [ -z "$USER_ID" ] && echo "ERROR: Could not resolve breakglass USER_ID" && exit 1
 
-              echo "Password length: ${BREAKGLASS_USERNAME}"
+              echo "Password length: ${BREAKGLASS_USER}"
               echo "Password length: ${#BREAKGLASS_PASSWORD}"
 
               echo "Setting permanent password (creates credential in KC26+)"
