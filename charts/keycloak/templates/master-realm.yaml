@@ -60,7 +60,7 @@ spec:
                 --format csv --noquotes \
                 | grep -E ",$BOOTSTRAP_USER$" \
                 | head -n 1 \
-                | cut -d',' -f1))
+                | cut -d',' -f1)
 
               echo "👀 Check breakglass user exists"
               BREAKGLASS_USER_ID=$(/opt/keycloak/bin/kcadm.sh get users \
