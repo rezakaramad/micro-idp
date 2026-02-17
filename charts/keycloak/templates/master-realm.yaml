@@ -47,22 +47,31 @@ spec:
               done
               [ "$LOGIN_SUCCESS" != "true" ] && echo "ERROR: Keycloak not ready for authentication" && exit 1
 
+
               echo "Ensuring breakglass user exists"
               USER_ID=$(/opt/keycloak/bin/kcadm.sh get users -r master -q username="$BREAKGLASS_USER" --fields id --format csv | tail -n1)
 
               if [ -z "$USER_ID" ]; then
                 echo "Creating breakglass user"
-                /opt/keycloak/bin/kcadm.sh create users -r master -s username="$BREAKGLASS_USER" -s enabled=true
-                USER_ID=$(/opt/keycloak/bin/kcadm.sh get users -r master -q username="$BREAKGLASS_USER" --fields id --format csv | tail -n1)
+                /opt/keycloak/bin/kcadm.sh create users -r master \
+                  -s username="$BREAKGLASS_USER" \
+                  -s enabled=true
 
-                /opt/keycloak/bin/kcadm.sh set-password -r master \
-                  --userid "$USER_ID" \
-                  --new-password "$BREAKGLASS_PASSWORD" \
-                  --temporary=false
+                USER_ID=$(/opt/keycloak/bin/kcadm.sh get users -r master -q username="$BREAKGLASS_USER" --fields id --format csv | tail -n1)
               fi
+
+
+              echo "Setting permanent password (creates credential in KC26+)"
+              /opt/keycloak/bin/kcadm.sh update users/$USER_ID/reset-password -r master \
+                -s type=password \
+                -s value="$BREAKGLASS_PASSWORD" \
+                -s temporary=false
+
 
               echo "Ensuring admin role"
               /opt/keycloak/bin/kcadm.sh add-roles -r master --uid "$USER_ID" --rolename admin || true
+
+              echo "Breakglass user ready"
           env:
             - name: BOOTSTRAP_USER
               value: admin
