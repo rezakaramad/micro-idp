@@ -66,6 +66,8 @@ spec:
                 /opt/keycloak/bin/kcadm.sh create users \
                   -r master \
                   -s username="$BREAKGLASS_USER" \
+                  -s firstName="$BREAKGLASS_FIRSTNAME" \
+                  -s lastName="$BREAKGLASS_LASTNAME" \
                   -s email="$BREAKGLASS_EMAIL" \
                   -s emailVerified=true \
                   -s enabled=true
@@ -118,104 +120,146 @@ spec:
                   key: password
             - name: BREAKGLASS_EMAIL
               value: r.karamad@gmail.com
+            - name: BREAKGLASS_FIRSTNAME
+              value: Keycloak
+            - name: BREAKGLASS_LASTNAME
+              value: Administrator
 
-# ---
-# apiVersion: batch/v1
-# kind: Job
-# metadata:
-#   name: enable-oidc-master-realm
-#   namespace: keycloak
-#   annotations:
-#     "helm.sh/hook": post-install,post-upgrade
-#     "helm.sh/hook-weight": "0"
-#     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
-# spec:
-#   backoffLimit: 0
-#   template:
-#     spec:
-#       restartPolicy: Never
-#       containers:
-#         - name: configure-oidc
-#           image: quay.io/keycloak/keycloak:26.5
-#           command:
-#             - /bin/bash
-#             - -ec
-#             - |
-#               KC=http://keycloak-service:8080
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: enable-oidc-master-realm
+  namespace: keycloak
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: configure-oidc
+          image: quay.io/keycloak/keycloak:26.5
+          command:
+            - /bin/bash
+            - -ec
+            - |
+              KEYCLOAK_SERVICE_NAME=keycloak-service
+              KEYCLOAK_SERVICE_PORT=8080
+              KEYCLOAK_URL=http://$KEYCLOAK_SERVICE_NAME:$KEYCLOAK_SERVICE_PORT
 
-#               echo "Checking Keycloak socket..."
-#               for i in {1..3}; do
-#                 (echo > /dev/tcp/keycloak-service/8080) >/dev/null 2>&1 && break
-#                 echo "Socket not ready yet..."
-#                 sleep 5
-#               done
+              echo "Checking Keycloak socket..."
+              SOCKET_OK=false
+              for i in {1..12}; do
+                if (echo > /dev/tcp/$KEYCLOAK_SERVICE_NAME/$KEYCLOAK_SERVICE_PORT) >/dev/null 2>&1; then
+                  SOCKET_OK=true
+                  break
+                fi
+                echo "Socket not ready yet..."
+                sleep 5
+              done
+              [ "$SOCKET_OK" != "true" ] && echo "ERROR: Keycloak service unreachable" && exit 1
 
-#               echo "Checking Keycloak authentication..."
-#               LOGIN_SUCCESS=false
-#               for i in {1..3}; do
-#                 if /opt/keycloak/bin/kcadm.sh config credentials \
-#                   --server $KC --realm master \
-#                   --user "$BOOTSTRAP_USER" --password "$BOOTSTRAP_PASSWORD"; then
-#                   LOGIN_SUCCESS=true
-#                   break
-#                 fi
-#                 sleep 5
-#               done
-#               [ "$LOGIN_SUCCESS" != "true" ] && echo "ERROR: Keycloak not ready" && exit 1
+              echo "Checking Keycloak authentication..."
+              LOGIN_SUCCESS=false
+              for i in {1..12}; do
+                if /opt/keycloak/bin/kcadm.sh config credentials \
+                  --realm master \
+                  --server "$KEYCLOAK_URL" \
+                  --user "$BREAKGLASS_USER" \
+                  --password "$BREAKGLASS_PASSWORD"; then
+                  LOGIN_SUCCESS=true
+                  break
+                fi
+                echo "Login not ready yet..."
+                sleep 5
+              done
+              [ "$LOGIN_SUCCESS" != "true" ] && echo "ERROR: Keycloak not ready for authentication" && exit 1
 
+              echo "Create or update Azure IdP"
+              IDP_CONFIG=(
+                -s enabled=true
+                -s displayName="Azure AD"
+                -s trustEmail=true
+                -s 'config.authorizationUrl=https://login.microsoftonline.com/'"$TENANT_ID"'/oauth2/v2.0/authorize'
+                -s 'config.tokenUrl=https://login.microsoftonline.com/'"$TENANT_ID"'/oauth2/v2.0/token'
+                -s 'config.jwksUrl=https://login.microsoftonline.com/'"$TENANT_ID"'/discovery/v2.0/keys'
+                -s 'config.logoutUrl=https://login.microsoftonline.com/'"$TENANT_ID"'/oauth2/v2.0/logout'
+                -s 'config.userInfoUrl=https://graph.microsoft.com/oidc/userinfo'
+                -s 'config.issuer=https://login.microsoftonline.com/'"$TENANT_ID"'/v2.0'
+                -s 'config.validateSignature=true'
+                -s 'config.defaultScope=openid profile email'
+                -s "config.clientId=$CLIENT_ID"
+                -s "config.clientSecret=$CLIENT_SECRET"
+              )
 
-#               echo "Ensuring breakglass user exists"
-#               USER_ID=$(/opt/keycloak/bin/kcadm.sh get users -r master \
-#                 -q username="$BREAKGLASS_USER" --fields id --format csv \
-#                 | tail -n1 | tr -d '"')
+              # create-or-update pattern (safe for upgrades)
+              /opt/keycloak/bin/kcadm.sh create identity-provider/instances \
+                -r master \
+                -s alias=azure \
+                -s providerId=oidc \
+                "${IDP_CONFIG[@]}" >/dev/null 2>&1 || \
+              /opt/keycloak/bin/kcadm.sh update identity-provider/instances/azure -r master "${IDP_CONFIG[@
 
-#               if [ -z "$USER_ID" ]; then
-#                 echo "Creating breakglass user"
-#                 /opt/keycloak/bin/kcadm.sh create users -r master \
-#                   -s username="$BREAKGLASS_USER" \
-#                   -s enabled=true
+              echo "Ensure 'platform-admins' group exists (create if missing)"
+              /opt/keycloak/bin/kcadm.sh create groups \
+                -r master \
+                -s name=platform-admins >/dev/null 2>&1 || true
 
-#                 USER_ID=$(/opt/keycloak/bin/kcadm.sh get users -r master \
-#                   -q username="$BREAKGLASS_USER" --fields id --format csv \
-#                   | tail -n1 | tr -d '"')
-#               fi
+              echo "Resolve 'platform-admins' ID"
+              GROUP_ID=$(/opt/keycloak/bin/kcadm.sh get groups \
+                -r master \
+                -q name='platform-admins' \
+                --fields id \
+                --format csv --noquotes)
 
+              [ -z "$GROUP_ID" ] && echo "ERROR: platform-admins group not found" && exit 1
 
-#               echo "Setting permanent password"
-#               /opt/keycloak/bin/kcadm.sh update users/$USER_ID/reset-password -r master \
-#                 -s type=password \
-#                 -s value="$BREAKGLASS_PASSWORD" \
-#                 -s temporary=false
+              echo "Assign 'admin' role to 'platform-admins'"
+              /opt/keycloak/bin/kcadm.sh add-roles \
+                -r master \
+                --gid "$GROUP_ID" \
+                --rolename admin || true
 
+              if ! /opt/keycloak/bin/kcadm.sh get identity-provider/instances/azure/mappers -r master \
+                  --fields name --format csv --noquotes | grep -qx platform-admins; then
+                /opt/keycloak/bin/kcadm.sh create identity-provider/instances/azure/mappers \
+                  -r master \
+                  -s name=platform-admins \
+                  -s identityProviderMapper=oidc-group-membership-mapper \
+                  -s 'config.claim=groups' \
+                  -s 'config.claim.value='"$PLATFORM_ADMINS_GROUP_ID" \
+                  -s 'config.group=/platform-admins'
+              fi
 
-#               echo "Granting admin role"
-#               /opt/keycloak/bin/kcadm.sh add-roles -r master --uid "$USER_ID" --rolename admin || true
+              echo "OIDC successfully configured"
+          env:
+            - name: BREAKGLASS_USER
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-breakglass
+                  key: username
+            - name: BREAKGLASS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-breakglass
+                  key: password
+            - name: TENANT_ID
+              value: c6ba6fd6-0fdd-4458-ad98-0c292dd79188
+            - name: CLIENT_ID
+              value: c25f407d-7794-4e55-bd0a-f0cd20bc6de2
+            - name: CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: azure-oidc-master
+                  key: client-secret
+            - name: PLATFORM_ADMINS_GROUP_ID
+              value: 9b207afe-3824-482f-8985-e2337a7f7e9b
 
-#               echo "Breakglass user ready"
-#           env:
-#             - name: BREAKGLASS_USER
-#               valueFrom:
-#                 secretKeyRef:
-#                   name: keycloak-breakglass
-#                   key: username
-#             - name: BREAKGLASS_PASSWORD
-#               valueFrom:
-#                 secretKeyRef:
-#                   name: keycloak-breakglass
-#                   key: password
-#             - name: TENANT_ID
-#               value: c6ba6fd6-0fdd-4458-ad98-0c292dd79188
-#             - name: CLIENT_ID
-#               value: c25f407d-7794-4e55-bd0a-f0cd20bc6de2
-#             - name: CLIENT_SECRET
-#               valueFrom:
-#                 secretKeyRef:
-#                   name: azure-oidc-master
-#                   key: client-secret
-#             - name: PLATFORM_ADMINS_GROUP_ID
-#               value: 9b207afe-3824-482f-8985-e2337a7f7e9b
-
-# ---
+---
 # apiVersion: batch/v1
 # kind: Job
 # metadata:
