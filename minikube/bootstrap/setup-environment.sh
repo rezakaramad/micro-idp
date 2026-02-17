@@ -208,7 +208,7 @@ create_keycloak_breakglass_secret() {
   BREAKGLASS_PASSWORD="$(openssl rand -hex 16)"
 
   vault kv put "$VAULT_PATH" \
-    username="admin" \
+    username="administrator" \
     password="$BREAKGLASS_PASSWORD" > /dev/null
 
   echo "✅ Keycloak bootstrap credentials stored in Vault"
