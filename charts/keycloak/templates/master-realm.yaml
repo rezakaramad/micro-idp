@@ -86,11 +86,14 @@ spec:
 
                 sleep 5
 
-                BREAKGLASS_USER=$(/opt/keycloak/bin/kcadm.sh get users \
+                BREAKGLASS_USER_ID=$(/opt/keycloak/bin/kcadm.sh get users \
                   -r master \
                   -q username="$BREAKGLASS_USER" \
-                  --fields id \
-                  --format csv --noquotes)
+                  --fields id,username \
+                  --format csv --noquotes \
+                  | grep -E ",$BREAKGLASS_USER$" \
+                  | head -n 1 \
+                  | cut -d',' -f1)
               else
                 echo "🤷 Breakglass user already exists"
               fi
@@ -98,16 +101,15 @@ spec:
               [ -z "$BREAKGLASS_USER" ] && echo "🛑 ERROR: Could not resolve breakglass BREAKGLASS_USER" && exit 1
 
               echo "🔑 Set permanent password"
-              
               /opt/keycloak/bin/kcadm.sh set-password \
                 -r master \
-                --userid "$BREAKGLASS_USER" \
+                --userid "$BREAKGLASS_USER_ID" \
                 --new-password "$BREAKGLASS_PASSWORD"
 
-              echo "🛡️ Grant admin role"
+              echo "🛡️ Grant admin role to breakglass user"
               /opt/keycloak/bin/kcadm.sh add-roles \
                 -r master \
-                --uid "$BREAKGLASS_USER" \
+                --uid "$BREAKGLASS_USER_ID" \
                 --rolename admin || true
               
               echo "❌ Delete bootstrap user"
