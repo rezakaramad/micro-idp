@@ -1,0 +1,222 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: create-breakglass-user-master-realm
+  namespace: keycloak
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "-10"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 6
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: kcadm
+          image: quay.io/keycloak/keycloak:26.5
+          command:
+            - /bin/bash
+            - -ec
+            - |
+              KC=http://keycloak:8080
+
+              until (echo > /dev/tcp/keycloak/8080) >/dev/null 2>&1; do sleep 5; done
+              sleep 10
+
+              LOGIN_SUCCESS=false
+              for i in {1..20}; do
+                if /opt/keycloak/bin/kcadm.sh config credentials \
+                  --server $KC --realm master \
+                  --user "$BOOTSTRAP_USER" --password "$BOOTSTRAP_PASSWORD"; then
+                  LOGIN_SUCCESS=true
+                  break
+                fi
+                sleep 5
+              done
+
+              [ "$LOGIN_SUCCESS" != "true" ] && echo "Cannot login to Keycloak" && exit 1
+
+              USER_ID=$(/opt/keycloak/bin/kcadm.sh get users -r master -q username="$BREAKGLASS_USER" --fields id --format csv | tail -n1)
+
+              if [ -z "$USER_ID" ]; then
+                /opt/keycloak/bin/kcadm.sh create users -r master -s username="$BREAKGLASS_USER" -s enabled=true
+                USER_ID=$(/opt/keycloak/bin/kcadm.sh get users -r master -q username="$BREAKGLASS_USER" --fields id --format csv | tail -n1)
+                /opt/keycloak/bin/kcadm.sh set-password -r master --userid "$USER_ID" --new-password "$BREAKGLASS_PASSWORD" --temporary=false
+              fi
+
+              /opt/keycloak/bin/kcadm.sh add-roles -r master --uid "$USER_ID" --rolename admin || true
+          env:
+            - name: BOOTSTRAP_USER
+              value: admin
+            - name: BOOTSTRAP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-bootstrap
+                  key: password
+            - name: BREAKGLASS_USER
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-breakglass
+                  key: username
+            - name: BREAKGLASS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-breakglass
+                  key: password
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: enable-oidc-master-realm
+  namespace: keycloak
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 6
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: configure-oidc
+          image: quay.io/keycloak/keycloak:26.5
+          command:
+            - /bin/bash
+            - -ec
+            - |
+              KC=http://keycloak:8080
+              until (echo > /dev/tcp/keycloak/8080) >/dev/null 2>&1; do sleep 5; done
+              sleep 10
+
+              LOGIN_SUCCESS=false
+              for i in {1..20}; do
+                if /opt/keycloak/bin/kcadm.sh config credentials \
+                  --server $KC --realm master \
+                  --user "$BOOTSTRAP_USER" --password "$BOOTSTRAP_PASSWORD"; then
+                  LOGIN_SUCCESS=true
+                  break
+                fi
+                sleep 5
+              done
+              [ "$LOGIN_SUCCESS" != "true" ] && exit 1
+
+              if /opt/keycloak/bin/kcadm.sh get identity-provider/instances/azure -r master >/dev/null 2>&1; then
+                /opt/keycloak/bin/kcadm.sh update identity-provider/instances/azure -r master \
+                  -s enabled=true \
+                  -s displayName="Azure AD" \
+                  -s trustEmail=true \
+                  -s 'config.clientId='"$CLIENT_ID" \
+                  -s 'config.clientSecret='"$CLIENT_SECRET"
+              else
+                /opt/keycloak/bin/kcadm.sh create identity-provider/instances -r master \
+                  -s alias=azure -s providerId=oidc -s enabled=true \
+                  -s displayName="Azure AD" -s trustEmail=true \
+                  -s 'config.authorizationUrl=https://login.microsoftonline.com/'"$TENANT_ID"'/oauth2/v2.0/authorize' \
+                  -s 'config.tokenUrl=https://login.microsoftonline.com/'"$TENANT_ID"'/oauth2/v2.0/token' \
+                  -s 'config.jwksUrl=https://login.microsoftonline.com/'"$TENANT_ID"'/discovery/v2.0/keys' \
+                  -s 'config.logoutUrl=https://login.microsoftonline.com/'"$TENANT_ID"'/oauth2/v2.0/logout' \
+                  -s 'config.userInfoUrl=https://graph.microsoft.com/oidc/userinfo' \
+                  -s 'config.issuer=https://login.microsoftonline.com/'"$TENANT_ID"'/v2.0' \
+                  -s 'config.validateSignature=true' \
+                  -s 'config.defaultScope=openid profile email' \
+                  -s 'config.clientId='"$CLIENT_ID" \
+                  -s 'config.clientSecret='"$CLIENT_SECRET"
+              fi
+
+              GROUP_ID=$(/opt/keycloak/bin/kcadm.sh get groups -r master -q search=platform-admins | grep -o '"id" : "[^"]*"' | head -1 | cut -d'"' -f4)
+              [ -z "$GROUP_ID" ] && GROUP_ID=$(/opt/keycloak/bin/kcadm.sh create groups -r master -s name=platform-admins -i)
+
+              /opt/keycloak/bin/kcadm.sh add-roles -r master --gid "$GROUP_ID" --rolename admin || true
+
+              if ! /opt/keycloak/bin/kcadm.sh get identity-provider/instances/azure/mappers -r master | grep -q azure-platform-admins; then
+                /opt/keycloak/bin/kcadm.sh create identity-provider/instances/azure/mappers -r master \
+                  -s name=azure-platform-admins \
+                  -s identityProviderMapper=oidc-group-membership-mapper \
+                  -s 'config.claim=groups' \
+                  -s 'config.claim.value='"$ADMIN_GROUP_ID" \
+                  -s 'config.group=/platform-admins'
+              fi
+          env:
+            - name: BOOTSTRAP_USER
+              value: admin
+            - name: BOOTSTRAP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-bootstrap
+                  key: password
+            - name: CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-azure-oidc
+                  key: client-id
+            - name: CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-azure-oidc
+                  key: client-secret
+            - name: TENANT_ID
+              value: c6ba6fd6-0fdd-4458-ad98-0c292dd79188
+            - name: ADMIN_GROUP_ID
+              value: 9b207afe-3824-482f-8985-e2337a7f7e9b
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: delete-bootstrap-user-master-realm
+  namespace: keycloak
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "10"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 6
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: cleanup
+          image: quay.io/keycloak/keycloak:26.5
+          command:
+            - /bin/bash
+            - -ec
+            - |
+              KC=http://keycloak:8080
+              until (echo > /dev/tcp/keycloak/8080) >/dev/null 2>&1; do sleep 5; done
+              sleep 10
+
+              /opt/keycloak/bin/kcadm.sh config credentials \
+                --server $KC --realm master \
+                --user "$BREAKGLASS_USER" --password "$BREAKGLASS_PASSWORD"
+
+              BG_ID=$(/opt/keycloak/bin/kcadm.sh get users -r master -q username="$BREAKGLASS_USER" --fields id --format csv | tail -n1)
+              ROLE_CHECK=$(/opt/keycloak/bin/kcadm.sh get users/$BG_ID/role-mappings/realm -r master | grep '"name" : "admin"' || true)
+              [ -z "$ROLE_CHECK" ] && echo "Breakglass not admin — abort" && exit 1
+
+              if ! /opt/keycloak/bin/kcadm.sh get identity-provider/instances/azure -r master >/dev/null 2>&1; then
+                echo "IdP missing — abort"
+                exit 1
+              fi
+
+              OLD_ID=$(/opt/keycloak/bin/kcadm.sh get users -r master -q username="$BOOTSTRAP_USER" --fields id --format csv | tail -n1)
+              [ -z "$OLD_ID" ] && exit 0
+
+              /opt/keycloak/bin/kcadm.sh delete users/$OLD_ID -r master
+          env:
+            - name: BOOTSTRAP_USER
+              value: admin
+            - name: BREAKGLASS_USER
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-breakglass
+                  key: username
+            - name: BREAKGLASS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-breakglass
+                  key: password
+
+---

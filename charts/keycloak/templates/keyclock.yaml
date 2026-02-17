@@ -12,7 +12,7 @@ spec:
     httpEnabled: true
   bootstrapAdmin:
     user:
-      secret: keycloak-initial-admin
+      secret: keycloak-bootstrap
   hostname:
     strict: false
     hostname: oidc.fluxdojo.local

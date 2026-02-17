@@ -9,7 +9,7 @@ spec:
   placeholders:
     azure.clientSecret:
       secret:
-        name: keycloak-azure-oidc
+        name: azure-oidc-management
         key: client-secret  
   realm:
     realm: management

@@ -140,7 +140,7 @@ register_clusters() {
 # Keycloak credentials
 # ----------------------------------------------------------------------------
 
-create_keycloak_azure_secret() {
+create_keycloak_azure_secret_management() {
   echo "🔐 Writing Entra ID App secret..."
 
   VAULT_PATH="local/management/keycloak/azure/apps/fluxdojo-keycloak-management-idp"
@@ -158,23 +158,41 @@ create_keycloak_azure_secret() {
   echo "✅ Entra ID client secret stored in Vault"
 }
 
+create_keycloak_azure_secret_master() {
+  echo "🔐 Writing Entra ID App secret..."
+
+  VAULT_PATH="local/management/keycloak/azure/apps/fluxdojo-keycloak-master-idp"
+
+  CLIENT_SECRET=$(pass show private/azure/entra-id/apps/keycloak/client-secrets/fluxdojo-keycloak-master-idp/value | head -n1)
+
+  if [[ -z "$CLIENT_SECRET" ]]; then
+    echo "❌ Failed to read client secret from pass."
+    return 1
+  fi
+
+  vault kv put local/management/keycloak/azure/apps/fluxdojo-keycloak-master-idp \
+    client-secret="$CLIENT_SECRET" \
+
+  echo "✅ Entra ID client secret stored in Vault"
+}
+
 create_keycloak_admin_secret() {
   echo "🔐 Generating Keycloak admin credentials..."
 
-  VAULT_PATH="local/management/keycloak/initial-admin"
+  VAULT_PATH="local/management/keycloak/bootstrap"
 
   if vault kv get "$VAULT_PATH" >/dev/null 2>&1; then
-    echo "⚠️  Admin secret already exists. Skipping."
+    echo "⚠️  Bootstrap user already exists. Skipping."
     return
   fi
 
-  ADMIN_PASSWORD="$(openssl rand -hex 16)"
+  BOOTSTRAP_PASSWORD="$(openssl rand -hex 16)"
 
   vault kv put "$VAULT_PATH" \
     username="admin" \
-    password="$ADMIN_PASSWORD" > /dev/null
+    password="$BOOTSTRAP_PASSWORD" > /dev/null
 
-  echo "✅ Keycloak admin credentials stored in Vault"
+  echo "✅ Keycloak bootstrap credentials stored in Vault"
 }
 
 # ----------------------------------------------------------------------------
@@ -187,7 +205,8 @@ main() {
   vault_login
   create_github_app_secret
   register_clusters
-  create_keycloak_azure_secret
+  create_keycloak_azure_secret_management
+  create_keycloak_azure_secret_master
   create_keycloak_admin_secret
 
   echo "✅ Bootstrap complete"
