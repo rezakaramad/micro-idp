@@ -184,14 +184,14 @@ spec:
                 -s enabled=true
                 -s displayName="Azure AD"
                 -s trustEmail=true
-                -s 'config.authorizationUrl=https://login.microsoftonline.com/'"$TENANT_ID"'/oauth2/v2.0/authorize'
-                -s 'config.tokenUrl=https://login.microsoftonline.com/'"$TENANT_ID"'/oauth2/v2.0/token'
-                -s 'config.jwksUrl=https://login.microsoftonline.com/'"$TENANT_ID"'/discovery/v2.0/keys'
-                -s 'config.logoutUrl=https://login.microsoftonline.com/'"$TENANT_ID"'/oauth2/v2.0/logout'
-                -s 'config.userInfoUrl=https://graph.microsoft.com/oidc/userinfo'
-                -s 'config.issuer=https://login.microsoftonline.com/'"$TENANT_ID"'/v2.0'
-                -s 'config.validateSignature=true'
-                -s 'config.defaultScope=openid profile email'
+                -s "config.authorizationUrl=https://login.microsoftonline.com/$TENANT_ID/oauth2/v2.0/authorize"
+                -s "config.tokenUrl=https://login.microsoftonline.com/$TENANT_ID/oauth2/v2.0/token"
+                -s "config.jwksUrl=https://login.microsoftonline.com/$TENANT_ID/discovery/v2.0/keys"
+                -s "config.logoutUrl=https://login.microsoftonline.com/$TENANT_ID/oauth2/v2.0/logout"
+                -s "config.userInfoUrl=https://graph.microsoft.com/oidc/userinfo"
+                -s "config.issuer=https://login.microsoftonline.com/$TENANT_ID/v2.0"
+                -s config.validateSignature=true
+                -s "config.defaultScope=openid profile email"
                 -s "config.clientId=$CLIENT_ID"
                 -s "config.clientSecret=$CLIENT_SECRET"
               )
