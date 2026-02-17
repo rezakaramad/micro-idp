@@ -50,7 +50,7 @@ spec:
                 echo "🛑 Login not ready yet"
                 sleep 5
               done
-              [ "$LOGIN_SUCCESS" != "true" ] && echo "ERROR: Keycloak not ready for authentication" && exit 1
+              [ "$LOGIN_SUCCESS" != "true" ] && echo "🛑 ERROR: Keycloak not ready for authentication" && exit 1
 
               echo "👤 Check breakglass user exists"
 
@@ -83,7 +83,7 @@ spec:
                 echo "👤 Breakglass user already exists"
               fi
 
-              [ -z "$USER_ID" ] && echo "ERROR: Could not resolve breakglass USER_ID" && exit 1
+              [ -z "$USER_ID" ] && echo "🛑 ERROR: Could not resolve breakglass USER_ID" && exit 1
 
               echo "🔑 Set permanent password"
               
@@ -177,7 +177,7 @@ spec:
                 echo "🛑 Login not ready yet"
                 sleep 5
               done
-              [ "$LOGIN_SUCCESS" != "true" ] && echo "ERROR: Keycloak not ready for authentication" && exit 1
+              [ "$LOGIN_SUCCESS" != "true" ] && echo "🛑 ERROR: Keycloak not ready for authentication" && exit 1
 
               echo "☁️ Create/update Azure IdP"
               IDP_CONFIG=(
@@ -198,12 +198,12 @@ spec:
               echo "🔁 Reconcile Azure IdP"
 
               if /opt/keycloak/bin/kcadm.sh get identity-provider/instances/azure -r master >/dev/null 2>&1; then
-                echo "Azure IdP exists - updating ..."
+                echo "💡 Azure IdP exists - updating ..."
                 /opt/keycloak/bin/kcadm.sh update identity-provider/instances/azure \
                   -r master \
                   "${IDP_CONFIG[@]}"
               else
-                echo "Azure IdP does not exist - creating ..."
+                echo "💡 Azure IdP does not exist - creating ..."
                 /opt/keycloak/bin/kcadm.sh create identity-provider/instances \
                   -r master \
                   -s alias=azure \
@@ -223,7 +223,7 @@ spec:
                 --fields id \
                 --format csv --noquotes)
 
-              [ -z "$GROUP_ID" ] && echo "ERROR: $PLATFORM_ADMINS_GROUP_NAME group not found" && exit 1
+              [ -z "$GROUP_ID" ] && echo "🛑 ERROR: $PLATFORM_ADMINS_GROUP_NAME group not found" && exit 1
 
               echo "🛡️ Assign 'admin' role to '$PLATFORM_ADMINS_GROUP_NAME'"
               /opt/keycloak/bin/kcadm.sh add-roles \
@@ -232,7 +232,7 @@ spec:
                 --rolename admin || true
 
               
-              cat <<EOF >"/tmp/${PLATFORM_ADMINS_GROUP_NAME}-mapper.json"
+              cat <<EOF > /tmp/mapper.json
               {
                 "name": "$PLATFORM_ADMINS_GROUP_NAME",
                 "identityProviderAlias": "azure",
