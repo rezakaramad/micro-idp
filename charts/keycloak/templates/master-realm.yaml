@@ -24,19 +24,19 @@ spec:
               KEYCLOAK_SERVICE_PORT=8080
               KEYCLOAK_URL=http://$KEYCLOAK_SERVICE_NAME:$KEYCLOAK_SERVICE_PORT
 
-              echo "Checking Keycloak socket..."
+              echo "🔌 Check Keycloak socket"
               SOCKET_OK=false
               for i in {1..12}; do
                 if (echo > /dev/tcp/$KEYCLOAK_SERVICE_NAME/$KEYCLOAK_SERVICE_PORT) >/dev/null 2>&1; then
                   SOCKET_OK=true
                   break
                 fi
-                echo "Socket not ready yet..."
+                echo "🛑 Socket not ready yet"
                 sleep 5
               done
-              [ "$SOCKET_OK" != "true" ] && echo "ERROR: Keycloak service unreachable" && exit 1
+              [ "$SOCKET_OK" != "true" ] && echo "🛑 ERROR: Keycloak service unreachable" && exit 1
 
-              echo "Checking Keycloak authentication..."
+              echo "🔐 Authenticate to Keycloak"
               LOGIN_SUCCESS=false
               for i in {1..12}; do
                 if /opt/keycloak/bin/kcadm.sh config credentials \
@@ -47,12 +47,12 @@ spec:
                   LOGIN_SUCCESS=true
                   break
                 fi
-                echo "Login not ready yet..."
+                echo "🛑 Login not ready yet"
                 sleep 5
               done
               [ "$LOGIN_SUCCESS" != "true" ] && echo "ERROR: Keycloak not ready for authentication" && exit 1
 
-              echo "Checking breakglass user existence"
+              echo "👤 Check breakglass user exists"
 
               USER_ID=$(/opt/keycloak/bin/kcadm.sh get users \
                 -r master \
@@ -61,7 +61,7 @@ spec:
                 --format csv --noquotes)
 
               if [ -z "$USER_ID" ]; then
-                echo "Creating breakglass user"
+                echo "👤 Create breakglass user"
 
                 /opt/keycloak/bin/kcadm.sh create users \
                   -r master \
@@ -80,25 +80,25 @@ spec:
                   --fields id \
                   --format csv --noquotes)
               else
-                echo "Breakglass user already exists"
+                echo "👤 Breakglass user already exists"
               fi
 
               [ -z "$USER_ID" ] && echo "ERROR: Could not resolve breakglass USER_ID" && exit 1
 
-              echo "Setting permanent password"
+              echo "🔑 Set permanent password"
               
               /opt/keycloak/bin/kcadm.sh set-password \
                 -r master \
                 --userid "$USER_ID" \
                 --new-password "$BREAKGLASS_PASSWORD"
 
-              echo "Ensuring admin role"
+              echo "🛡️ Grant admin role"
               /opt/keycloak/bin/kcadm.sh add-roles \
                 -r master \
                 --uid "$USER_ID" \
                 --rolename admin || true
 
-              echo "Breakglass user ready"
+              echo "🟢 Breakglass user ready"
 
           env:
             - name: BOOTSTRAP_USER
@@ -151,19 +151,19 @@ spec:
               KEYCLOAK_SERVICE_PORT=8080
               KEYCLOAK_URL=http://$KEYCLOAK_SERVICE_NAME:$KEYCLOAK_SERVICE_PORT
 
-              echo "Checking Keycloak socket..."
+              echo "🔌 Check Keycloak socket"
               SOCKET_OK=false
               for i in {1..12}; do
                 if (echo > /dev/tcp/$KEYCLOAK_SERVICE_NAME/$KEYCLOAK_SERVICE_PORT) >/dev/null 2>&1; then
                   SOCKET_OK=true
                   break
                 fi
-                echo "Socket not ready yet..."
+                echo "🛑 Socket not ready yet"
                 sleep 5
               done
-              [ "$SOCKET_OK" != "true" ] && echo "ERROR: Keycloak service unreachable" && exit 1
+              [ "$SOCKET_OK" != "true" ] && echo "🛑 ERROR: Keycloak service unreachable" && exit 1
 
-              echo "Checking Keycloak authentication..."
+              echo "🔐 Authenticate to Keycloak"
               LOGIN_SUCCESS=false
               for i in {1..12}; do
                 if /opt/keycloak/bin/kcadm.sh config credentials \
@@ -174,12 +174,12 @@ spec:
                   LOGIN_SUCCESS=true
                   break
                 fi
-                echo "Login not ready yet..."
+                echo "🛑 Login not ready yet"
                 sleep 5
               done
               [ "$LOGIN_SUCCESS" != "true" ] && echo "ERROR: Keycloak not ready for authentication" && exit 1
 
-              echo "Create or update Azure IdP"
+              echo "☁️ Create/update Azure IdP"
               IDP_CONFIG=(
                 -s enabled=true
                 -s displayName="Azure AD"
@@ -195,15 +195,15 @@ spec:
                 -s "config.clientSecret=$CLIENT_SECRET"
               )
 
-              echo "Reconciling Azure IdP"
+              echo "🔁 Reconcile Azure IdP"
 
               if /opt/keycloak/bin/kcadm.sh get identity-provider/instances/azure -r master >/dev/null 2>&1; then
-                echo "Azure IdP exists — updating"
+                echo "Azure IdP exists - updating ..."
                 /opt/keycloak/bin/kcadm.sh update identity-provider/instances/azure \
                   -r master \
                   "${IDP_CONFIG[@]}"
               else
-                echo "Azure IdP does not exist — creating"
+                echo "Azure IdP does not exist - creating ..."
                 /opt/keycloak/bin/kcadm.sh create identity-provider/instances \
                   -r master \
                   -s alias=azure \
@@ -211,12 +211,12 @@ spec:
                   "${IDP_CONFIG[@]}"
               fi
 
-              echo "Ensure '$PLATFORM_ADMINS_GROUP_NAME' group exists (create if missing)"
+              echo "👥 Ensure '$PLATFORM_ADMINS_GROUP_NAME' group exists (create if missing)"
               /opt/keycloak/bin/kcadm.sh create groups \
                 -r master \
                 -s name=$PLATFORM_ADMINS_GROUP_NAME >/dev/null 2>&1 || true
 
-              echo "Resolve '$PLATFORM_ADMINS_GROUP_NAME' ID"
+              echo "👥 Resolve '$PLATFORM_ADMINS_GROUP_NAME' ID"
               GROUP_ID=$(/opt/keycloak/bin/kcadm.sh get groups \
                 -r master \
                 -q name='$PLATFORM_ADMINS_GROUP_NAME' \
@@ -225,7 +225,7 @@ spec:
 
               [ -z "$GROUP_ID" ] && echo "ERROR: $PLATFORM_ADMINS_GROUP_NAME group not found" && exit 1
 
-              echo "Assign 'admin' role to '$PLATFORM_ADMINS_GROUP_NAME'"
+              echo "🛡️ Assign 'admin' role to '$PLATFORM_ADMINS_GROUP_NAME'"
               /opt/keycloak/bin/kcadm.sh add-roles \
                 -r master \
                 --gid "$GROUP_ID" \
@@ -250,7 +250,7 @@ spec:
                 -r master \
                 -f /tmp/platform-admins-mapper.json
 
-              echo "OIDC successfully configured"
+              echo "🟢 OIDC successfully configured"
           env:
             - name: BREAKGLASS_USER
               valueFrom:
@@ -265,7 +265,7 @@ spec:
             - name: TENANT_ID
               value: c6ba6fd6-0fdd-4458-ad98-0c292dd79188
             - name: CLIENT_ID
-              value: c25f407d-7794-4e55-bd0a-f0cd20bc6de2
+              value: 3bb8c767-9c1f-4ce2-823e-39e8fa6b907c
             - name: CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
@@ -277,81 +277,83 @@ spec:
               value: platform-admins
 
 ---
-# apiVersion: batch/v1
-# kind: Job
-# metadata:
-#   name: delete-bootstrap-user-master-realm
-#   namespace: keycloak
-#   annotations:
-#     "helm.sh/hook": post-install,post-upgrade
-#     "helm.sh/hook-weight": "10"
-#     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
-# spec:
-#   backoffLimit: 0
-#   activeDeadlineSeconds: 120
-#   template:
-#     spec:
-#       restartPolicy: Never
-#       containers:
-#         - name: cleanup
-#           image: quay.io/keycloak/keycloak:26.5
-#           command:
-#             - /bin/bash
-#             - -ec
-#             - |
-#               KC=http://keycloak-service:8080
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: delete-bootstrap-user-master-realm
+  namespace: keycloak
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "10"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 120
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: cleanup
+          image: quay.io/keycloak/keycloak:26.5
+          command:
+            - /bin/bash
+            - -ec
+            - |
+              KEYCLOAK_SERVICE_NAME=keycloak-service
+              KEYCLOAK_SERVICE_PORT=8080
+              KEYCLOAK_URL=http://$KEYCLOAK_SERVICE_NAME:$KEYCLOAK_SERVICE_PORT
 
-#               echo "Checking Keycloak socket..."
-#               SOCKET_OK=false
-#               for i in {1..3}; do
-#                 if (echo > /dev/tcp/keycloak-service/8080) >/dev/null 2>&1; then
-#                   SOCKET_OK=true
-#                   break
-#                 fi
-#                 echo "Socket not ready yet..."
-#                 sleep 5
-#               done
-#               [ "$SOCKET_OK" != "true" ] && echo "ERROR: Keycloak service unreachable" && exit 1
+              echo "🔌 Check Keycloak socket..."
+              SOCKET_OK=false
+              for i in {1..12}; do
+                if (echo > /dev/tcp/$KEYCLOAK_SERVICE_NAME/$KEYCLOAK_SERVICE_PORT) >/dev/null 2>&1; then
+                  SOCKET_OK=true
+                  break
+                fi
+                echo "🛑 Socket not ready yet..."
+                sleep 5
+              done
+              [ "$SOCKET_OK" != "true" ] && echo "🛑 ERROR: Keycloak service unreachable" && exit 1
 
-#               echo "Checking Keycloak authentication..."
-#               LOGIN_SUCCESS=false
-#               for i in {1..3}; do
-#                 if /opt/keycloak/bin/kcadm.sh config credentials \
-#                   --server $KC --realm master \
-#                   --user "$BREAKGLASS_USER" --password "$BREAKGLASS_PASSWORD"; then
-#                   LOGIN_SUCCESS=true
-#                   break
-#                 fi
-#                 echo "Login not ready yet..."
-#                 sleep 5
-#               done
-#               [ "$LOGIN_SUCCESS" != "true" ] && echo "ERROR: Cannot login to Keycloak" && exit 1
+              echo "🔐 Authenticate to Keycloak"
+              LOGIN_SUCCESS=false
+              for i in {1..12}; do
+                if /opt/keycloak/bin/kcadm.sh config credentials \
+                  --realm master \
+                  --server "$KEYCLOAK_URL" \
+                  --user "$BREAKGLASS_USER" \
+                  --password "$BREAKGLASS_PASSWORD"; then
+                  LOGIN_SUCCESS=true
+                  break
+                fi
+                echo "🛑 Login not ready yet..."
+                sleep 5
+              done
+              [ "$LOGIN_SUCCESS" != "true" ] && echo "🛑 ERROR: Keycloak not ready for authentication" && exit 1
 
-#               BG_ID=$(/opt/keycloak/bin/kcadm.sh get users -r master -q username="$BREAKGLASS_USER" --fields id --format csv | tail -n1)
-#               ROLE_CHECK=$(/opt/keycloak/bin/kcadm.sh get users/$BG_ID/role-mappings/realm -r master | grep '"name" : "admin"' || true)
-#               [ -z "$ROLE_CHECK" ] && echo "Breakglass not admin — abort" && exit 1
+              echo "👤 Ensure bootstrap user exists"
+              USER_ID=$(/opt/keycloak/bin/kcadm.sh get users \
+                -r master \
+                -q username="$BOOTSTRAP_USER" \
+                --fields id \
+                --format csv --noquotes)
 
-#               if ! /opt/keycloak/bin/kcadm.sh get identity-provider/instances/azure -r master >/dev/null 2>&1; then
-#                 echo "IdP missing — abort"
-#                 exit 1
-#               fi
+              [ -z "$USER_ID" ] && echo "🛑 ERROR: Could not resolve bootstrap uesr" && exit 1
 
-#               OLD_ID=$(/opt/keycloak/bin/kcadm.sh get users -r master -q username="$BOOTSTRAP_USER" --fields id --format csv | tail -n1)
-#               [ -z "$OLD_ID" ] && exit 0
+              echo "👤 Delete bootstrap user"
+              /opt/keycloak/bin/kcadm.sh delete users/$USER_ID -r master
+          env:
+            - name: BOOTSTRAP_USER
+              value: admin
+            - name: BREAKGLASS_USER
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-breakglass
+                  key: username
+            - name: BREAKGLASS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-breakglass
+                  key: password
 
-#               /opt/keycloak/bin/kcadm.sh delete users/$OLD_ID -r master
-#           env:
-#             - name: BOOTSTRAP_USER
-#               value: admin
-#             - name: BREAKGLASS_USER
-#               valueFrom:
-#                 secretKeyRef:
-#                   name: keycloak-breakglass
-#                   key: username
-#             - name: BREAKGLASS_PASSWORD
-#               valueFrom:
-#                 secretKeyRef:
-#                   name: keycloak-breakglass
-#                   key: password
-
-# ---
+---
