@@ -57,7 +57,7 @@ spec:
                 echo "Creating breakglass user"
                 CREATE_OUTPUT=$(/opt/keycloak/bin/kcadm.sh create users -r master \
                   -s username="$BREAKGLASS_USER" \
-                  -s enabled=true)
+                  -s enabled=true 2>&1)
 
                 USER_ID=$(echo "$CREATE_OUTPUT" | grep -oE "[0-9a-fA-F-]{36}")
               fi
