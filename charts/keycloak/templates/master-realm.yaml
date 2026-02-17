@@ -64,23 +64,11 @@ spec:
 
               [ -z "$USER_ID" ] && echo "ERROR: Could not resolve breakglass USER_ID" && exit 1
 
-              echo "Waiting for user to become available in admin API..."
-              USER_READY=false
-              for i in {1..10}; do
-                if /opt/keycloak/bin/kcadm.sh get users/$USER_ID -r master >/dev/null 2>&1; then
-                  USER_READY=true
-                  break
-                fi
-                sleep 2
-              done
-
-              [ "$USER_READY" != "true" ] && echo "ERROR: User never became visible in Keycloak admin API" && exit 1
-
               echo "Setting permanent password (creates credential in KC26+)"
-              /opt/keycloak/bin/kcadm.sh update "users/$USER_ID/reset-password" -r master \
-                -s type=password \
-                -s value="$BREAKGLASS_PASSWORD" \
-                -s temporary=false
+              /opt/keycloak/bin/kcadm.sh set-password \
+                -r master \
+                --userid "$USER_ID" \
+                --password "$BREAKGLASS_PASSWORD"
 
               echo "Ensuring admin role"
               /opt/keycloak/bin/kcadm.sh add-roles -r master --uid "$USER_ID" --rolename admin || true
