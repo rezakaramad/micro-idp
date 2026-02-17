@@ -59,9 +59,7 @@ spec:
                   -s username="$BREAKGLASS_USER" \
                   -s enabled=true
 
-                USER_ID=$(/opt/keycloak/bin/kcadm.sh get users -r master \
-                  -q username="$BREAKGLASS_USER" --fields id --format csv \
-                  | tail -n +2 | head -n 1 | tr -d '"')
+                USER_ID=$(echo "$CREATE_OUTPUT" | grep -oE "[0-9a-fA-F-]{36}")
               fi
 
               [ -z "$USER_ID" ] && echo "ERROR: Could not resolve breakglass USER_ID" && exit 1
