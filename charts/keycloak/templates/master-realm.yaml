@@ -25,7 +25,7 @@ spec:
               sleep 10
 
               LOGIN_SUCCESS=false
-              for i in {1..20}; do
+              for i in {1..5}; do
                 if /opt/keycloak/bin/kcadm.sh config credentials \
                   --server $KC --realm master \
                   --user "$BOOTSTRAP_USER" --password "$BOOTSTRAP_PASSWORD"; then
@@ -92,7 +92,7 @@ spec:
               sleep 10
 
               LOGIN_SUCCESS=false
-              for i in {1..20}; do
+              for i in {1..5}; do
                 if /opt/keycloak/bin/kcadm.sh config credentials \
                   --server $KC --realm master \
                   --user "$BOOTSTRAP_USER" --password "$BOOTSTRAP_PASSWORD"; then
@@ -101,7 +101,8 @@ spec:
                 fi
                 sleep 5
               done
-              [ "$LOGIN_SUCCESS" != "true" ] && exit 1
+
+              [ "$LOGIN_SUCCESS" != "true" ] && echo "Cannot login to Keycloak" && exit 1
 
               if /opt/keycloak/bin/kcadm.sh get identity-provider/instances/azure -r master >/dev/null 2>&1; then
                 /opt/keycloak/bin/kcadm.sh update identity-provider/instances/azure -r master \
@@ -185,7 +186,7 @@ spec:
             - -ec
             - |
               KC=http://keycloak-service:8080
-              until (echo > /dev/tcp/keycloak/8080) >/dev/null 2>&1; do sleep 5; done
+              until (echo > /dev/tcp/keycloak-service/8080) >/dev/null 2>&1; do sleep 5; done
               sleep 10
 
               /opt/keycloak/bin/kcadm.sh config credentials \
