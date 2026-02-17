@@ -52,15 +52,27 @@ spec:
               done
               [ "$LOGIN_SUCCESS" != "true" ] && echo "🛑 ERROR: Keycloak not ready for authentication" && exit 1
 
-              echo "👤 Check breakglass user exists"
+              echo "🔎 Resolve bootstrap user ID"
+              BOOTSTRAP_USER_ID=$(/opt/keycloak/bin/kcadm.sh get users \
+                -r master \
+                -q username="$BOOTSTRAP_USER" \
+                --fields id,username \
+                --format csv --noquotes \
+                | grep -E ",$BOOTSTRAP_USER$" \
+                | head -n 1 \
+                | cut -d',' -f1))
 
-              USER_ID=$(/opt/keycloak/bin/kcadm.sh get users \
+              echo "👀 Check breakglass user exists"
+              BREAKGLASS_USER_ID=$(/opt/keycloak/bin/kcadm.sh get users \
                 -r master \
                 -q username="$BREAKGLASS_USER" \
-                --fields id \
-                --format csv --noquotes)
+                --fields id,username \
+                --format csv --noquotes \
+                | grep -E ",$BREAKGLASS_USER$" \
+                | head -n 1 \
+                | cut -d',' -f1))
 
-              if [ -z "$USER_ID" ]; then
+              if [ -z "$BREAKGLASS_USER" ]; then
                 echo "👤 Create breakglass user"
 
                 /opt/keycloak/bin/kcadm.sh create users \
@@ -74,29 +86,32 @@ spec:
 
                 sleep 5
 
-                USER_ID=$(/opt/keycloak/bin/kcadm.sh get users \
+                BREAKGLASS_USER=$(/opt/keycloak/bin/kcadm.sh get users \
                   -r master \
                   -q username="$BREAKGLASS_USER" \
                   --fields id \
                   --format csv --noquotes)
               else
-                echo "👤 Breakglass user already exists"
+                echo "🤷 Breakglass user already exists"
               fi
 
-              [ -z "$USER_ID" ] && echo "🛑 ERROR: Could not resolve breakglass USER_ID" && exit 1
+              [ -z "$BREAKGLASS_USER" ] && echo "🛑 ERROR: Could not resolve breakglass BREAKGLASS_USER" && exit 1
 
               echo "🔑 Set permanent password"
               
               /opt/keycloak/bin/kcadm.sh set-password \
                 -r master \
-                --userid "$USER_ID" \
+                --userid "$BREAKGLASS_USER" \
                 --new-password "$BREAKGLASS_PASSWORD"
 
               echo "🛡️ Grant admin role"
               /opt/keycloak/bin/kcadm.sh add-roles \
                 -r master \
-                --uid "$USER_ID" \
+                --uid "$BREAKGLASS_USER" \
                 --rolename admin || true
+              
+              echo "❌ Delete bootstrap user"
+              /opt/keycloak/bin/kcadm.sh delete users/$BOOTSTRAP_USER_ID -r master
 
               echo "🟢 Breakglass user ready"
 
@@ -211,17 +226,20 @@ spec:
                   "${IDP_CONFIG[@]}"
               fi
 
-              echo "👥 Ensure '$PLATFORM_ADMINS_GROUP_NAME' group exists (create if missing)"
+              echo "👥 Ensure '$PLATFORM_ADMINS_GROUP_NAME' group already exists (create if missing)"
               /opt/keycloak/bin/kcadm.sh create groups \
                 -r master \
                 -s name=$PLATFORM_ADMINS_GROUP_NAME >/dev/null 2>&1 || true
 
-              echo "👥 Resolve '$PLATFORM_ADMINS_GROUP_NAME' ID"
+              echo "🔎 Resolve '$PLATFORM_ADMINS_GROUP_NAME' ID"
               GROUP_ID=$(/opt/keycloak/bin/kcadm.sh get groups \
                 -r master \
-                -q name='$PLATFORM_ADMINS_GROUP_NAME' \
-                --fields id \
-                --format csv --noquotes)
+                -q name="$PLATFORM_ADMINS_GROUP_NAME" \
+                --fields id,name \
+                --format csv --noquotes \
+                | grep -E ",$PLATFORM_ADMINS_GROUP_NAME$" \
+                | head -n 1 \
+                | cut -d',' -f1)
 
               [ -z "$GROUP_ID" ] && echo "🛑 ERROR: $PLATFORM_ADMINS_GROUP_NAME group not found" && exit 1
 
@@ -275,85 +293,5 @@ spec:
               value: 9b207afe-3824-482f-8985-e2337a7f7e9b
             - name: PLATFORM_ADMINS_GROUP_NAME
               value: platform-admins
-
----
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: delete-bootstrap-user-master-realm
-  namespace: keycloak
-  annotations:
-    "helm.sh/hook": post-install,post-upgrade
-    "helm.sh/hook-weight": "10"
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
-spec:
-  backoffLimit: 0
-  activeDeadlineSeconds: 120
-  template:
-    spec:
-      restartPolicy: Never
-      containers:
-        - name: cleanup
-          image: quay.io/keycloak/keycloak:26.5
-          command:
-            - /bin/bash
-            - -ec
-            - |
-              KEYCLOAK_SERVICE_NAME=keycloak-service
-              KEYCLOAK_SERVICE_PORT=8080
-              KEYCLOAK_URL=http://$KEYCLOAK_SERVICE_NAME:$KEYCLOAK_SERVICE_PORT
-
-              echo "🔌 Check Keycloak socket..."
-              SOCKET_OK=false
-              for i in {1..12}; do
-                if (echo > /dev/tcp/$KEYCLOAK_SERVICE_NAME/$KEYCLOAK_SERVICE_PORT) >/dev/null 2>&1; then
-                  SOCKET_OK=true
-                  break
-                fi
-                echo "🛑 Socket not ready yet..."
-                sleep 5
-              done
-              [ "$SOCKET_OK" != "true" ] && echo "🛑 ERROR: Keycloak service unreachable" && exit 1
-
-              echo "🔐 Authenticate to Keycloak"
-              LOGIN_SUCCESS=false
-              for i in {1..12}; do
-                if /opt/keycloak/bin/kcadm.sh config credentials \
-                  --realm master \
-                  --server "$KEYCLOAK_URL" \
-                  --user "$BREAKGLASS_USER" \
-                  --password "$BREAKGLASS_PASSWORD"; then
-                  LOGIN_SUCCESS=true
-                  break
-                fi
-                echo "🛑 Login not ready yet..."
-                sleep 5
-              done
-              [ "$LOGIN_SUCCESS" != "true" ] && echo "🛑 ERROR: Keycloak not ready for authentication" && exit 1
-
-              echo "👤 Ensure bootstrap user exists"
-              USER_ID=$(/opt/keycloak/bin/kcadm.sh get users \
-                -r master \
-                -q username="$BOOTSTRAP_USER" \
-                --fields id \
-                --format csv --noquotes)
-
-              [ -z "$USER_ID" ] && echo "🛑 ERROR: Could not resolve bootstrap uesr" && exit 1
-
-              echo "👤 Delete bootstrap user"
-              /opt/keycloak/bin/kcadm.sh delete users/$USER_ID -r master
-          env:
-            - name: BOOTSTRAP_USER
-              value: admin
-            - name: BREAKGLASS_USER
-              valueFrom:
-                secretKeyRef:
-                  name: keycloak-breakglass
-                  key: username
-            - name: BREAKGLASS_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: keycloak-breakglass
-                  key: password
 
 ---
