@@ -145,6 +145,19 @@ spec:
                   -s displayName="Azure AD" -s trustEmail=true \
                   -s 'config.authorizationUrl=https://login.microsoftonline.com/'"$TENANT_ID"'/oauth2/v2.0/authorize' \
                   -s 'config.tokenUrl
+          env:
+            - name: BOOTSTRAP_USER
+              value: admin
+            - name: BREAKGLASS_USER
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-breakglass
+                  key: username
+            - name: BREAKGLASS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-breakglass
+                  key: password
 
 ---
 apiVersion: batch/v1
