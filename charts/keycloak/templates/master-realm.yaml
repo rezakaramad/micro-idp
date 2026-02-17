@@ -202,7 +202,7 @@ spec:
                 -s alias=azure \
                 -s providerId=oidc \
                 "${IDP_CONFIG[@]}" >/dev/null 2>&1 || \
-              /opt/keycloak/bin/kcadm.sh update identity-provider/instances/azure -r master "${IDP_CONFIG[@
+              /opt/keycloak/bin/kcadm.sh update identity-provider/instances/azure -r master "${IDP_CONFIG[@]}"
 
               echo "Ensure 'platform-admins' group exists (create if missing)"
               /opt/keycloak/bin/kcadm.sh create groups \
