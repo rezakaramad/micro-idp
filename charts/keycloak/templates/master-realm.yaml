@@ -22,8 +22,7 @@ spec:
             - |
               KEYCLOAK_SERVICE_NAME=keycloak-service
               KEYCLOAK_SERVICE_PORT=8080
-              KEYCLOAK_URL=http://$KEYCLOCK_SERVICE_NAME:$KEYCLOCK_SERVICE_PORT
-                           http://$KEYCLOAK_SERVICE_NAME:$KEYCLOAK_SERVICE_PORT
+              KEYCLOAK_URL=http://$KEYCLOAK_SERVICE_NAME:$KEYCLOAK_SERVICE_PORT
 
               echo "Checking Keycloak socket..."
               SOCKET_OK=false
