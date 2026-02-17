@@ -232,7 +232,7 @@ spec:
                 --rolename admin || true
 
               
-              cat <<EOF > /tmp/mapper.json
+              cat <<EOF > /tmp/platform-admins-mapper.json
               {
                 "name": "$PLATFORM_ADMINS_GROUP_NAME",
                 "identityProviderAlias": "azure",
