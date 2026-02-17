@@ -113,41 +113,73 @@ spec:
                   SOCKET_OK=true
                   break
                 fi
-                echo "Socket not ready yet..."
                 sleep 5
               done
-              [ "$SOCKET_OK" != "true" ] && echo "ERROR: Keycloak service unreachable" && exit 1
+              [ "$SOCKET_OK" != "true" ] && echo "ERROR: Keycloak unreachable" && exit 1
 
-              echo "Checking Keycloak authentication..."
+              echo "Login using breakglass admin..."
               LOGIN_SUCCESS=false
               for i in {1..3}; do
                 if /opt/keycloak/bin/kcadm.sh config credentials \
                   --server $KC --realm master \
-                  --user "$BOOTSTRAP_USER" --password "$BOOTSTRAP_PASSWORD"; then
+                  --user "$BREAKGLASS_USER" --password "$BREAKGLASS_PASSWORD"; then
                   LOGIN_SUCCESS=true
                   break
                 fi
-                echo "Login not ready yet..."
                 sleep 5
               done
-              [ "$LOGIN_SUCCESS" != "true" ] && echo "ERROR: Cannot login to Keycloak" && exit 1
+              [ "$LOGIN_SUCCESS" != "true" ] && echo "ERROR: Cannot login" && exit 1
 
+              echo "Create or update Azure IdP"
+              IDP_CONFIG=(
+                -s enabled=true
+                -s displayName="Azure AD"
+                -s trustEmail=true
+                -s 'config.authorizationUrl=https://login.microsoftonline.com/'"$TENANT_ID"'/oauth2/v2.0/authorize'
+                -s 'config.tokenUrl=https://login.microsoftonline.com/'"$TENANT_ID"'/oauth2/v2.0/token'
+                -s 'config.jwksUrl=https://login.microsoftonline.com/'"$TENANT_ID"'/discovery/v2.0/keys'
+                -s 'config.logoutUrl=https://login.microsoftonline.com/'"$TENANT_ID"'/oauth2/v2.0/logout'
+                -s 'config.userInfoUrl=https://graph.microsoft.com/oidc/userinfo'
+                -s 'config.issuer=https://login.microsoftonline.com/'"$TENANT_ID"'/v2.0'
+                -s 'config.validateSignature=true'
+                -s 'config.defaultScope=openid profile email'
+                -s 'config.clientId='"$CLIENT_ID"
+                -s 'config.clientSecret='"$CLIENT_SECRET"
+              )
+
+              echo "Reconciling Azure OIDC identity provider (create or update to desired state)"
               if /opt/keycloak/bin/kcadm.sh get identity-provider/instances/azure -r master >/dev/null 2>&1; then
-                /opt/keycloak/bin/kcadm.sh update identity-provider/instances/azure -r master \
-                  -s enabled=true \
-                  -s displayName="Azure AD" \
-                  -s trustEmail=true \
-                  -s 'config.clientId='"$CLIENT_ID" \
-                  -s 'config.clientSecret='"$CLIENT_SECRET"
+                /opt/keycloak/bin/kcadm.sh update identity-provider/instances/azure -r master "${IDP_CONFIG[@]}"
               else
                 /opt/keycloak/bin/kcadm.sh create identity-provider/instances -r master \
-                  -s alias=azure -s providerId=oidc -s enabled=true \
-                  -s displayName="Azure AD" -s trustEmail=true \
-                  -s 'config.authorizationUrl=https://login.microsoftonline.com/'"$TENANT_ID"'/oauth2/v2.0/authorize' \
-                  -s 'config.tokenUrl
+                  -s alias=azure \
+                  -s providerId=oidc \
+                  "${IDP_CONFIG[@]}"
+              fi
+
+              echo "Ensure admin group exists"
+              GROUP_ID=$(/opt/keycloak/bin/kcadm.sh get groups -r master -q search=platform-admins \
+                | grep -o '"id" : "[^"]*"' | head -1 | cut -d'"' -f4)
+
+              if [ -z "$GROUP_ID" ]; then
+                GROUP_ID=$(/opt/keycloak/bin/kcadm.sh create groups -r master -s name=platform-admins -i)
+              fi
+
+              echo "Assign 'admin' role to group"
+              /opt/keycloak/bin/kcadm.sh add-roles -r master --gid "$GROUP_ID" --rolename admin || true
+
+              echo "Ensure Azure group mapper exists"
+              if ! /opt/keycloak/bin/kcadm.sh get identity-provider/instances/azure/mappers -r master | grep -q azure-platform-admins; then
+                /opt/keycloak/bin/kcadm.sh create identity-provider/instances/azure/mappers -r master \
+                  -s name=azure-platform-admins \
+                  -s identityProviderMapper=oidc-group-membership-mapper \
+                  -s 'config.claim=groups' \
+                  -s 'config.claim.value='"$PLATFORM_ADMINS_GROUP_ID" \
+                  -s 'config.group=/platform-admins'
+              fi
+
+              echo "OIDC successfully configured"
           env:
-            - name: BOOTSTRAP_USER
-              value: admin
             - name: BREAKGLASS_USER
               valueFrom:
                 secretKeyRef:
@@ -158,6 +190,17 @@ spec:
                 secretKeyRef:
                   name: keycloak-breakglass
                   key: password
+            - name: TENANT_ID
+              value: c6ba6fd6-0fdd-4458-ad98-0c292dd79188
+            - name: CLIENT_ID
+              value: c25f407d-7794-4e55-bd0a-f0cd20bc6de2
+            - name: CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: azure-oidc-master
+                  key: client-secret
+            - name: PLATFORM_ADMINS_GROUP_ID
+              value: 9b207afe-3824-482f-8985-e2337a7f7e9b
 
 ---
 apiVersion: batch/v1
