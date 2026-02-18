@@ -1,0 +1,76 @@
+apiVersion: k8s.keycloak.org/v2alpha1
+kind: KeycloakRealmImport
+metadata:
+  name: master-realm
+  namespace: keycloak
+spec:
+  keycloakCRName: keycloak
+
+  placeholders:
+    azure.clientSecret:
+      secret:
+        name: azure-oidc-master
+        key: client-secret
+    breakglass.user:
+      secret:
+        name: keycloak-breakglass
+        key: username
+    breakglass.password:
+      secret:
+        name: keycloak-breakglass
+        key: password
+  realm:
+    realm: master
+    enabled: true
+    groups:
+      - name: platform-admins
+        realmRoles:
+          - admin
+    users:
+      - username: breakglass
+        enabled: true
+        emailVerified: true
+        firstName: Keycloak
+        lastName: Administrator
+        email: r.karamad@gmail.com
+        credentials:
+          - type: password
+            value: "${breakglass.password}"
+            temporary: false
+        realmRoles:
+          - admin
+    identityProviders:
+      - alias: azure
+        displayName: Azure AD
+        providerId: oidc
+        enabled: true
+        trustEmail: false
+        config:
+          tokenUrl: https://login.microsoftonline.com/c6ba6fd6-0fdd-4458-ad98-0c292dd79188/oauth2/v2.0/token
+          jwksUrl: https://login.microsoftonline.com/c6ba6fd6-0fdd-4458-ad98-0c292dd79188/discovery/v2.0/keys
+          issuer: https://login.microsoftonline.com/c6ba6fd6-0fdd-4458-ad98-0c292dd79188/v2.0
+          clientAuthMethod: client_secret_post
+          syncMode: IMPORT
+          defaultScope: "openid profile email"
+          userInfoUrl: https://graph.microsoft.com/oidc/userinfo
+          clientId: 3bb8c767-9c1f-4ce2-823e-39e8fa6b907c
+          sendClientIdOnLogout: "false"
+          metadataDescriptorUrl: https://login.microsoftonline.com/c6ba6fd6-0fdd-4458-ad98-0c292dd79188/v2.0/.well-known/openid-configuration
+          authorizationUrl: https://login.microsoftonline.com/c6ba6fd6-0fdd-4458-ad98-0c292dd79188/oauth2/v2.0/authorize
+          logoutUrl: https://login.microsoftonline.com/c6ba6fd6-0fdd-4458-ad98-0c292dd79188/oauth2/v2.0/logout
+          sendIdTokenOnLogout: "true"
+          clientSecret: "${azure.clientSecret}"
+        types:
+          - USER_AUTHENTICATION
+          - CLIENT_ASSERTION
+          - EXCHANGE_EXTERNAL_TOKEN
+          - JWT_AUTHORIZATION_GRANT
+    identityProviderMappers:
+      - name: platform-admins
+        identityProviderAlias: azure
+        identityProviderMapper: oidc-advanced-group-idp-mapper
+        config:
+          syncMode: INHERIT
+          claim: "groups"
+          claim.value: "9b207afe-3824-482f-8985-e2337a7f7e9b"
+          group: "/platform-admins"
