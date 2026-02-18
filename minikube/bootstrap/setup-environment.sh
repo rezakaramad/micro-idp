@@ -140,7 +140,7 @@ register_clusters() {
 # Keycloak credentials
 # ----------------------------------------------------------------------------
 
-create_keycloak_azure_secret_management() {
+create_keycloak_azure_secret_management_realm() {
   echo "🔐 Writing Entra ID App secret..."
 
   VAULT_PATH="local/management/keycloak/azure/apps/fluxdojo-keycloak-management-idp"
@@ -153,24 +153,6 @@ create_keycloak_azure_secret_management() {
   fi
 
   vault kv put local/management/keycloak/azure/apps/fluxdojo-keycloak-management-idp \
-    client-secret="$CLIENT_SECRET" \
-
-  echo "✅ Entra ID client secret stored in Vault"
-}
-
-create_keycloak_azure_secret_master() {
-  echo "🔐 Writing Entra ID App secret..."
-
-  VAULT_PATH="local/management/keycloak/azure/apps/fluxdojo-keycloak-master-idp"
-
-  CLIENT_SECRET=$(pass show private/azure/entra-id/apps/keycloak/client-secrets/fluxdojo-keycloak-master-idp/value | head -n1)
-
-  if [[ -z "$CLIENT_SECRET" ]]; then
-    echo "❌ Failed to read client secret from pass."
-    return 1
-  fi
-
-  vault kv put local/management/keycloak/azure/apps/fluxdojo-keycloak-master-idp \
     client-secret="$CLIENT_SECRET" \
 
   echo "✅ Entra ID client secret stored in Vault"
@@ -224,8 +206,7 @@ main() {
   vault_login
   create_github_app_secret
   register_clusters
-  create_keycloak_azure_secret_management
-  create_keycloak_azure_secret_master
+  create_keycloak_azure_secret_management_realm
   create_keycloak_bootstrap_secret
   create_keycloak_breakglass_secret
 
