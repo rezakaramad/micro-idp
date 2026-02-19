@@ -1,3 +1,4 @@
+{{- if .Capabilities.APIVersions.Has "pkg.crossplane.io/v1/Provider" }}
 {{- if .Values.keycloakProvider.enabled }}
 apiVersion: pkg.crossplane.io/v1
 kind: Provider
@@ -6,4 +7,7 @@ metadata:
   namespace: crossplane
 spec:
   package: {{ .Values.keycloakProvider.providerPackage }}
+{{- end }}
+{{- else }}
+{{- printf "Skipping Crossplane Provider because CRD not installed" | quote | nindent 0 }}
 {{- end }}

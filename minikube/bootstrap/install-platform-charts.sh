@@ -123,8 +123,8 @@ curl -fsSL \
 kubectl apply --server-side -f "$CHART_PATH/crds/"
 
 # Install charts
-helm_install platform-scaffold platform-scaffold default \
-  -f $CHARTS_DIR/platform-scaffold/values-management.yaml
+helm_install namespace-resources namespace-resources default \
+  -f $CHARTS_DIR/namespace-resources/values-management.yaml
 helm_install cert-manager cert-manager "$PLATFORM_NAMESPACE"
 helm_install vault vault "$VAULT_NAMESPACE"
 helm_install external-secrets external-secrets "$PLATFORM_NAMESPACE"
@@ -164,9 +164,9 @@ kubectl wait \
   -n "$PLATFORM_NAMESPACE" \
   --timeout=180s
 
-helm_install platform-global platform-global "default"
+helm_install cluster-resources cluster-resources "default"
 
-helm_install platform-management platform-management "$PLATFORM_NAMESPACE"
+helm_install management-resources management-resources "$PLATFORM_NAMESPACE"
 
 # ----------------------------------------------------------------------------
 # credentials
