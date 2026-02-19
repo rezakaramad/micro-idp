@@ -96,17 +96,6 @@ argocd:
       # -- Track resources via annotations instead of labels to avoid label collisions.
       application.resourceTrackingMethod: annotation
 
-    rbac:
-      # -- Default role for authenticated users when no explicit RBAC rule matches.
-      # -- Leave empty to give no permissions by default (recommended with SSO).
-      policy.default: ""
-      # -- Additional RBAC policies and group-to-role mappings in Casbin CSV format.
-      # p, <subject>, <resource>, <action>, <object>, <effect>
-      # g, EntraID Group ID, role: ArgoCD Role
-      # 'policy.csv' lives in argocd-rbac-cm
-      policy.csv: |
-        g, "ACL.GCP.PLT.Administrators", role:admin
-
       resource.customizations.health.k8s.keycloak.org_KeycloakRealmImport: |
         hs = {}
         if obj.status ~= nil and obj.status.conditions ~= nil then
@@ -128,3 +117,14 @@ argocd:
         hs.status = "Progressing"
         hs.message = "Waiting for operator"
         return hs
+
+    rbac:
+      # -- Default role for authenticated users when no explicit RBAC rule matches.
+      # -- Leave empty to give no permissions by default (recommended with SSO).
+      policy.default: ""
+      # -- Additional RBAC policies and group-to-role mappings in Casbin CSV format.
+      # p, <subject>, <resource>, <action>, <object>, <effect>
+      # g, EntraID Group ID, role: ArgoCD Role
+      # 'policy.csv' lives in argocd-rbac-cm
+      policy.csv: |
+        g, "ACL.GCP.PLT.Administrators", role:admin
