@@ -1,4 +1,0 @@
-apiVersion: v2
-name: platform-global
-description: Deploys the global resources in all clusters.
-version: 0.0.1

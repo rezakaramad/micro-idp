@@ -1,0 +1,15 @@
+{{/*
+Create a dedicated namespace per tenant in the management cluster.
+This allows tenant Application resources to live in their own
+namespace and avoids naming conflicts.
+*/}}
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: argocd-{{ .Values.tenant.name }}
+  labels:
+{{ include "common.labels" . | nindent 4 }}
+    platform.fluxdojo.local/tenant: "{{ .Values.tenant.name | lower }}"
+
+---

@@ -28,6 +28,11 @@ spec:
       - name: platform-admins
         realmRoles:
           - platform-admin
+    clients:
+      - clientId: frontend
+        publicClient: true
+        enabled: true
+        protocol: openid-connect
     identityProviders:
       - alias: azure
         displayName: Azure AD

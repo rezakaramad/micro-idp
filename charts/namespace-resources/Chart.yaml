@@ -1,0 +1,4 @@
+apiVersion: v2
+name: namespace-resources
+description: Creates namespaces with default resources.
+version: 0.0.1

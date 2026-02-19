@@ -1,0 +1,33 @@
+tenant:
+  name: ""
+  shortName: ""
+  argoCD:
+    aadGroupId: ""
+  gcp:
+    aadGroupName: ""
+    aadGroupId: ""
+    pushAuthorizedGithubRepos: []
+
+gateway:
+  environmentPrefix: ""
+  gatewayClass: "traefik"
+
+argocd:
+  clusters:
+    - clusterName: workload
+      environmentPrefix: wl
+      tenantAppProject:
+        policies:
+          - resource: applications
+            actions:
+              - get
+              - update
+              - delete
+              - sync
+              - action/apps/Deployment/pause
+              - action/apps/Deployment/resume
+              - action/apps/Deployment/restart
+              - action/batch/CronJob/create-job
+          - resource: logs
+            actions:
+              - get

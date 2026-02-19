@@ -1,0 +1,4 @@
+apiVersion: v2
+name: cluster-resources
+description: Deploys the common resources in all clusters.
+version: 0.0.1

@@ -1,0 +1,4 @@
+apiVersion: v2
+name: tenant-resources
+description: Creates tenant resources.
+version: 0.0.1

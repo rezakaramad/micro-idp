@@ -1,0 +1,92 @@
+{{- $repoName := include "tenant.repoName" .Values.tenant.name }}
+{{- $githubOrg := include "deploy.githubOrg" $ }}
+
+apiVersion: repo.github.upbound.io/v1alpha1
+kind: RepositoryFile
+metadata:
+  name: "{{ .Values.tenant.name }}-support"
+  namespace: "argocd-{{ .Values.tenant.name }}"
+  labels:
+{{ include "common.labels" . | nindent 4 }}
+    platform.fluxdojo.local/tenant: "{{ .Values.tenant.name | lower }}"
+    platform.fluxdojo.local/github-org: "{{ $githubOrg }}"
+
+spec:
+  providerConfigRef:
+    name: "github-{{ $githubOrg }}"
+
+  forProvider:
+    repository: {{ $repoName | quote }}
+    file: SUPPORT.md
+    branch: main
+    commitMessage: "chore: post tenant details in SUPPORT.md via Crossplane"
+
+    content: |
+      # Tenant Guide
+
+      ⚠️ **This file is automatically managed by Crossplane. Do not edit manually.**
+
+      ---
+
+      ## 🏷 Tenant
+
+      `{{ .Values.tenant.name }}`
+
+      ---
+
+      ## 🌐 DNS
+
+      | Environment | Hostname |
+      |-------------|-----------|
+      | DEV  | `*.{{ .Values.tenant.shortName }}.dev.fluxdojo.local` |
+      | TEST | `*.{{ .Values.tenant.shortName }}.test.fluxdojo.local` |
+      | PROD | `*.{{ .Values.tenant.shortName }}.prod.fluxdojo.local` |
+
+      ---
+
+      ## 🚦 HTTPRoute / Gateway
+
+      ```yaml
+      parentRefs:
+        - group: gateway.networking.k8s.io
+          kind: Gateway
+          name: "{{ .Values.tenant.name }}"
+          namespace: platform-resources
+          sectionName: https
+      ```
+
+      ---
+
+      ## 🔐 GitHub Actions → Google Cloud Authentication
+
+      Your GitHub Actions workflows authenticate to Google Cloud using **Workload Identity Federation**.
+
+      ### Identity
+
+      | Item | Value |
+      |------|-------|
+      | CI Service Account | `github-{{ .Values.tenant.name }}@jysk-platform.iam.gserviceaccount.com` |
+      | Workload Identity Provider | `projects/123266955408/locations/global/workloadIdentityPools/github/providers/github-workflows` |
+
+      ### Example workflow
+
+      ```yaml
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: "projects/123266955408/locations/global/workloadIdentityPools/github/providers/github-workflows"
+          service_account: "github-{{ .Values.tenant.name }}@jysk-platform.iam.gserviceaccount.com"
+
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker europe-west3-docker.pkg.dev --quiet
+
+      - name: Build & push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            europe-west3-docker.pkg.dev/jysk-artifacts/{{ .Values.tenant.name }}/YOUR_FAVORITE_IMAGE:YOUR_FAVORITE_TAG
+      ```
+---
