@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: crossplane-plt-management
+  namespace: argocd
+spec:
+  project: platform-system
+  source:
+    repoURL: https://github.com/jysk-dev/platform-hub
+    targetRevision: HEAD
+    path: kubernetes/charts/crossplane
+    helm:
+      valueFiles:
+        - values-plt-management.yaml
+  destination:
+    name: in-cluster
+    namespace: crossplane-system
+  syncPolicy:
+    syncOptions:
+    - ServerSideApply=true
+    - ApplyOutOfSyncOnly=true
+    - RespectIgnoreDifferences=true
+  ignoreDifferences:
+    - group: external-secrets.io
+      kind: ExternalSecret
+      jqPathExpressions:
+        - .spec.data[].remoteRef.conversionStrategy
+        - .spec.data[].remoteRef.decodingStrategy
+        - .spec.data[].remoteRef.metadataPolicy

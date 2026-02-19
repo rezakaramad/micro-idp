@@ -14,3 +14,6 @@ namespaces:
   - name: postgres
     extraLabels: {}
     extraAnnotations: {}
+  - name: crossplane
+    extraLabels: {}
+    extraAnnotations: {}
