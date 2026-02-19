@@ -67,10 +67,16 @@ spec:
         identityProviderAlias: azure
         identityProviderMapper: oidc-user-attribute-idp-mapper
         config:
-          syncMode: INHERIT
+          syncMode: FORCE
           claim: email
-          attribute: emailVerified
           user.attribute: email
+      - name: azure-email-verified
+        identityProviderAlias: azure
+        identityProviderMapper: hardcoded-attribute-idp-mapper
+        config:
+          syncMode: FORCE
+          attribute: emailVerified
+          value: "true"
       - name: azure-username
         identityProviderAlias: azure
         identityProviderMapper: oidc-user-attribute-idp-mapper
