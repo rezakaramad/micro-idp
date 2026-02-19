@@ -11,7 +11,6 @@ spec:
     path: charts/crossplane
     helm:
       valueFiles:
-        - values.yaml
         - values-management.yaml
   destination:
     name: in-cluster
