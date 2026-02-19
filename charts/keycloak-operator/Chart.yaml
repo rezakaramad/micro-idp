@@ -4,3 +4,4 @@ description: Keycloak Operator
 type: application
 version: 0.0.1
 appVersion: 26.5.3
+home: https://www.keycloak.org/operator/installation

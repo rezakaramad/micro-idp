@@ -63,3 +63,32 @@ spec:
           claim: "groups"
           claim.value: "9b207afe-3824-482f-8985-e2337a7f7e9b"
           group: "/platform-admins"
+      - name: azure-email
+        identityProviderAlias: azure
+        identityProviderMapper: oidc-user-attribute-idp-mapper
+        config:
+          syncMode: INHERIT
+          claim: email
+          attribute: emailVerified
+          user.attribute: email
+      - name: azure-username
+        identityProviderAlias: azure
+        identityProviderMapper: oidc-user-attribute-idp-mapper
+        config:
+          syncMode: INHERIT
+          claim: preferred_username
+          user.attribute: username
+      - name: azure-firstname
+        identityProviderAlias: azure
+        identityProviderMapper: oidc-user-attribute-idp-mapper
+        config:
+          syncMode: INHERIT
+          claim: given_name
+          user.attribute: firstName
+      - name: azure-lastname
+        identityProviderAlias: azure
+        identityProviderMapper: oidc-user-attribute-idp-mapper
+        config:
+          syncMode: INHERIT
+          claim: family_name
+          user.attribute: lastName

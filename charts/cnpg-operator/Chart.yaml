@@ -1,0 +1,12 @@
+apiVersion: v2
+name: cnpg-operator
+description: Platform chart that installs the CloudNativePG operator as a dependency.
+type: application
+version: 0.0.1
+home: "https://cloudnative-pg.io/"
+sources:
+  - https://github.com/cloudnative-pg/charts
+dependencies:
+  - name: cloudnative-pg
+    version: "0.27.1"
+    repository: "https://cloudnative-pg.github.io/charts"
