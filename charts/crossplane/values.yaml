@@ -5,5 +5,4 @@ githubProvider:
 keycloakProvider:
   enabled: false
   providerPackage: xpkg.upbound.io/crossplane-contrib/provider-keycloak:v0.12.0
-
-
+  keycloakUrl: http://keycloak-service.keycloak.svc.cluster.local:8080

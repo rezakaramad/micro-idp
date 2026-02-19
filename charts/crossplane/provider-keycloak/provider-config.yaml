@@ -10,6 +10,6 @@ spec:
     source: Secret
     secretRef:
       namespace: crossplane
-      name: keycloak
+      name: keycloak-master
       key: credentials
 {{- end }}
