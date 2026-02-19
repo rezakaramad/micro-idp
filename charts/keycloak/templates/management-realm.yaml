@@ -33,7 +33,7 @@ spec:
         displayName: Azure AD
         providerId: oidc
         enabled: true
-        trustEmail: false
+        trustEmail: true
         config:
           tokenUrl: https://login.microsoftonline.com/c6ba6fd6-0fdd-4458-ad98-0c292dd79188/oauth2/v2.0/token
           jwksUrl: https://login.microsoftonline.com/c6ba6fd6-0fdd-4458-ad98-0c292dd79188/discovery/v2.0/keys
@@ -70,13 +70,6 @@ spec:
           syncMode: FORCE
           claim: email
           user.attribute: email
-      - name: azure-email-verified
-        identityProviderAlias: azure
-        identityProviderMapper: hardcoded-attribute-idp-mapper
-        config:
-          syncMode: FORCE
-          attribute: emailVerified
-          value: "true"
       - name: azure-username
         identityProviderAlias: azure
         identityProviderMapper: oidc-user-attribute-idp-mapper
