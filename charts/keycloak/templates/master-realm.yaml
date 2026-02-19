@@ -4,9 +4,7 @@ metadata:
   name: create-breakglass-user-master-realm
   namespace: keycloak
   annotations:
-    "helm.sh/hook": post-install,post-upgrade
-    "helm.sh/hook-weight": "-10"
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    argocd.argoproj.io/sync-wave: "15"
 spec:
   backoffLimit: 2
   activeDeadlineSeconds: 120
