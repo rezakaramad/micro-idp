@@ -106,3 +106,25 @@ argocd:
       # 'policy.csv' lives in argocd-rbac-cm
       policy.csv: |
         g, "ACL.GCP.PLT.Administrators", role:admin
+
+      resource.customizations.health.k8s.keycloak.org_KeycloakRealmImport: |
+        hs = {}
+        if obj.status ~= nil and obj.status.conditions ~= nil then
+          for i, condition in ipairs(obj.status.conditions) do
+            if condition.type == "Done" then
+              if condition.status == "True" then
+                hs.status = "Healthy"
+                hs.message = "Realm imported"
+                return hs
+              else
+                hs.status = "Progressing"
+                hs.message = "Realm still reconciling"
+                return hs
+              end
+            end
+          end
+        end
+
+        hs.status = "Progressing"
+        hs.message = "Waiting for operator"
+        return hs
