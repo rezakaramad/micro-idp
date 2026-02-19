@@ -1,20 +1,20 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: crossplane-plt-management
+  name: crossplane-management
   namespace: argocd
 spec:
   project: platform-system
   source:
-    repoURL: https://github.com/jysk-dev/platform-hub
+    repoURL: https://github.com/rezakaramad/micro-idp
     targetRevision: HEAD
-    path: kubernetes/charts/crossplane
+    path: charts/crossplane
     helm:
       valueFiles:
-        - values-plt-management.yaml
+        - values-management.yaml
   destination:
     name: in-cluster
-    namespace: crossplane-system
+    namespace: crossplane
   syncPolicy:
     syncOptions:
     - ServerSideApply=true
