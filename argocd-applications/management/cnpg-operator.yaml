@@ -1,14 +1,14 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: postgres-operator
+  name: cnpg-operator
   namespace: argocd
 spec:
   project: platform-system
   source:
     repoURL: https://github.com/rezakaramad/micro-idp
     targetRevision: HEAD
-    path: charts/postgres-operator
+    path: charts/cnpg-operator
   destination:
     name: in-cluster
     namespace: postgres
