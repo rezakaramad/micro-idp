@@ -4,7 +4,7 @@ metadata:
   name: create-breakglass-user-master-realm
   namespace: keycloak
   annotations:
-    argocd.argoproj.io/sync-wave: "15"
+    argocd.argoproj.io/sync-wave: "5"
 spec:
   backoffLimit: 2
   activeDeadlineSeconds: 120
@@ -110,9 +110,6 @@ spec:
                 --uid "$BREAKGLASS_USER_ID" \
                 --rolename admin || true
               
-              echo "❌ Delete bootstrap user"
-              /opt/keycloak/bin/kcadm.sh delete users/$BOOTSTRAP_USER_ID -r master
-
               echo "🟢 Breakglass user ready"
 
           env:
