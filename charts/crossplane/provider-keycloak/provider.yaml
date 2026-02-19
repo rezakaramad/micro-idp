@@ -1,0 +1,9 @@
+{{- if .Values.githubProvider.enabled }}
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: keycloak
+  namespace: crossplane
+spec:
+  package: {{ .Values.githubProvider.providerPackage }}
+{{- end }}

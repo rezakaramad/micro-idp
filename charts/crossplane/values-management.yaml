@@ -1,0 +1,5 @@
+githubProvider:
+  enabled: false
+
+keycloakProvider:
+  enabled: true
