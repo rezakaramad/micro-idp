@@ -21,11 +21,11 @@ spec:
     headers: xforwarded
   db:
     vendor: postgres
-    host: pg-keycloak
+    host: pg-keycloak-rw
     database: keycloak
     usernameSecret:
-      name: keycloak.pg-keycloak.credentials.postgresql.acid.zalan.do
+      name: pg-keycloak-app
       key: username
     passwordSecret:
-      name: keycloak.pg-keycloak.credentials.postgresql.acid.zalan.do
+      name: pg-keycloak-app
       key: password
