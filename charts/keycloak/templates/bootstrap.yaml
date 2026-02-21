@@ -13,8 +13,8 @@ spec:
       restartPolicy: Never
       containers:
         - name: bootstrap
-          image: "{{ .Values.bootstrap.repository }}:{{ .Values.bootstrap.tag }}"
-          imagePullPolicy: "{{ .Values.image.imagePullPolicy }}"
+          image: "{{ .Values.bootstrap.image.repository }}:{{ .Values.bootstrap.image.tag }}"
+          imagePullPolicy: IfNotPresent
           command:
             - /bin/bash
             - -ec
