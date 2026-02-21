@@ -25,7 +25,7 @@ spec:
               KEYCLOAK_URL=http://$KEYCLOAK_SERVICE_NAME:$KEYCLOAK_SERVICE_PORT
               CLIENT_ID="crossplane-admin"
               REALM="master"
-              VAULT_PATH="local/management/pki"
+              VAULT_PATH="local/management/keycloak/crossplane"
 
               # verify Keycloak is reachable
               echo "🔌 Check Keycloak socket"
@@ -54,21 +54,21 @@ spec:
               LOGIN_SUCCESS=false
               for i in {1..12}; do
                 if /opt/keycloak/bin/kcadm.sh config credentials \
-                  --realm master \
+                  --realm $REALM \
                   --server "$KEYCLOAK_URL" \
                   --user "$USER" \
                   --password "$PASSWORD"; then
                   LOGIN_SUCCESS=true
                   break
                 fi
-                echo "🛑 Login not ready yet for $USER and $PASSWORD"
+                echo "🛑 Login not ready yet"
                 sleep 5
               done
               [ "$LOGIN_SUCCESS" != "true" ] && echo "🛑 ERROR: Keycloak not ready for authentication" && exit 1
 
               echo "🔎 Resolve bootstrap user ID"
               BOOTSTRAP_USER_ID=$(/opt/keycloak/bin/kcadm.sh get users \
-                -r master \
+                -r $REALM \
                 -q username="$BOOTSTRAP_USER" \
                 --fields id,username \
                 --format csv --noquotes \
@@ -78,7 +78,7 @@ spec:
 
               echo "🔎 Check if administrator user already exists"
               ADMINISTRATOR_USER_ID=$(/opt/keycloak/bin/kcadm.sh get users \
-                -r master \
+                -r $REALM \
                 -q username="$ADMINISTRATOR_USER" \
                 --fields id,username \
                 --format csv --noquotes \
@@ -90,7 +90,7 @@ spec:
                 echo "👤 Create administrator user"
 
                 /opt/keycloak/bin/kcadm.sh create users \
-                  -r master \
+                  -r $REALM \
                   -s username="$ADMINISTRATOR_USER" \
                   -s firstName="$ADMINISTRATOR_FIRSTNAME" \
                   -s lastName="$ADMINISTRATOR_LASTNAME" \
@@ -102,7 +102,7 @@ spec:
 
                 echo "🔎 Resolve bootstrap user ID"
                 ADMINISTRATOR_USER_ID=$(/opt/keycloak/bin/kcadm.sh get users \
-                  -r master \
+                  -r $REALM \
                   -q username="$ADMINISTRATOR_USER" \
                   --fields id,username \
                   --format csv --noquotes \
@@ -117,13 +117,13 @@ spec:
 
               echo "🔑 Set permanent password for administrator user"
               /opt/keycloak/bin/kcadm.sh set-password \
-                -r master \
+                -r $REALM \
                 --userid "$ADMINISTRATOR_USER_ID" \
                 --new-password "$ADMINISTRATOR_PASSWORD"
 
               echo "🛡️ Grant admin role to administrator user"
               /opt/keycloak/bin/kcadm.sh add-roles \
-                -r master \
+                -r $REALM \
                 --uid "$ADMINISTRATOR_USER_ID" \
                 --rolename admin || true
 
