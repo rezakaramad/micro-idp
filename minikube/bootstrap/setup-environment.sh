@@ -502,8 +502,8 @@ main() {
   start_minikube_tunnel
   update_hosts
   vault_login
-  configure_vault_kubernetes_auth
-  configure_keycloak_bootstrap_vault_access
+  # configure_vault_kubernetes_auth
+  # configure_keycloak_bootstrap_vault_access
   create_github_app_secret
   register_clusters
   create_keycloak_azure_secret_management_realm
