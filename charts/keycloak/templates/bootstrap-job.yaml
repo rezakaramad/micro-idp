@@ -170,7 +170,7 @@ spec:
               echo "✅ Vault authentication successful"
 
               echo "🧯 Disable bootstrap login in Vault"
-              vault kv patch local/management/keycloak/bootstrap disabled=1 >/dev/null
+              vault kv put local/management/keycloak/bootstrap disabled=1 >/dev/null
 
               echo "🟢 Administrator user ready"
 
@@ -266,7 +266,7 @@ spec:
               fi
 
               echo "📤 Save Crossplane client secret in Vault"
-              vault kv patch "$VAULT_PATH" \
+              vault kv put "$VAULT_PATH" \
                 client_id="$CLIENT_ID" \
                 client_secret="$CLIENT_SECRET" >/dev/null
               
