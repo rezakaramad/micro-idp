@@ -79,23 +79,18 @@ vault:
 
         vault policy write keycloak-bootstrap - <<'EOF'
         path "local/data/management/keycloak/bootstrap" {
-          capabilities = ["read", "update", "patch"]
+          capabilities = ["read"]
         }
 
         path "local/data/management/keycloak/administrator" {
           capabilities = ["read"]
         }
 
-        path "local/data/management/pki" {
-          capabilities = ["read", "update", "patch"]
+        path "local/management/keycloak/crossplane" {
+          capabilities = ["read", "create", "update", "patch"]
         }
 
-        # KV v2: metadata path
         path "local/metadata/management/keycloak/*" {
-          capabilities = ["read", "list"]
-        }
-
-        path "local/metadata/management/pki" {
           capabilities = ["read", "list"]
         }
         EOF
