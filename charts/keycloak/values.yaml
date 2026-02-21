@@ -1,0 +1,5 @@
+bootstrap:
+  image:
+    repository: ghcr.io/rezakaramad/micro-idp-bootstrap
+    tag: sha-9ebe327
+    imagePullPolicy: IfNotPresent

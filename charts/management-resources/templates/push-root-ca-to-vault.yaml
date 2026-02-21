@@ -1,0 +1,20 @@
+apiVersion: external-secrets.io/v1alpha1
+kind: PushSecret
+metadata:
+  name: push-root-ca-to-vault
+  namespace: platform-resources
+spec:
+  refreshInterval: 1h
+  deletionPolicy: Delete
+  secretStoreRefs:
+    - name: vault-local
+      kind: ClusterSecretStore
+  selector:
+    secret:
+      name: root-ca-secret
+  data:
+    - match:
+        secretKey: tls.crt
+        remoteRef:
+          remoteKey: management/pki
+          property: ca.crt

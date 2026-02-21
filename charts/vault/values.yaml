@@ -66,9 +66,14 @@ vault:
         echo "Writing ESO policy..."
 
         vault policy write eso-policy - <<EOF
+        path "local/metadata/*" {
+          capabilities = ["read", "list", "create", "update"]
+        }
+
         path "local/data/*" {
           capabilities = ["read", "create", "update"]
         }
+
         EOF
 
         echo "Creating ESO role..."
