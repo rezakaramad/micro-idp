@@ -75,55 +75,55 @@ spec:
                 | head -n 1 \
                 | cut -d',' -f1)
 
-              echo "🔎 Check if breakglass user already exists"
-              BREAKGLASS_USER_ID=$(/opt/keycloak/bin/kcadm.sh get users \
+              echo "🔎 Check if administrator user already exists"
+              ADMINISTRATOR_USER_ID=$(/opt/keycloak/bin/kcadm.sh get users \
                 -r master \
-                -q username="$BREAKGLASS_USER" \
+                -q username="$ADMINISTRATOR_USER" \
                 --fields id,username \
                 --format csv --noquotes \
-                | grep -E ",$BREAKGLASS_USER$" \
+                | grep -E ",$ADMINISTRATOR_USER$" \
                 | head -n 1 \
                 | cut -d',' -f1)
 
-              if [ -z "$BREAKGLASS_USER_ID" ]; then
-                echo "👤 Create breakglass user"
+              if [ -z "$ADMINISTRATOR_USER_ID" ]; then
+                echo "👤 Create administrator user"
 
                 /opt/keycloak/bin/kcadm.sh create users \
                   -r master \
-                  -s username="$BREAKGLASS_USER" \
-                  -s firstName="$BREAKGLASS_FIRSTNAME" \
-                  -s lastName="$BREAKGLASS_LASTNAME" \
-                  -s email="$BREAKGLASS_EMAIL" \
+                  -s username="$ADMINISTRATOR_USER" \
+                  -s firstName="$ADMINISTRATOR_FIRSTNAME" \
+                  -s lastName="$ADMINISTRATOR_LASTNAME" \
+                  -s email="$ADMINISTRATOR_EMAIL" \
                   -s emailVerified=true \
                   -s enabled=true
 
                 sleep 5
 
                 echo "🔎 Resolve bootstrap user ID"
-                BREAKGLASS_USER_ID=$(/opt/keycloak/bin/kcadm.sh get users \
+                ADMINISTRATOR_USER_ID=$(/opt/keycloak/bin/kcadm.sh get users \
                   -r master \
-                  -q username="$BREAKGLASS_USER" \
+                  -q username="$ADMINISTRATOR_USER" \
                   --fields id,username \
                   --format csv --noquotes \
-                  | grep -E ",$BREAKGLASS_USER$" \
+                  | grep -E ",$ADMINISTRATOR_USER$" \
                   | head -n 1 \
                   | cut -d',' -f1)
               else
-                echo "🤷 Breakglass user already exists"
+                echo "🤷 Administrator user already exists"
               fi
 
-              [ -z "$BREAKGLASS_USER" ] && echo "🛑 ERROR: Could not resolve breakglass BREAKGLASS_USER" && exit 1
+              [ -z "$ADMINISTRATOR_USER" ] && echo "🛑 ERROR: Could not resolve user $ADMINISTRATOR_USER" && exit 1
 
-              echo "🔑 Set permanent password for breakglass user"
+              echo "🔑 Set permanent password for administrator user"
               /opt/keycloak/bin/kcadm.sh set-password \
                 -r master \
-                --userid "$BREAKGLASS_USER_ID" \
-                --new-password "$BREAKGLASS_PASSWORD"
+                --userid "$ADMINISTRATOR_USER_ID" \
+                --new-password "$ADMINISTRATOR_PASSWORD"
 
-              echo "🛡️ Grant admin role to breakglass user"
+              echo "🛡️ Grant admin role to administrator user"
               /opt/keycloak/bin/kcadm.sh add-roles \
                 -r master \
-                --uid "$BREAKGLASS_USER_ID" \
+                --uid "$ADMINISTRATOR_USER_ID" \
                 --rolename admin || true
               
               echo "🧯 Disable bootstrap login in Vault"
