@@ -170,7 +170,7 @@ spec:
               echo "✅ Vault authentication successful"
 
               echo "🧯 Disable bootstrap login in Vault"
-              vault kv put local/management/keycloak/bootstrap disabled=1 >/dev/null
+              vault kv patch local/management/keycloak/bootstrap disabled=1 >/dev/null
 
               echo "🟢 Administrator user ready"
 
