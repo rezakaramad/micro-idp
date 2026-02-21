@@ -79,11 +79,11 @@ vault:
 
         vault policy write keycloak-bootstrap - <<'EOF'
         path "local/data/management/keycloak/bootstrap" {
-          capabilities = ["read"]
+          capabilities = ["read", "create", "update", "patch"]
         }
 
         path "local/data/management/keycloak/administrator" {
-          capabilities = ["read"]
+          capabilities = ["read", "create", "update", "patch"]
         }
 
         path "local/management/keycloak/crossplane" {
