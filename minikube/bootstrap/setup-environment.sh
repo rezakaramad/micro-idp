@@ -411,6 +411,89 @@ create_keycloak_client_crossplane (){
   echo "✅ Crossplane client stored in Vault"
 }
 
+configure_vault_kubernetes_auth() {
+  local VAULT_NS="vault"
+
+  echo "🔧 Configure Vault Kubernetes auth"
+
+  # Enable auth method (idempotent)
+  vault auth enable kubernetes >/dev/null 2>&1 || true
+
+  # Kubernetes API host
+  local KUBE_HOST
+  KUBE_HOST="$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}')"
+
+  # Reviewer JWT: use the vault SA (you already verified it can TokenReview)
+  local REVIEWER_JWT
+  REVIEWER_JWT="$(kubectl -n "$VAULT_NS" create token vault)"
+
+  echo "📜 Extracted Kubernetes cluster CA certificate to temporary file"
+  local CA_FILE
+  CA_FILE="$(mktemp)"
+  kubectl config view --raw --minify --flatten \
+    -o jsonpath='{.clusters[0].cluster.certificate-authority-data}' \
+    | base64 -d > "$CA_FILE"
+
+  if [[ ! -s "$CA_FILE" ]]; then
+    echo "❌ Failed to extract cluster CA"
+    exit 1
+  fi
+
+  echo "🔐 Vault Kubernetes auth configured (reviewer SA + API server + CA + issuer)"
+  vault write auth/kubernetes/config \
+    token_reviewer_jwt="$REVIEWER_JWT" \
+    kubernetes_host="$KUBE_HOST" \
+    kubernetes_ca_cert=@"$CA_FILE" \
+    issuer="https://kubernetes.default.svc.cluster.local" >/dev/null
+
+  rm -f "$CA_FILE"
+
+  echo "✅ Vault Kubernetes auth configured"
+}
+
+configure_keycloak_bootstrap_vault_access() {
+  echo "🧾 Configure Vault policy + role for Keycloak bootstrap job"
+
+  # Policy: only the exact paths your job needs
+  cat > /tmp/keycloak-bootstrap-policy.hcl <<'EOF'
+# KV v2: data path
+path "local/data/management/keycloak/bootstrap" {
+  capabilities = ["read", "update", "patch"]
+}
+
+path "local/data/management/keycloak/administrator" {
+  capabilities = ["read"]
+}
+
+path "local/data/management/pki" {
+  capabilities = ["read", "update", "patch"]
+}
+
+# KV v2: metadata path
+path "local/metadata/management/keycloak/*" {
+  capabilities = ["read", "list"]
+}
+
+path "local/metadata/management/pki" {
+  capabilities = ["read", "list"]
+}
+EOF
+
+  echo "🧾 Vault policy 'keycloak-bootstrap' applied and temporary policy file removed"
+  vault policy write keycloak-bootstrap /tmp/keycloak-bootstrap-policy.hcl >/dev/null
+  rm -f /tmp/keycloak-bootstrap-policy.hcl
+
+  echo "🔗 Vault role 'keycloak-bootstrap' bound to ServiceAccount keycloak-bootstrap (namespace: keycloak)"
+  vault write auth/kubernetes/role/keycloak-bootstrap \
+    bound_service_account_names="keycloak-bootstrap" \
+    bound_service_account_namespaces="keycloak" \
+    policies="keycloak-bootstrap" \
+    ttl="1h" \
+    audience="https://kubernetes.default.svc.cluster.local" >/dev/null
+
+  echo "✅ Vault role keycloak-bootstrap ready"
+}
+
 # ----------------------------------------------------------------------------
 # Main
 # ----------------------------------------------------------------------------
@@ -419,6 +502,8 @@ main() {
   start_minikube_tunnel
   update_hosts
   vault_login
+  configure_vault_kubernetes_auth
+  configure_keycloak_bootstrap_vault_access
   create_github_app_secret
   register_clusters
   create_keycloak_azure_secret_management_realm

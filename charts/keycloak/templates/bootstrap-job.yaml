@@ -10,6 +10,7 @@ spec:
   activeDeadlineSeconds: 260
   template:
     spec:
+      serviceAccountName: keycloak-bootstrap
       restartPolicy: Never
       containers:
         - name: bootstrap
@@ -125,9 +126,52 @@ spec:
                 -r master \
                 --uid "$ADMINISTRATOR_USER_ID" \
                 --rolename admin || true
-              
+
+              echo "🔐 Login to Vault"
+              export VAULT_ADDR="http://vault.vault:8200"
+
+              # Wait for Vault API
+              echo "⏳ Waiting for Vault API"
+              for i in {1..30}; do
+                if curl -sf "$VAULT_ADDR/v1/sys/health" >/dev/null; then
+                  break
+                fi
+                sleep 2
+              done
+
+              SA_TOKEN_PATH="/var/run/secrets/kubernetes.io/serviceaccount/token"
+              if [[ ! -f "$SA_TOKEN_PATH" ]]; then
+                echo "🛑 ServiceAccount token not found"
+                exit 1
+              fi
+
+              # Authenticate (retry because auth backend may not be ready yet)
+              echo "🔑 Authenticating with Kubernetes auth"
+              LOGIN_OK=false
+              for i in {1..10}; do
+                VAULT_TOKEN="$(vault write -field=token auth/kubernetes/login \
+                  role=keycloak-bootstrap \
+                  jwt=@"$SA_TOKEN_PATH" 2>/dev/null || true)"
+
+                if [[ -n "$VAULT_TOKEN" && "$VAULT_TOKEN" != "null" ]]; then
+                  LOGIN_OK=true
+                  break
+                fi
+
+                sleep 3
+              done
+
+              if [[ "$LOGIN_OK" != "true" ]]; then
+                echo "🛑 Vault authentication failed"
+                exit 1
+              fi
+
+              export VAULT_TOKEN
+              echo "✅ Vault authentication successful"
+
               echo "🧯 Disable bootstrap login in Vault"
               vault kv patch local/management/keycloak/bootstrap disabled=1 >/dev/null
+
               echo "🟢 Administrator user ready"
 
               echo "🤖 Ensure Crossplane bootstrap client exists"
