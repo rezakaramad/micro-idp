@@ -60,7 +60,7 @@ spec:
                   LOGIN_SUCCESS=true
                   break
                 fi
-                echo "🛑 Login not ready yet"
+                echo "🛑 Login not ready yet for $USER and $PASSWORD""
                 sleep 5
               done
               [ "$LOGIN_SUCCESS" != "true" ] && echo "🛑 ERROR: Keycloak not ready for authentication" && exit 1
