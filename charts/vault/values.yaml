@@ -78,15 +78,7 @@ vault:
         EOF
 
         vault policy write keycloak-bootstrap - <<'EOF'
-        path "local/data/management/keycloak/bootstrap" {
-          capabilities = ["read", "create", "update", "patch"]
-        }
-
-        path "local/data/management/keycloak/administrator" {
-          capabilities = ["read", "create", "update", "patch"]
-        }
-
-        path "local/management/keycloak/crossplane" {
+        path "local/data/management/keycloak/*" {
           capabilities = ["read", "create", "update", "patch"]
         }
 
