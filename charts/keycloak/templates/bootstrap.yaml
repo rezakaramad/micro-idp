@@ -231,7 +231,10 @@ spec:
               echo "🎉 Bootstrap phase completed"
           env:
             - name: BOOTSTRAP_USER
-              value: username
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-bootstrap
+                  key: username
             - name: BOOTSTRAP_PASSWORD
               valueFrom:
                 secretKeyRef:
