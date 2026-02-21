@@ -14,7 +14,7 @@ spec:
       containers:
         - name: bootstrap
           image: "{{ .Values.bootstrap.repository }}:{{ .Values.bootstrap.tag }}"
-          imagePullPolicy: "{{ .Values.image.pullPolicy }}"
+          imagePullPolicy: "{{ .Values.image.imagePullPolicy }}"
           command:
             - /bin/bash
             - -ec
