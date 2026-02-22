@@ -7,11 +7,8 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "5"
 spec:
-  credentials:
-    source: Secret
-    secretRef:
-      namespace: crossplane
-      name: keycloak-master
-      key: credentials
+  credentialsSecretRef:
+    name: keycloak-master
+    key: credentials
 {{- end }}
 {{- end }}
