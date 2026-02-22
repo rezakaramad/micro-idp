@@ -1,4 +1,4 @@
-{{- if .Capabilities.APIVersions.Has "keycloak.crossplane.io/v1beta1/ProviderConfig" }}
+{{- if .Capabilities.APIVersions.Has "keycloak.m.crossplane.io/v1beta1/ProviderConfig" }}
 {{- if .Values.keycloakProvider.enabled }}
 apiVersion: keycloak.m.crossplane.io/v1beta1
 kind: ProviderConfig
