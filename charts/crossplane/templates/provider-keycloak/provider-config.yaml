@@ -1,4 +1,3 @@
-{{- if .Capabilities.APIVersions.Has "keycloak.m.crossplane.io/v1beta1" }}
 {{- if .Values.keycloakProvider.enabled }}
 apiVersion: keycloak.m.crossplane.io/v1beta1
 kind: ProviderConfig
@@ -10,5 +9,4 @@ spec:
   credentialsSecretRef:
     name: keycloak-master
     key: credentials
-{{- end }}
 {{- end }}
