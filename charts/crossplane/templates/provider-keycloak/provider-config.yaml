@@ -7,9 +7,10 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "5"
 spec:
-  secretRef:
-    name: crossplane-admin
-    namespace: keycloak
-    key: credentials
+  credentials:
+    secretRef:
+      name: crossplane-admin
+      namespace: keycloak
+      key: credentials
 {{- end }}
 {{- end }}
