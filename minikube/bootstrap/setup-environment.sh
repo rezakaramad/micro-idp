@@ -228,7 +228,7 @@ trust_self_signed_ca_certificate() {
     exit 1
   fi
 
-  echo "🏛️ Verify certificate is a CA"
+  echo "🏛️  Verify certificate is a CA"
   if ! openssl x509 -in "$CA_FILE" -noout -ext basicConstraints 2>/dev/null | grep -qi 'CA:TRUE'; then
     echo "❌ Certificate is not a CA (BasicConstraints is not CA:TRUE)"
     openssl x509 -in "$CA_FILE" -noout -subject -issuer || true
