@@ -1,0 +1,13 @@
+apiVersion: realm.keycloak.m.crossplane.io/v1alpha1
+kind: Realm
+metadata:
+  name: management
+  namespace: keycloak
+spec:
+  forProvider:
+    realm: management
+  providerConfigRef:
+    kind: ProviderConfig
+    name: keycloak
+
+---

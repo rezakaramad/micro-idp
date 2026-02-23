@@ -1,0 +1,117 @@
+---
+
+apiVersion: identityprovider.keycloak.m.crossplane.io/v1alpha1
+kind: IdentityProviderMapper
+metadata:
+  name: azure-email
+  namespace: keycloak
+spec:
+  forProvider:
+    realm: management
+    identityProviderAlias: azure
+    name: azure-email
+    identityProviderMapper: oidc-user-attribute-idp-mapper
+
+    extraConfig:
+      syncMode: FORCE
+      claim: email
+      user.attribute: email
+
+  providerConfigRef:
+    kind: ProviderConfig
+    name: keycloak
+
+---
+
+apiVersion: identityprovider.keycloak.m.crossplane.io/v1alpha1
+kind: IdentityProviderMapper
+metadata:
+  name: azure-username
+  namespace: keycloak
+spec:
+  forProvider:
+    realm: management
+    identityProviderAlias: azure
+    name: azure-username
+    identityProviderMapper: oidc-user-attribute-idp-mapper
+
+    extraConfig:
+      syncMode: INHERIT
+      claim: preferred_username
+      user.attribute: username
+
+  providerConfigRef:
+    kind: ProviderConfig
+    name: keycloak
+
+---
+
+apiVersion: identityprovider.keycloak.m.crossplane.io/v1alpha1
+kind: IdentityProviderMapper
+metadata:
+  name: azure-firstname
+  namespace: keycloak
+spec:
+  forProvider:
+    realm: management
+    identityProviderAlias: azure
+    name: azure-firstname
+    identityProviderMapper: oidc-user-attribute-idp-mapper
+
+    extraConfig:
+      syncMode: INHERIT
+      claim: given_name
+      user.attribute: firstName
+
+  providerConfigRef:
+    kind: ProviderConfig
+    name: keycloak
+
+---
+
+apiVersion: identityprovider.keycloak.m.crossplane.io/v1alpha1
+kind: IdentityProviderMapper
+metadata:
+  name: azure-lastname
+  namespace: keycloak
+spec:
+  forProvider:
+    realm: management
+    identityProviderAlias: azure
+    name: azure-lastname
+    identityProviderMapper: oidc-user-attribute-idp-mapper
+
+    extraConfig:
+      syncMode: INHERIT
+      claim: family_name
+      user.attribute: lastName
+
+  providerConfigRef:
+    kind: ProviderConfig
+    name: keycloak
+
+---
+
+apiVersion: identityprovider.keycloak.m.crossplane.io/v1alpha1
+kind: IdentityProviderMapper
+metadata:
+  name: azure-platform-admins
+  namespace: keycloak
+spec:
+  forProvider:
+    realm: management
+    identityProviderAlias: azure
+    name: platform-admins
+    identityProviderMapper: oidc-advanced-group-idp-mapper
+
+    extraConfig:
+      syncMode: INHERIT
+      claim: groups
+      claim.value: 9b207afe-3824-482f-8985-e2337a7f7e9b
+      group: /platform-admins
+
+  providerConfigRef:
+    kind: ProviderConfig
+    name: keycloak
+
+---

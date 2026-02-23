@@ -1,0 +1,282 @@
+---
+
+apiVersion: role.keycloak.m.crossplane.io/v1alpha1
+kind: Role
+metadata:
+  name: manage-realm
+  namespace: keycloak
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    name: manage-realm
+    realmId: management
+    clientIdRef:
+      name: realm-management
+  providerConfigRef:
+    kind: ProviderConfig
+    name: keycloak
+
+---
+
+apiVersion: role.keycloak.m.crossplane.io/v1alpha1
+kind: Role
+metadata:
+  name: platform-admin
+  namespace: keycloak
+spec:
+  forProvider:
+    name: platform-admin
+    realmId: management
+
+    compositeRolesRefs:
+      - name: view-realm
+      - name: query-users
+      - name: view-users
+      - name: manage-users
+      - name: view-clients
+      - name: manage-clients
+      - name: manage-realm
+      - name: view-events
+      - name: manage-events
+      - name: impersonation
+      - name: view-identity-providers
+      - name: manage-identity-providers
+  providerConfigRef:
+    kind: ProviderConfig
+    name: keycloak
+
+---
+
+apiVersion: group.keycloak.m.crossplane.io/v1alpha1
+kind: Roles
+metadata:
+  name: platform-admins
+  namespace: keycloak
+spec:
+  forProvider:
+    realmId: management
+    groupIdRef:
+      name: platform-admins
+    roleIdsRefs:
+      - name: platform-admin
+  providerConfigRef:
+    kind: ProviderConfig
+    name: keycloak
+
+---
+
+apiVersion: role.keycloak.m.crossplane.io/v1alpha1
+kind: Role
+metadata:
+  name: view-realm
+  namespace: keycloak
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    name: view-realm
+    realmId: management
+    clientIdRef:
+      name: realm-management
+  providerConfigRef:
+    kind: ProviderConfig
+    name: keycloak
+
+---
+
+apiVersion: role.keycloak.m.crossplane.io/v1alpha1
+kind: Role
+metadata:
+  name: query-users
+  namespace: keycloak
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    name: query-users
+    realmId: management
+    clientIdRef:
+      name: realm-management
+  providerConfigRef:
+    kind: ProviderConfig
+    name: keycloak
+
+---
+
+apiVersion: role.keycloak.m.crossplane.io/v1alpha1
+kind: Role
+metadata:
+  name: view-users
+  namespace: keycloak
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    name: view-users
+    realmId: management
+    clientIdRef:
+      name: realm-management
+  providerConfigRef:
+    kind: ProviderConfig
+    name: keycloak
+
+---
+
+apiVersion: role.keycloak.m.crossplane.io/v1alpha1
+kind: Role
+metadata:
+  name: manage-users
+  namespace: keycloak
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    name: manage-users
+    realmId: management
+    clientIdRef:
+      name: realm-management
+  providerConfigRef:
+    kind: ProviderConfig
+    name: keycloak
+
+---
+
+apiVersion: role.keycloak.m.crossplane.io/v1alpha1
+kind: Role
+metadata:
+  name: view-clients
+  namespace: keycloak
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    name: view-clients
+    realmId: management
+    clientIdRef:
+      name: realm-management
+  providerConfigRef:
+    kind: ProviderConfig
+    name: keycloak
+
+---
+
+apiVersion: role.keycloak.m.crossplane.io/v1alpha1
+kind: Role
+metadata:
+  name: manage-clients
+  namespace: keycloak
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    name: manage-clients
+    realmId: management
+    clientIdRef:
+      name: realm-management
+  providerConfigRef:
+    kind: ProviderConfig
+    name: keycloak
+
+---
+
+apiVersion: role.keycloak.m.crossplane.io/v1alpha1
+kind: Role
+metadata:
+  name: manage-realm
+  namespace: keycloak
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    name: manage-realm
+    realmId: management
+    clientIdRef:
+      name: realm-management
+  providerConfigRef:
+    kind: ProviderConfig
+    name: keycloak
+
+---
+
+apiVersion: role.keycloak.m.crossplane.io/v1alpha1
+kind: Role
+metadata:
+  name: view-events
+  namespace: keycloak
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    name: view-events
+    realmId: management
+    clientIdRef:
+      name: realm-management
+  providerConfigRef:
+    kind: ProviderConfig
+    name: keycloak
+
+---
+
+apiVersion: role.keycloak.m.crossplane.io/v1alpha1
+kind: Role
+metadata:
+  name: manage-events
+  namespace: keycloak
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    name: manage-events
+    realmId: management
+    clientIdRef:
+      name: realm-management
+  providerConfigRef:
+    kind: ProviderConfig
+    name: keycloak
+
+---
+
+apiVersion: role.keycloak.m.crossplane.io/v1alpha1
+kind: Role
+metadata:
+  name: impersonation
+  namespace: keycloak
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    name: impersonation
+    realmId: management
+    clientIdRef:
+      name: realm-management
+  providerConfigRef:
+    kind: ProviderConfig
+    name: keycloak
+
+---
+
+apiVersion: role.keycloak.m.crossplane.io/v1alpha1
+kind: Role
+metadata:
+  name: view-identity-providers
+  namespace: keycloak
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    name: view-identity-providers
+    realmId: management
+    clientIdRef:
+      name: realm-management
+  providerConfigRef:
+    kind: ProviderConfig
+    name: keycloak
+
+---
+
+apiVersion: role.keycloak.m.crossplane.io/v1alpha1
+kind: Role
+metadata:
+  name: manage-identity-providers
+  namespace: keycloak
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    name: manage-identity-providers
+    realmId: management
+    clientIdRef:
+      name: realm-management
+  providerConfigRef:
+    kind: ProviderConfig
+    name: keycloak
+
+---

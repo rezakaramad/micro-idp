@@ -1,0 +1,15 @@
+apiVersion: openidclient.keycloak.m.crossplane.io/v1alpha1
+kind: Client
+metadata:
+  name: realm-management
+  namespace: keycloak
+spec:
+  managementPolicies: ["Observe"]
+  forProvider:
+    clientId: realm-management
+    realmId: management
+  providerConfigRef:
+    kind: ProviderConfig
+    name: keycloak
+
+---

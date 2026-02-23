@@ -1,0 +1,18 @@
+
+---
+
+apiVersion: group.keycloak.m.crossplane.io/v1alpha1
+kind: Group
+metadata:
+  name: platform-admins
+  namespace: keycloak
+spec:
+  forProvider:
+    name: platform-admins
+    realmIdRef:
+      name: management
+  providerConfigRef:
+    kind: ProviderConfig
+    name: keycloak
+
+---
