@@ -10,7 +10,7 @@ spec:
   activeDeadlineSeconds: 260
   template:
     spec:
-      serviceAccountName: bootstrap
+      serviceAccountName: keycloak-bootstrap
       restartPolicy: Never
       containers:
         - name: bootstrap
