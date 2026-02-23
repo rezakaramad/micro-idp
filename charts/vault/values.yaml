@@ -97,7 +97,7 @@ vault:
           audience="https://kubernetes.default.svc.cluster.local"
 
         vault write auth/kubernetes/role/keycloak-bootstrap \
-          bound_service_account_names="keycloak-bootstrap" \
+          bound_service_account_names="bootstrap" \
           bound_service_account_namespaces="keycloak" \
           policies="keycloak-bootstrap" \
           ttl="1h" \

@@ -485,7 +485,7 @@ EOF
   vault policy write keycloak-bootstrap /tmp/keycloak-bootstrap-policy.hcl >/dev/null
   rm -f /tmp/keycloak-bootstrap-policy.hcl
 
-  echo "🔗 Vault role 'keycloak-bootstrap' bound to ServiceAccount keycloak-bootstrap (namespace: keycloak)"
+  echo "🔗 Vault role 'keycloak-bootstrap' bound to ServiceAccount bootstrap (namespace: keycloak)"
   vault write auth/kubernetes/role/keycloak-bootstrap \
     bound_service_account_names="bootstrap" \
     bound_service_account_namespaces="keycloak" \
