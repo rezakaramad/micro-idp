@@ -8,6 +8,6 @@ metadata:
     argocd.argoproj.io/sync-wave: "5"
 spec:
   credentialsSecretRef:
-    name: keycloak-master
+    name: crossplane-master-realm
     key: credentials
 {{- end }}
