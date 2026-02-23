@@ -8,6 +8,7 @@ metadata:
     argocd.argoproj.io/sync-wave: "5"
 spec:
   credentials:
+    source: Secret
     secretRef:
       name: crossplane-admin
       namespace: keycloak
