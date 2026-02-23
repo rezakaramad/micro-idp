@@ -13,7 +13,8 @@ spec:
     secret:
       name: root-ca-secret
   data:
-    - match:
+    - conversionStrategy: None
+      match:
         secretKey: tls.crt
         remoteRef:
           remoteKey: management/pki
