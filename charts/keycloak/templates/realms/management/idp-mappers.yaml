@@ -5,6 +5,8 @@ kind: IdentityProviderMapper
 metadata:
   name: azure-email
   namespace: keycloak
+  annotations:
+    argocd.argoproj.io/sync-wave: "25"
 spec:
   forProvider:
     realm: management
@@ -28,6 +30,8 @@ kind: IdentityProviderMapper
 metadata:
   name: azure-username
   namespace: keycloak
+  annotations:
+    argocd.argoproj.io/sync-wave: "25"
 spec:
   forProvider:
     realm: management
@@ -51,6 +55,8 @@ kind: IdentityProviderMapper
 metadata:
   name: azure-firstname
   namespace: keycloak
+  annotations:
+    argocd.argoproj.io/sync-wave: "25"
 spec:
   forProvider:
     realm: management
@@ -74,6 +80,8 @@ kind: IdentityProviderMapper
 metadata:
   name: azure-lastname
   namespace: keycloak
+  annotations:
+    argocd.argoproj.io/sync-wave: "25"
 spec:
   forProvider:
     realm: management
@@ -97,6 +105,8 @@ kind: IdentityProviderMapper
 metadata:
   name: azure-platform-admins
   namespace: keycloak
+  annotations:
+    argocd.argoproj.io/sync-wave: "25"
 spec:
   forProvider:
     realm: management

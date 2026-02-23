@@ -5,6 +5,8 @@ kind: Role
 metadata:
   name: manage-realm
   namespace: keycloak
+  annotations:
+    argocd.argoproj.io/sync-wave: "25"
 spec:
   managementPolicies: ["Observe"]
   forProvider:
@@ -23,6 +25,8 @@ kind: Role
 metadata:
   name: platform-admin
   namespace: keycloak
+  annotations:
+    argocd.argoproj.io/sync-wave: "25"
 spec:
   forProvider:
     name: platform-admin
@@ -52,6 +56,8 @@ kind: Roles
 metadata:
   name: platform-admins
   namespace: keycloak
+  annotations:
+    argocd.argoproj.io/sync-wave: "25"
 spec:
   forProvider:
     realmId: management
@@ -70,6 +76,8 @@ kind: Role
 metadata:
   name: view-realm
   namespace: keycloak
+  annotations:
+    argocd.argoproj.io/sync-wave: "25"
 spec:
   managementPolicies: ["Observe"]
   forProvider:
@@ -88,6 +96,8 @@ kind: Role
 metadata:
   name: query-users
   namespace: keycloak
+  annotations:
+    argocd.argoproj.io/sync-wave: "25"  
 spec:
   managementPolicies: ["Observe"]
   forProvider:
@@ -106,6 +116,8 @@ kind: Role
 metadata:
   name: view-users
   namespace: keycloak
+  annotations:
+    argocd.argoproj.io/sync-wave: "25"
 spec:
   managementPolicies: ["Observe"]
   forProvider:
@@ -124,6 +136,8 @@ kind: Role
 metadata:
   name: manage-users
   namespace: keycloak
+  annotations:
+    argocd.argoproj.io/sync-wave: "25"
 spec:
   managementPolicies: ["Observe"]
   forProvider:
@@ -142,6 +156,8 @@ kind: Role
 metadata:
   name: view-clients
   namespace: keycloak
+  annotations:
+    argocd.argoproj.io/sync-wave: "25"
 spec:
   managementPolicies: ["Observe"]
   forProvider:
@@ -160,6 +176,8 @@ kind: Role
 metadata:
   name: manage-clients
   namespace: keycloak
+  annotations:
+    argocd.argoproj.io/sync-wave: "25"
 spec:
   managementPolicies: ["Observe"]
   forProvider:
@@ -176,26 +194,10 @@ spec:
 apiVersion: role.keycloak.m.crossplane.io/v1alpha1
 kind: Role
 metadata:
-  name: manage-realm
-  namespace: keycloak
-spec:
-  managementPolicies: ["Observe"]
-  forProvider:
-    name: manage-realm
-    realmId: management
-    clientIdRef:
-      name: realm-management
-  providerConfigRef:
-    kind: ProviderConfig
-    name: keycloak
-
----
-
-apiVersion: role.keycloak.m.crossplane.io/v1alpha1
-kind: Role
-metadata:
   name: view-events
   namespace: keycloak
+  annotations:
+    argocd.argoproj.io/sync-wave: "25"
 spec:
   managementPolicies: ["Observe"]
   forProvider:
@@ -214,6 +216,8 @@ kind: Role
 metadata:
   name: manage-events
   namespace: keycloak
+  annotations:
+    argocd.argoproj.io/sync-wave: "25"
 spec:
   managementPolicies: ["Observe"]
   forProvider:
@@ -232,6 +236,8 @@ kind: Role
 metadata:
   name: impersonation
   namespace: keycloak
+  annotations:
+    argocd.argoproj.io/sync-wave: "25"
 spec:
   managementPolicies: ["Observe"]
   forProvider:
@@ -250,6 +256,8 @@ kind: Role
 metadata:
   name: view-identity-providers
   namespace: keycloak
+  annotations:
+    argocd.argoproj.io/sync-wave: "25"
 spec:
   managementPolicies: ["Observe"]
   forProvider:
@@ -268,6 +276,8 @@ kind: Role
 metadata:
   name: manage-identity-providers
   namespace: keycloak
+  annotations:
+    argocd.argoproj.io/sync-wave: "25"  
 spec:
   managementPolicies: ["Observe"]
   forProvider:

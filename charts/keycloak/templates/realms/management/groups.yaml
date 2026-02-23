@@ -6,6 +6,8 @@ kind: Group
 metadata:
   name: platform-admins
   namespace: keycloak
+  annotations:
+    argocd.argoproj.io/sync-wave: "25"
 spec:
   forProvider:
     name: platform-admins
