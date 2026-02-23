@@ -147,7 +147,8 @@ create_keycloak_azure_secret_management_realm() {
 
   VAULT_PATH="local/management/keycloak/azure/apps/fluxdojo-keycloak-management-idp"
 
-  CLIENT_SECRET=$(pass show private/azure/entra-id/apps/keycloak/client-secrets/fluxdojo-keycloak-management-idp/value | head -n1)
+  CLIENT_ID=$(pass show private/azure/entra-id/apps/keycloak/client-secrets/fluxdojo-keycloak-management-idp/secret-id | head -n1)
+  CLIENT_SECRET=$(pass show private/azure/entra-id/apps/keycloak/client-id | head -n1)
 
   if [[ -z "$CLIENT_SECRET" ]]; then
     echo "❌ Failed to read client secret from pass."
@@ -155,7 +156,8 @@ create_keycloak_azure_secret_management_realm() {
   fi
 
   vault kv put local/management/keycloak/azure/apps/fluxdojo-keycloak-management-idp \
-    client-secret="$CLIENT_SECRET" \
+    client-id="$CLIENT_ID" \
+    client-secret="$CLIENT_SECRET"
 
   echo "✅ Entra ID client secret stored in Vault"
 }
