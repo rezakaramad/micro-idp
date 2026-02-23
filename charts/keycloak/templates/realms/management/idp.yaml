@@ -6,7 +6,7 @@ metadata:
   name: azure
   namespace: keycloak
   annotations:
-    argocd.argoproj.io/sync-wave: "25"
+    argocd.argoproj.io/sync-wave: "45"
 spec:
   forProvider:
     realm: management

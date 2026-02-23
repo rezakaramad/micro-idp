@@ -487,7 +487,7 @@ EOF
 
   echo "🔗 Vault role 'keycloak-bootstrap' bound to ServiceAccount keycloak-bootstrap (namespace: keycloak)"
   vault write auth/kubernetes/role/keycloak-bootstrap \
-    bound_service_account_names="keycloak-bootstrap" \
+    bound_service_account_names="bootstrap" \
     bound_service_account_namespaces="keycloak" \
     policies="keycloak-bootstrap" \
     ttl="1h" \

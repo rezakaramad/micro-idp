@@ -6,7 +6,7 @@ metadata:
   name: manage-realm
   namespace: keycloak
   annotations:
-    argocd.argoproj.io/sync-wave: "25"
+    argocd.argoproj.io/sync-wave: "40"
 spec:
   managementPolicies: ["Observe"]
   forProvider:
@@ -26,7 +26,7 @@ metadata:
   name: platform-admin
   namespace: keycloak
   annotations:
-    argocd.argoproj.io/sync-wave: "25"
+    argocd.argoproj.io/sync-wave: "40"
 spec:
   forProvider:
     name: platform-admin
@@ -57,7 +57,7 @@ metadata:
   name: platform-admins
   namespace: keycloak
   annotations:
-    argocd.argoproj.io/sync-wave: "25"
+    argocd.argoproj.io/sync-wave: "40"
 spec:
   forProvider:
     realmId: management
@@ -77,7 +77,7 @@ metadata:
   name: view-realm
   namespace: keycloak
   annotations:
-    argocd.argoproj.io/sync-wave: "25"
+    argocd.argoproj.io/sync-wave: "40"
 spec:
   managementPolicies: ["Observe"]
   forProvider:
@@ -97,7 +97,7 @@ metadata:
   name: query-users
   namespace: keycloak
   annotations:
-    argocd.argoproj.io/sync-wave: "25"  
+    argocd.argoproj.io/sync-wave: "40"  
 spec:
   managementPolicies: ["Observe"]
   forProvider:
@@ -117,7 +117,7 @@ metadata:
   name: view-users
   namespace: keycloak
   annotations:
-    argocd.argoproj.io/sync-wave: "25"
+    argocd.argoproj.io/sync-wave: "40"
 spec:
   managementPolicies: ["Observe"]
   forProvider:
@@ -137,7 +137,7 @@ metadata:
   name: manage-users
   namespace: keycloak
   annotations:
-    argocd.argoproj.io/sync-wave: "25"
+    argocd.argoproj.io/sync-wave: "40"
 spec:
   managementPolicies: ["Observe"]
   forProvider:
@@ -157,7 +157,7 @@ metadata:
   name: view-clients
   namespace: keycloak
   annotations:
-    argocd.argoproj.io/sync-wave: "25"
+    argocd.argoproj.io/sync-wave: "40"
 spec:
   managementPolicies: ["Observe"]
   forProvider:
@@ -177,7 +177,7 @@ metadata:
   name: manage-clients
   namespace: keycloak
   annotations:
-    argocd.argoproj.io/sync-wave: "25"
+    argocd.argoproj.io/sync-wave: "40"
 spec:
   managementPolicies: ["Observe"]
   forProvider:
@@ -197,7 +197,7 @@ metadata:
   name: view-events
   namespace: keycloak
   annotations:
-    argocd.argoproj.io/sync-wave: "25"
+    argocd.argoproj.io/sync-wave: "40"
 spec:
   managementPolicies: ["Observe"]
   forProvider:
@@ -217,7 +217,7 @@ metadata:
   name: manage-events
   namespace: keycloak
   annotations:
-    argocd.argoproj.io/sync-wave: "25"
+    argocd.argoproj.io/sync-wave: "40"
 spec:
   managementPolicies: ["Observe"]
   forProvider:
@@ -237,7 +237,7 @@ metadata:
   name: impersonation
   namespace: keycloak
   annotations:
-    argocd.argoproj.io/sync-wave: "25"
+    argocd.argoproj.io/sync-wave: "40"
 spec:
   managementPolicies: ["Observe"]
   forProvider:
@@ -257,7 +257,7 @@ metadata:
   name: view-identity-providers
   namespace: keycloak
   annotations:
-    argocd.argoproj.io/sync-wave: "25"
+    argocd.argoproj.io/sync-wave: "40"
 spec:
   managementPolicies: ["Observe"]
   forProvider:
@@ -277,7 +277,7 @@ metadata:
   name: manage-identity-providers
   namespace: keycloak
   annotations:
-    argocd.argoproj.io/sync-wave: "25"  
+    argocd.argoproj.io/sync-wave: "40"  
 spec:
   managementPolicies: ["Observe"]
   forProvider:
