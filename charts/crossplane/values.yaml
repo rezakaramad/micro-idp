@@ -8,6 +8,6 @@ keycloakProvider:
 
 crossplane:
   args:
-  - core
-  - start
-  - --enable-composition-functions
+    - core
+    - start
+    - --package-runtime=runtime
