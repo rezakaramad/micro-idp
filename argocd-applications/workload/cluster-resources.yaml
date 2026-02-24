@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: cluster-resources-mgmt
+  name: cluster-resources-wl
   namespace: argocd
 spec:
   project: platform-system
@@ -10,7 +10,7 @@ spec:
     targetRevision: HEAD
     path: charts/cluster-resources
   destination:
-    name: in-cluster
+    name: minikube-workload
   syncPolicy:
     syncOptions:
     - ServerSideApply=true
