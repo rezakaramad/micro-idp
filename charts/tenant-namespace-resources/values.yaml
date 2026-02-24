@@ -1,12 +1,8 @@
 tenant:
   name: ""
   dnsName: ""
-  argoCD:
+  argocd:
     aadGroupId: ""
-  gcp:
-    aadGroupName: ""
-    aadGroupId: ""
-    pushAuthorizedGithubRepos: []
 
 # Must be pinned to prevent breaking changes caused by future Pod Security Standard updates, especially in production.
 podSecurity:

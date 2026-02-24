@@ -8,7 +8,7 @@ metadata:
   labels:
 {{ include "common.labels" . | nindent 4 }}
     platform.fluxdojo.local/tenant: "{{ $.Values.tenant.name | lower }}"
-    platform.fluxdojo.local/rbac-group-id: "{{ $.Values.tenant.argoCD.aadGroupId | lower }}"
+    platform.fluxdojo.local/rbac-group-id: "{{ $.Values.tenant.argocd.aadGroupId | lower }}"
     platform.fluxdojo.local/cluster: "{{ $cluster.clusterName | lower }}"
 spec:
   sourceNamespaces:
@@ -99,7 +99,7 @@ spec:
 {{- end }}
 {{- end }}
     groups:
-      - {{ $.Values.tenant.argoCD.aadGroupId }}
+      - {{ $.Values.tenant.argocd.aadGroupId }}
 
 ---
 {{- end }}

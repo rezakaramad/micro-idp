@@ -1,12 +1,8 @@
 tenant:
   name: ""
   dnsName: ""
-  argoCD:
+  argocd:
     aadGroupId: ""
-  gcp:
-    aadGroupName: ""
-    aadGroupId: ""
-    pushAuthorizedGithubRepos: []
 
 argocd:
   clusters:
