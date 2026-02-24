@@ -5,3 +5,9 @@ githubProvider:
 keycloakProvider:
   enabled: false
   providerPackage: xpkg.upbound.io/crossplane-contrib/provider-keycloak:v2.7.2
+
+crossplane:
+  args:
+  - core
+  - start
+  - --enable-composition-functions
