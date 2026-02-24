@@ -8,10 +8,6 @@ tenant:
     aadGroupId: ""
     pushAuthorizedGithubRepos: []
 
-gateway:
-  environmentPrefix: ""
-  gatewayClass: "traefik"
-
 argocd:
   clusters:
     - clusterName: workload

@@ -30,21 +30,20 @@ spec:
 
       ## 🏷 Tenant
 
-      `{{ .Values.tenant.name }}`
+          {{ .Values.tenant.name }}
 
       ---
 
       ## 🌐 DNS
 
-      | Environment | Hostname |
-      |-------------|-----------|
-      | DEV  | `*.{{ .Values.tenant.shortName }}.dev.fluxdojo.local` |
-      | TEST | `*.{{ .Values.tenant.shortName }}.test.fluxdojo.local` |
-      | PROD | `*.{{ .Values.tenant.shortName }}.prod.fluxdojo.local` |
+      | Environment     | Hostname                                           |
+      |-----------------|----------------------------------------------------|
+      | Workload `wl`   | `*.{{ .Values.tenant.dnsName }}.wl.fluxdojo.local` |
 
       ---
 
       ## 🚦 HTTPRoute / Gateway
+      This is how tenants need to create their HTTPRoute resources, either directly or through an abstraction provided by DevEx:
 
       ```yaml
       parentRefs:
@@ -53,40 +52,5 @@ spec:
           name: "{{ .Values.tenant.name }}"
           namespace: platform-resources
           sectionName: https
-      ```
-
-      ---
-
-      ## 🔐 GitHub Actions → Google Cloud Authentication
-
-      Your GitHub Actions workflows authenticate to Google Cloud using **Workload Identity Federation**.
-
-      ### Identity
-
-      | Item | Value |
-      |------|-------|
-      | CI Service Account | `github-{{ .Values.tenant.name }}@jysk-platform.iam.gserviceaccount.com` |
-      | Workload Identity Provider | `projects/123266955408/locations/global/workloadIdentityPools/github/providers/github-workflows` |
-
-      ### Example workflow
-
-      ```yaml
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: "projects/123266955408/locations/global/workloadIdentityPools/github/providers/github-workflows"
-          service_account: "github-{{ .Values.tenant.name }}@jysk-platform.iam.gserviceaccount.com"
-
-      - name: Configure Docker for Artifact Registry
-        run: |
-          gcloud auth configure-docker europe-west3-docker.pkg.dev --quiet
-
-      - name: Build & push Docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          tags: |
-            europe-west3-docker.pkg.dev/jysk-artifacts/{{ .Values.tenant.name }}/YOUR_FAVORITE_IMAGE:YOUR_FAVORITE_TAG
       ```
 ---

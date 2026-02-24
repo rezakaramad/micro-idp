@@ -1,0 +1,4 @@
+apiVersion: v2
+name: tenant-argocd-resources
+description: Creates argo cd related tenant resources.
+version: 0.0.1

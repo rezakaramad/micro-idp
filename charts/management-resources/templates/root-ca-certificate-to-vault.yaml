@@ -1,7 +1,7 @@
 apiVersion: external-secrets.io/v1alpha1
 kind: PushSecret
 metadata:
-  name: push-root-ca-to-vault
+  name: root-ca-cert-to-vault
   namespace: platform-resources
 spec:
   refreshInterval: 1h

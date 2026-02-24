@@ -1,0 +1,4 @@
+apiVersion: v2
+name: tenant-namespace-resources
+description: Creates tenant namespaces and tenant namespace-scoped resources.
+version: 0.0.1

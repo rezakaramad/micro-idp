@@ -8,6 +8,8 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: argocd-{{ .Values.tenant.name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
   labels:
 {{ include "common.labels" . | nindent 4 }}
     platform.fluxdojo.local/tenant: "{{ .Values.tenant.name | lower }}"
