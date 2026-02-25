@@ -1,14 +1,14 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: platform-namespace-baseline-wl
+  name: platform-ns-baseline-wl
   namespace: argocd
 spec:
   project: platform-system
   source:
     repoURL: https://github.com/rezakaramad/micro-idp
     targetRevision: HEAD
-    path: charts/platform-namespace-baseline
+    path: charts/platform-ns-baseline
     helm:
       valueFiles:
         - values-wl.yaml

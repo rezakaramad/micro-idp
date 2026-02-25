@@ -1,4 +1,4 @@
 apiVersion: v2
-name: tenant-namespace-baseline
+name: tenant-ns-baseline
 description: Creates tenant namespaces with default resources.
 version: 0.0.1

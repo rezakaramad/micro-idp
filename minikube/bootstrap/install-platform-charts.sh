@@ -17,6 +17,24 @@ VAULT_NAMESPACE="vault"
 ARGOCD_NAMESPACE="argocd"
 
 # -----------------------------------------------------------------------------
+# Discover tenant clusters dynamically.
+# "minikube-management" = management cluster (tunnel only)
+# other "minikube-*" profiles = tenants (proxies + Argo CD cluster registration)
+# -----------------------------------------------------------------------------
+
+MANAGEMENT_PROFILE="minikube-management"
+
+get_tenant_profiles() {
+  minikube profile list -o json \
+    | jq -r '
+        .valid[]
+        | select(.Status == "OK")
+        | .Name
+        | select(startswith("minikube-"))
+      '
+}
+
+# -----------------------------------------------------------------------------
 # helm_install — Small wrapper around `helm upgrade --install`
 #
 # Usage:
@@ -51,30 +69,36 @@ helm_install () {
 
 
 # ----------------------------------------------------------------------------
-# Install Kubernetes Gateway API
+# Install Kubernetes Gateway API on Minikube cluslters
 # ----------------------------------------------------------------------------
 
 echo "🚀 Installing Kubernetes Gateway API (CRDs + Standard controller)..."
 
-# Step 1: install Gateway API CRDs
-echo "📦 Applying official Gateway API CRDs..."
-kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.4.1/standard-install.yaml
+GATEWAY_VERSION="v1.4.1"
+GATEWAY_URL="https://github.com/kubernetes-sigs/gateway-api/releases/download/${GATEWAY_VERSION}/standard-install.yaml"
 
-# Optional: wait until CRDs are registered
-echo "⏳ Waiting for CRDs to be established..."
-kubectl wait --for=condition=Established crd/gateways.gateway.networking.k8s.io --timeout=60s
+for profile in $(get_tenant_profiles); do
 
-# Step 3: confirm installation
-echo "✅ Gateway API CRDs installed:"
-kubectl get crds | grep gateway.networking.k8s.io || true
+  echo "🔎 Checking API readiness..."
+  kubectl --context="$profile" get --raw=/readyz >/dev/null
 
-echo "🎉 Gateway API successfully installed on Minikube."
+  echo "🚀 Installing Gateway API on $profile..."
+  kubectl --context=$profile apply -f $GATEWAY_URL
 
-echo "⏳ Waiting for cluster networking..."
+  echo "⏳ Waiting for CRDs in $profile..."
+  kubectl --context=$profile wait \
+    --for=condition=Established \
+    crd/gateways.gateway.networking.k8s.io \
+    --timeout=60s
 
-kubectl wait --for=condition=Ready nodes --all --timeout=120s
-kubectl wait --for=condition=Available deployment/coredns -n kube-system --timeout=120s
-kubectl wait --for=condition=Available deployment/kube-proxy -n kube-system --timeout=120s 2>/dev/null || true
+  echo "🎉 Gateway API successfully installed on Minikube $profile"
+  kubectl --context=$profile get crds | grep gateway.networking.k8s.io || true
+
+  echo "⏳ Waiting for cluster networking in $profile cluster..."
+  kubectl --context="$profile" wait --for=condition=Ready nodes --all --timeout=120s
+  kubectl --context="$profile" wait --for=condition=Available deployment/coredns -n kube-system --timeout=120s
+  kubectl --context="$profile" wait --for=condition=Available deployment/kube-proxy -n kube-system --timeout=120s 2>/dev/null || true
+done
 
 # ----------------------------------------------------------------------------
 # Install core components
@@ -123,8 +147,8 @@ curl -fsSL \
 kubectl apply --server-side -f "$CHART_PATH/crds/"
 
 # Install charts
-helm_install platform-namespace-baseline platform-namespace-baseline default \
-  -f $CHARTS_DIR/platform-namespace-baseline/values-mgmt.yaml
+helm_install platform-ns-baseline platform-ns-baseline default \
+  -f $CHARTS_DIR/platform-ns-baseline/values-mgmt.yaml
 helm_install cert-manager cert-manager "$PLATFORM_NAMESPACE"
 helm_install vault vault "$VAULT_NAMESPACE"
 helm_install external-secrets external-secrets "$PLATFORM_NAMESPACE"

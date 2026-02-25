@@ -14,7 +14,9 @@ KEYCLOAK_ADMIN_PASSWORD=""
 get_tenant_profiles() {
   minikube profile list -o json \
     | jq -r --arg mgmt "$MANAGEMENT_PROFILE" '
-        .valid[].Name
+        .valid[]
+        | select(.Status == "OK")
+        | .Name
         | select(startswith("minikube-") and . != $mgmt)
       '
 }
