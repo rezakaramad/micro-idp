@@ -3,4 +3,9 @@ commonLabels:
 
 commonAnnotations: {}
 
+commonNamespaces:
+  - name: platform-system
+    extraLabels: {}
+    extraAnnotations: {}
+
 namespaces: []

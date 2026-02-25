@@ -32,7 +32,7 @@ argocd:
         - group: gateway.networking.k8s.io
           kind: Gateway
           name: default-traefik
-          namespace: platform-resources
+          namespace: platform-system
       rules:
         - matches:
             - path:
@@ -51,7 +51,7 @@ argocd:
         - argocd.fluxdojo.local
       parentRefs:
         - name: traefik-gateway
-          namespace: platform-resources
+          namespace: platform-system
       rules:
         - backendRefs:
             - name: argocd-server

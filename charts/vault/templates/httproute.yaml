@@ -12,7 +12,7 @@ spec:
   - group: gateway.networking.k8s.io
     kind: Gateway
     name: default-traefik
-    namespace: platform-resources
+    namespace: platform-system
   rules:
   - backendRefs:
     - group: ""

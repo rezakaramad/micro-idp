@@ -1,0 +1,4 @@
+apiVersion: v2
+name: platform-namespace-baseline
+description: Creates platform namespaces with default resources.
+version: 0.0.1

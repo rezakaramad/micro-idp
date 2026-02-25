@@ -1,0 +1,4 @@
+apiVersion: v2
+name: tenant-gitops
+description: Creates GitOps related tenant resources.
+version: 0.0.1

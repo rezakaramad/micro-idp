@@ -35,7 +35,7 @@ start_minikube_tunnel() {
 }
 
 update_hosts() {
-  local PLATFORM_NAMESPACE="platform-resources"
+  local PLATFORM_NAMESPACE="platform-system"
 
   echo "⚙️  Updating /etc/hosts (requires sudo privileges)"
 

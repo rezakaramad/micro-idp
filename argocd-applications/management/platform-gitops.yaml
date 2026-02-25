@@ -1,25 +1,20 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: crossplane-mgmt
+  name: platform-gitops
   namespace: argocd
 spec:
   project: platform-system
   source:
     repoURL: https://github.com/rezakaramad/micro-idp
     targetRevision: HEAD
-    path: charts/crossplane
-    helm:
-      valueFiles:
-        - values-mgmt.yaml
+    path: charts/platform-gitops
   destination:
     name: in-cluster
-    namespace: crossplane
   syncPolicy:
     syncOptions:
     - ServerSideApply=true
     - ApplyOutOfSyncOnly=true
-    - RespectIgnoreDifferences=true
   ignoreDifferences:
     - group: external-secrets.io
       kind: ExternalSecret

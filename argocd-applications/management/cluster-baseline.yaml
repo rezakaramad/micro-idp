@@ -1,14 +1,14 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: management-resources
+  name: cluster-baseline-mgmt
   namespace: argocd
 spec:
   project: platform-system
   source:
     repoURL: https://github.com/rezakaramad/micro-idp
     targetRevision: HEAD
-    path: charts/management-resources
+    path: charts/cluster-baseline
   destination:
     name: in-cluster
   syncPolicy:

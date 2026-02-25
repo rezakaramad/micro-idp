@@ -1,17 +1,17 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: namespace-resources
+  name: platform-namespace-baseline
   namespace: argocd
 spec:
   project: platform-system
   source:
     repoURL: https://github.com/rezakaramad/micro-idp
     targetRevision: HEAD
-    path: charts/namespace-resources
+    path: charts/platform-namespace-baseline
     helm:
       valueFiles:
-        - values-management.yaml
+        - values-mgmt.yaml
   destination:
     name: in-cluster
   syncPolicy:

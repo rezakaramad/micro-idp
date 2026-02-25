@@ -1,24 +1,17 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: cluster-resources-mgmt
+  name: platform-pki
   namespace: argocd
 spec:
   project: platform-system
   source:
     repoURL: https://github.com/rezakaramad/micro-idp
     targetRevision: HEAD
-    path: charts/cluster-resources
+    path: charts/platform-pki
   destination:
     name: in-cluster
   syncPolicy:
     syncOptions:
     - ServerSideApply=true
     - ApplyOutOfSyncOnly=true
-  ignoreDifferences:
-    - group: external-secrets.io
-      kind: ExternalSecret
-      jqPathExpressions:
-        - .spec.data[].remoteRef.conversionStrategy
-        - .spec.data[].remoteRef.decodingStrategy
-        - .spec.data[].remoteRef.metadataPolicy

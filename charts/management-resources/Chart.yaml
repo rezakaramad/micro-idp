@@ -1,4 +1,0 @@
-apiVersion: v2
-name: management-resources
-description: Deploys control-planes resources only in management cluster.
-version: 0.0.1

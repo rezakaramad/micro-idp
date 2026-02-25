@@ -91,7 +91,7 @@ vault:
 
         vault write auth/kubernetes/role/external-secrets \
           bound_service_account_names=external-secrets \
-          bound_service_account_namespaces=platform-resources \
+          bound_service_account_namespaces=platform-system \
           policies=eso-policy \
           ttl=1h \
           audience="https://kubernetes.default.svc.cluster.local"

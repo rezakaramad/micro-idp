@@ -1,0 +1,4 @@
+apiVersion: v2
+name: platform-pki
+description: Deploys security foundation in management cluster.
+version: 0.0.1

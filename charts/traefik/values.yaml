@@ -2,7 +2,7 @@ defaultGateway:
   # The hostname for defeault gateway resource in management cluster
   hostname: '*.fluxdojo.local'
   # In tenant environments, we don't allow tenants to send traffic
-  # to platform-owned default Gateway in 'platform-resources' namespace.
+  # to platform-owned default Gateway in 'platform-system' namespace.
   allowedRoutes:
     namespaces:
       from: All

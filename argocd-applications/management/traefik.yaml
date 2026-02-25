@@ -11,7 +11,7 @@ spec:
     path: charts/traefik
   destination:
     name: in-cluster
-    namespace: platform-resources
+    namespace: platform-system
   syncPolicy:
     syncOptions:
     - ServerSideApply=true

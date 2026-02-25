@@ -12,7 +12,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 CHARTS_DIR="$REPO_ROOT/charts"
 
 # Specify platform components namespaces
-PLATFORM_NAMESPACE="platform-resources"
+PLATFORM_NAMESPACE="platform-system"
 VAULT_NAMESPACE="vault"
 ARGOCD_NAMESPACE="argocd"
 
@@ -23,7 +23,7 @@ ARGOCD_NAMESPACE="argocd"
 #   helm_install <release> <chart> <namespace> [extra helm args...]
 #
 # Examples:
-#   helm_install cert-manager cert-manager platform-resources
+#   helm_install cert-manager cert-manager platform-system
 #   helm_install platform-namespaces platform-namespaces default -f values.yaml
 #   helm_install vault vault vault --set server.dev.enabled=true
 #
@@ -123,8 +123,8 @@ curl -fsSL \
 kubectl apply --server-side -f "$CHART_PATH/crds/"
 
 # Install charts
-helm_install namespace-resources namespace-resources default \
-  -f $CHARTS_DIR/namespace-resources/values-management.yaml
+helm_install platform-namespace-baseline platform-namespace-baseline default \
+  -f $CHARTS_DIR/platform-namespace-baseline/values-mgmt.yaml
 helm_install cert-manager cert-manager "$PLATFORM_NAMESPACE"
 helm_install vault vault "$VAULT_NAMESPACE"
 helm_install external-secrets external-secrets "$PLATFORM_NAMESPACE"
@@ -164,9 +164,15 @@ kubectl wait \
   -n "$PLATFORM_NAMESPACE" \
   --timeout=180s
 
-helm_install cluster-resources cluster-resources "default"
+# Deploy cluster-scoped baseline resources.
+# Namespace argument is ignored because the chart only contains cluster-level objects.
+helm_install cluster-baseline cluster-baseline "default"
 
-helm_install management-resources management-resources "$PLATFORM_NAMESPACE"
+# Bootstrap the GitOps structure (application folders and system AppProject resources).
+helm_install platform-gitops platform-gitops "$PLATFORM_NAMESPACE"
+
+# Install components required to establish the cluster PKI and trust chain.
+helm_install platform-pki platform-pki "$PLATFORM_NAMESPACE"
 
 # ----------------------------------------------------------------------------
 # credentials

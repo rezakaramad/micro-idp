@@ -1,0 +1,4 @@
+apiVersion: v2
+name: platform-gitops
+description: Deploys GitOps resources in management cluster.
+version: 0.0.1
