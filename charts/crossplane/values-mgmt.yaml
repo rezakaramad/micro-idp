@@ -3,3 +3,6 @@ githubProvider:
 
 keycloakProvider:
   enabled: true
+
+azureADProvider:
+  enabled: true

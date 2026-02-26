@@ -1,6 +1,12 @@
+{{- if .Capabilities.APIVersions.Has "pkg.crossplane.io/v1/Provider" }}
+{{- if .Values.azureADProvider.enabled }}
+
 apiVersion: pkg.crossplane.io/v1
 kind: Provider
 metadata:
   name: provider-azuread
 spec:
-  package: xpkg.upbound.io/upbound/provider-azuread:v2.2.1
+  package: {{ .Values.azureADProvider.providerPackage }}
+
+{{- end }}
+{{- end }}

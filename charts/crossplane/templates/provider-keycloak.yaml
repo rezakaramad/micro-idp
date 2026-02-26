@@ -1,5 +1,6 @@
 {{- if .Capabilities.APIVersions.Has "pkg.crossplane.io/v1/Provider" }}
 {{- if .Values.keycloakProvider.enabled }}
+
 apiVersion: pkg.crossplane.io/v1
 kind: Provider
 metadata:
@@ -7,5 +8,6 @@ metadata:
   namespace: crossplane
 spec:
   package: {{ .Values.keycloakProvider.providerPackage }}
+
 {{- end }}
 {{- end }}
