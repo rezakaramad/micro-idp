@@ -1,0 +1,12 @@
+apiVersion: azuread.m.upbound.io/v1beta1
+kind: ProviderConfig
+metadata:
+  name: azuread
+  namespace: crossplane
+spec:
+  credentials:
+    source: Secret
+    secretRef:
+      namespace: crossplane
+      name: crossplane-admin
+      key: credentials

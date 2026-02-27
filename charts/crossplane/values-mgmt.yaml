@@ -6,3 +6,6 @@ keycloakProvider:
 
 azureADProvider:
   enabled: true
+
+tenantBootstrap:
+  enabled: true

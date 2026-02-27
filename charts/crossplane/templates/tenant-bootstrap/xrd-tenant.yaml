@@ -1,0 +1,151 @@
+{{- if .Capabilities.APIVersions.Has "apiextensions.crossplane.io/v2/CompositeResourceDefinition" }}
+{{- if .Values.tenantBootstrap.enabled }}
+
+apiVersion: apiextensions.crossplane.io/v2
+kind: CompositeResourceDefinition
+metadata:
+  name: tenants.idp.fluxdojo.local
+
+spec:
+  scope: Cluster
+  group: idp.fluxdojo.local
+
+  names:
+    kind: Tenant
+    plural: tenants
+
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true 
+      schema:
+        openAPIV3Schema:
+          type: object
+          required: ["spec"]
+
+          properties:
+            spec:
+              type: object
+              required: ["name", "dnsName", "owner", "argocd"]
+              properties:
+
+                name:
+                  type: string
+                  description: Human-readable tenant name. Lowercase + hyphens only.
+                  minLength: 1
+                  maxLength: 63
+                  pattern: "^[a-z0-9]+(-[a-z0-9]+)*$"
+
+                dnsName:
+                  type: string
+                  description: Abbreviated identifier used e.g. as subdomain label.
+                  minLength: 1
+                  maxLength: 63
+                  pattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
+
+                displayName:
+                  type: string
+                  description: Human readable tenant name shown in UI and dashboards.
+                  minLength: 1
+                  maxLength: 128
+
+                owner:
+                  type: object
+                  description: Ownership metadata for auditing and routing.
+                  required: ["team"]
+                  properties:
+                    team:
+                      type: string
+                      description: Owning team identifier (e.g. github team, AD group, etc.)
+                      minLength: 1
+                      maxLength: 128
+                    email:
+                      type: string
+                      description: Optional contact email.
+                      maxLength: 256
+                    system:
+                      type: string
+                      description: Optional owning system/service name.
+                      maxLength: 128
+
+                argocd:
+                  type: object
+                  description: Argo CD specific configuration for tenant isolation and access control.
+                  required: ["aadGroupId", "syncRepos"]
+                  properties:
+                    aadGroupId:
+                      type: string
+                      description: Azure AD Group Object ID used for Argo CD RBAC (GUID).
+                      pattern: "^[0-9a-fA-F-]{36}$"
+
+                    syncRepos:
+                      type: array
+                      description: List of git repository URLs Argo CD is permitted to sync from.
+                      minItems: 1
+                      items:
+                        type: string
+                        pattern: "^(https://|ssh://|git@).+"
+
+                    syncPolicy:
+                      type: object
+                      description: Defaults for generated Argo CD Applications.
+                      properties:
+                        automatedSync:
+                          type: boolean
+                          default: true
+                        prune:
+                          type: boolean
+                          default: true
+                        selfHeal:
+                          type: boolean
+                          default: true
+
+                options:
+                  type: object
+                  description: Platform options (non-ArgoCD).
+                  properties:
+                    costCenter:
+                      type: string
+                      maxLength: 64
+                    labels:
+                      type: object
+                      additionalProperties:
+                        type: string
+                    annotations:
+                      type: object
+                      additionalProperties:
+                        type: string
+
+            status:
+              type: object
+              properties:
+
+                conditions:
+                  type: array
+                  items:
+                    type: object
+                    x-kubernetes-preserve-unknown-fields: true
+
+                tenantName:
+                  type: string
+
+                observedGeneration:
+                  type: integer
+                  format: int64
+
+      additionalPrinterColumns:
+        - name: Tenant
+          type: string
+          jsonPath: .spec.name
+
+        - name: DNS
+          type: string
+          jsonPath: .spec.dnsName
+
+        - name: Team
+          type: string
+          jsonPath: .spec.owner.team
+
+---
+{{- end }}
+{{- end }}

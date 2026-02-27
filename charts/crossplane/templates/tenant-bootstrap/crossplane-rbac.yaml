@@ -1,0 +1,30 @@
+{{- if .Capabilities.APIVersions.Has "apiextensions.crossplane.io/v1/Composition" }}
+{{- if .Values.tenantBootstrap.enabled }}
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: crossplane-manage-argocd-apps
+rules:
+- apiGroups: ["argoproj.io"]
+  resources: ["applications"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: crossplane-manage-argocd-apps
+subjects:
+- kind: ServiceAccount
+  name: crossplane
+  namespace: crossplane
+roleRef:
+  kind: ClusterRole
+  name: crossplane-manage-argocd-apps
+  apiGroup: rbac.authorization.k8s.io
+
+---
+{{- end }}
+{{- end }}

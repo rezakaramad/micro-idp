@@ -1,0 +1,170 @@
+{{- if .Capabilities.APIVersions.Has "apiextensions.crossplane.io/v1/Composition" }}
+{{- if .Values.tenantBootstrap.enabled }}
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: tenant.idp.fluxdojo.local
+  labels:
+    crossplane.io/xrd: tenants.idp.fluxdojo.local
+
+spec:
+  compositeTypeRef:
+    apiVersion: idp.fluxdojo.local/v1alpha1
+    kind: Tenant
+
+  mode: Pipeline
+  pipeline:
+    - step: render
+      functionRef:
+        name: function-patch-and-transform
+      input:
+        apiVersion: pt.fn.crossplane.io/v1beta1
+        kind: Resources
+        resources:
+
+# ------------------------------------------------------------
+# GitOps Bootstrap
+# ------------------------------------------------------------
+          - name: tenant-gitops
+            base:
+              apiVersion: argoproj.io/v1alpha1
+              kind: Application
+              metadata:
+                namespace: argocd
+                labels:
+                  idp.fluxdojo.local/tenant: ""
+                  idp.fluxdojo.local/component: gitops
+                  idp.fluxdojo.local/managed-by: crossplane
+              spec:
+                project: default
+                source:
+                  repoURL: https://github.com/rezakaramad/micro-idp.git
+                  targetRevision: HEAD
+                  path: charts/tenant-gitops
+                  helm:
+                    values: ""
+                destination:
+                  name: in-cluster
+                  namespace: argocd
+                syncPolicy:
+                  automated: {}
+                  syncOptions:
+                    - CreateNamespace=true
+
+            readinessChecks:
+              - type: MatchString
+                fieldPath: status.sync.status
+                matchString: Synced
+              - type: MatchString
+                fieldPath: status.health.status
+                matchString: Healthy
+
+            patches:
+              # Argo CD Application name
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.name
+                toFieldPath: metadata.name
+                transforms:
+                  - type: string
+                    string:
+                      type: Format
+                      fmt: "gitops-%s"
+
+              # Tenant labels
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.name
+                toFieldPath: metadata.labels[idp.fluxdojo.local/tenant]
+
+              # Helm values
+              - type: CombineFromComposite
+                toFieldPath: spec.source.helm.values
+                combine:
+                  strategy: string
+                  variables:
+                    - fromFieldPath: spec.name
+                    - fromFieldPath: spec.dnsName
+                    - fromFieldPath: spec.owner.team
+                    - fromFieldPath: spec.argocd.aadGroupId
+                  string:
+                    fmt: |
+                      tenant:
+                        name: %s
+                        dnsName: %s
+                        owner:
+                          team: %s
+                        argocd:
+                          aadGroupId: %s
+
+# ------------------------------------------------------------
+# Namespace baseline
+# ------------------------------------------------------------
+          - name: tenant-ns-baseline
+            base:
+              apiVersion: argoproj.io/v1alpha1
+              kind: Application
+              metadata:
+                namespace: argocd
+                labels:
+                  idp.fluxdojo.local/tenant: ""
+                  idp.fluxdojo.local/component: ns-baseline
+                  idp.fluxdojo.local/managed-by: crossplane
+              spec:
+                project: default
+                source:
+                  repoURL: https://github.com/rezakaramad/micro-idp.git
+                  targetRevision: HEAD
+                  path: charts/tenant-ns-baseline
+                  helm:
+                    values: ""
+                destination:
+                  name: minikube-workload
+                  namespace: ""
+                syncPolicy:
+                  automated: {}
+                  syncOptions:
+                    - CreateNamespace=true
+
+            readinessChecks:
+              - type: MatchString
+                fieldPath: status.sync.status
+                matchString: Synced
+              - type: MatchString
+                fieldPath: status.health.status
+                matchString: Healthy
+
+            patches:
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.name
+                toFieldPath: metadata.name
+                transforms:
+                  - type: string
+                    string:
+                      type: Format
+                      fmt: "ns-%s"
+
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.name
+                toFieldPath: spec.destination.namespace
+
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.name
+                toFieldPath: metadata.labels[idp.fluxdojo.local/tenant]
+
+              - type: CombineFromComposite
+                toFieldPath: spec.source.helm.values
+                combine:
+                  strategy: string
+                  variables:
+                    - fromFieldPath: spec.name
+                    - fromFieldPath: spec.owner.team
+                  string:
+                    fmt: |
+                      tenant:
+                        name: %s
+                        owner:
+                          team: %s
+
+---
+{{- end }}
+{{- end }}

@@ -1,0 +1,157 @@
+{{- if .Capabilities.APIVersions.Has "apiextensions.crossplane.io/v1/Composition" }}
+{{- if .Values.tenantBootstrap.enabled }}
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: tenantrequest-default
+  labels:
+    crossplane.io/xrd: tenantrequests.idp.fluxdojo.local
+
+spec:
+  compositeTypeRef:
+    apiVersion: idp.fluxdojo.local/v1alpha1
+    kind: TenantRequest
+
+  mode: Pipeline
+  pipeline:
+    - step: render
+      functionRef:
+        name: function-patch-and-transform
+      input:
+        apiVersion: pt.fn.crossplane.io/v1beta1
+        kind: Resources
+        resources:
+
+# ------------------------------------------------------------
+# Entra ID Group
+# ------------------------------------------------------------
+          - name: entra-group
+            base:
+              apiVersion: groups.azuread.m.upbound.io/v1beta1
+              kind: Group
+              metadata:
+                namespace: crossplane
+              spec:
+                forProvider:
+                  securityEnabled: true
+                  mailEnabled: false
+                  preventDuplicateNames: true
+                  owners:
+                    - "d98229ea-609e-4a61-bd1b-1bb092377571"
+                  displayName: ""
+                  mailNickname: ""
+                providerConfigRef:
+                  name: azuread
+                  kind: ProviderConfig
+
+            patches:
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.name
+                toFieldPath: metadata.name
+                transforms:
+                  - type: string
+                    string:
+                      type: Format
+                      fmt: "entra-tenant-%s"
+
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.name
+                toFieldPath: spec.forProvider.displayName
+                transforms:
+                  - type: string
+                    string:
+                      type: Format
+                      fmt: "tenant-%s"
+
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.name
+                toFieldPath: spec.forProvider.mailNickname
+                transforms:
+                  - type: string
+                    string:
+                      type: Format
+                      fmt: "tenant-%s"
+
+              - type: ToCompositeFieldPath
+                fromFieldPath: status.atProvider.objectId
+                toFieldPath: status.identity.aadGroupId
+
+
+# ------------------------------------------------------------
+# Tenant XR
+# ------------------------------------------------------------
+          - name: tenant-xr
+            base:
+              apiVersion: idp.fluxdojo.local/v1alpha1
+              kind: Tenant
+              spec:
+                name: ""
+                dnsName: ""
+                displayName: ""
+                owner:
+                  team: ""
+                  email: ""
+                  system: ""
+                argocd:
+                  aadGroupId: ""
+                  syncRepos: []
+
+            patches:
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.name
+                toFieldPath: metadata.name
+                transforms:
+                  - type: string
+                    string:
+                      type: Format
+                      fmt: "tenant-%s"
+
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.name
+                toFieldPath: spec.name
+
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.dnsName
+                toFieldPath: spec.dnsName
+
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.name
+                toFieldPath: spec.displayName
+                transforms:
+                  - type: string
+                    string:
+                      type: Format
+                      fmt: "%s"
+
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.owner.team
+                toFieldPath: spec.owner.team
+
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.owner.email
+                toFieldPath: spec.owner.email
+                policy:
+                  fromFieldPath: Optional
+
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.owner.system
+                toFieldPath: spec.owner.system
+                policy:
+                  fromFieldPath: Optional
+
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.gitops.syncRepos
+                toFieldPath: spec.argocd.syncRepos
+                policy:
+                  fromFieldPath: Required
+
+              - type: FromCompositeFieldPath
+                fromFieldPath: status.identity.aadGroupId
+                toFieldPath: spec.argocd.aadGroupId
+                policy:
+                  fromFieldPath: Required
+
+---
+{{- end }}
+{{- end }}
