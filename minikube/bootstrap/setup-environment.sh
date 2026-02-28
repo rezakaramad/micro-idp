@@ -157,7 +157,7 @@ create_keycloak_azure_secret_management_realm() {
     return 1
   fi
 
-  vault kv put local/management/keycloak/azure/apps/fluxdojo-keycloak-management-idp \
+  vault kv put "$VAULT_PATH" \
     client-id="$CLIENT_ID" \
     client-secret="$CLIENT_SECRET"
 
@@ -309,6 +309,32 @@ trust_self_signed_ca_certificate() {
 }
 
 # ----------------------------------------------------------------------------
+# Crossplane credential in Azure
+# ----------------------------------------------------------------------------
+
+create_crossplane_azure_secret() {
+  echo "🔐 Writing Entra ID App secret..."
+
+  VAULT_PATH="local/management/crossplane/azure/apps/fluxdojo-crossplane"
+
+  CLIENT_SECRET=$(pass show private/azure/entra-id/apps/crossplane/client-secrets/fluxdojo-crossplane/value | head -n1)
+  CLIENT_ID=$(pass show private/azure/entra-id/apps/crossplane/client-id | head -n1)
+  TENANT_ID=$(pass show private/azure/entra-id/apps/crossplane/tenant-id | head -n1)
+
+  if [[ -z "$CLIENT_SECRET" ]]; then
+    echo "❌ Failed to read client secret from pass."
+    return 1
+  fi
+
+  vault kv put "$VAULT_PATH" \
+    client-id="$CLIENT_ID" \
+    tenant-id="$TENANT_ID" \
+    client-secret="$CLIENT_SECRET"
+
+  echo "✅ Entra ID client secret stored in Vault"
+}
+
+# ----------------------------------------------------------------------------
 # Main
 # ----------------------------------------------------------------------------
 
@@ -322,6 +348,7 @@ main() {
   create_keycloak_bootstrap_secret
   create_keycloak_administrator_secret
   trust_self_signed_ca_certificate
+  create_crossplane_azure_secret
 
   echo "✅ Bootstrap complete"
 }
