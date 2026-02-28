@@ -158,8 +158,8 @@ create_keycloak_azure_secret_management_realm() {
   fi
 
   vault kv put "$VAULT_PATH" \
-    client-id="$CLIENT_ID" \
-    client-secret="$CLIENT_SECRET"
+    client_id="$CLIENT_ID" \
+    client_secret="$CLIENT_SECRET"
 
   echo "✅ Entra ID client secret stored in Vault"
 }
@@ -327,9 +327,9 @@ create_crossplane_azure_secret() {
   fi
 
   vault kv put "$VAULT_PATH" \
-    client-id="$CLIENT_ID" \
-    tenant-id="$TENANT_ID" \
-    client-secret="$CLIENT_SECRET"
+    client_id="$CLIENT_ID" \
+    tenant_id="$TENANT_ID" \
+    client_secret="$CLIENT_SECRET"
 
   echo "✅ Entra ID client secret stored in Vault"
 }
