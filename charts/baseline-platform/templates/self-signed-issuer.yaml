@@ -1,5 +1,5 @@
 # This is required in clusters that rely on self-signed certificates; otherwise the need depends on your PKI design.
-{{- if eq .Values.global.clusterRole "management" }}
+{{- if eq .Values.clusterRole "management" }}
 
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
