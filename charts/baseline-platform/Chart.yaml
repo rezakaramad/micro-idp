@@ -1,4 +1,4 @@
 apiVersion: v2
-name: platform-ns-baseline
+name: baseline-platform
 description: Creates platform namespaces with default resources.
 version: 0.0.1
