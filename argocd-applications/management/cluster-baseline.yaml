@@ -1,24 +1,24 @@
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: cluster-baseline-mgmt
-  namespace: argocd
-spec:
-  project: platform-system
-  source:
-    repoURL: https://github.com/rezakaramad/micro-idp
-    targetRevision: HEAD
-    path: charts/cluster-baseline
-  destination:
-    name: in-cluster
-  syncPolicy:
-    syncOptions:
-    - ServerSideApply=true
-    - ApplyOutOfSyncOnly=true
-  ignoreDifferences:
-    - group: external-secrets.io
-      kind: ExternalSecret
-      jqPathExpressions:
-        - .spec.data[].remoteRef.conversionStrategy
-        - .spec.data[].remoteRef.decodingStrategy
-        - .spec.data[].remoteRef.metadataPolicy
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   name: cluster-baseline-mgmt
+#   namespace: argocd
+# spec:
+#   project: platform-system
+#   source:
+#     repoURL: https://github.com/rezakaramad/micro-idp
+#     targetRevision: HEAD
+#     path: charts/cluster-baseline
+#   destination:
+#     name: in-cluster
+#   syncPolicy:
+#     syncOptions:
+#     - ServerSideApply=true
+#     - ApplyOutOfSyncOnly=true
+#   ignoreDifferences:
+#     - group: external-secrets.io
+#       kind: ExternalSecret
+#       jqPathExpressions:
+#         - .spec.data[].remoteRef.conversionStrategy
+#         - .spec.data[].remoteRef.decodingStrategy
+#         - .spec.data[].remoteRef.metadataPolicy

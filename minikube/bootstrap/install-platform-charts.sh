@@ -190,13 +190,13 @@ kubectl wait \
 
 # Deploy cluster-scoped baseline resources.
 # Namespace argument is ignored because the chart only contains cluster-level objects.
-helm_install cluster-baseline cluster-baseline "default"
+# helm_install cluster-baseline cluster-baseline "default"
 
 # Bootstrap the GitOps structure (application folders and system AppProject resources).
-helm_install platform-gitops platform-gitops "$PLATFORM_NAMESPACE"
+helm_install gitops-platform gitops-platform "$PLATFORM_NAMESPACE"
 
 # Install components required to establish the cluster PKI and trust chain.
-helm_install platform-pki platform-pki "$PLATFORM_NAMESPACE"
+# helm_install platform-pki platform-pki "$PLATFORM_NAMESPACE"
 
 # ----------------------------------------------------------------------------
 # credentials
