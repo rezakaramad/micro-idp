@@ -1,14 +1,14 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: cnpg-operator-mgmt
+  name: cloudnative-postgres-mgmt
   namespace: argocd
 spec:
   project: platform-system
   source:
     repoURL: https://github.com/rezakaramad/micro-idp
     targetRevision: HEAD
-    path: charts/cnpg-operator
+    path: charts/cloudnative-postgres
   destination:
     name: in-cluster
     namespace: postgres

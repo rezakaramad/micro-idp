@@ -6,7 +6,7 @@ kind: Function
 metadata:
   name: function-patch-and-transform
 spec:
-  package: {{ .Values.tenantBootstrap.crossplane-contrib-function-go-templating.providerPackage }}
+  package: {{ index .Values.tenantBootstrap "crossplane-contrib-function-go-templating" "providerPackage" }}
 
 ---
 {{- end }}
