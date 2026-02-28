@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: baseline-platform-wl
+  name: baseline-platform-mgmt
   namespace: argocd
 spec:
   project: platform-system
