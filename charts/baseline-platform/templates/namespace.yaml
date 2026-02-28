@@ -1,4 +1,5 @@
-{{- range $namespace := $namespaces }}
+{{- range $namespace := .Values.namespaces }}
+
 {{- $labels := merge (default dict $.Values.commonLabels) (default dict $namespace.extraLabels) }}
 {{- $annotations := merge (default dict $.Values.commonAnnotations) (default dict $namespace.extraAnnotations) }}
 {{- $annotations = merge $annotations (dict "helm.sh/resource-policy" "keep") }}
