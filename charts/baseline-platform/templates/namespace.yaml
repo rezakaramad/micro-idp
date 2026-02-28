@@ -1,4 +1,3 @@
-{{- $namespaces := concat .Values.commonNamespaces .Values.namespaces }}
 {{- range $namespace := $namespaces }}
 {{- $labels := merge (default dict $.Values.commonLabels) (default dict $namespace.extraLabels) }}
 {{- $annotations := merge (default dict $.Values.commonAnnotations) (default dict $namespace.extraAnnotations) }}
