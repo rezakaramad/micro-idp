@@ -1,0 +1,33 @@
+{{- if .Capabilities.APIVersions.Has "repo.github.upbound.io/v1alpha1/Repository" }}
+
+{{- $repoName := include "tenant.repoName" .Values.tenant.name }}
+{{- $githubOrg := include "deploy.githubOrg" $ }}
+
+apiVersion: repo.github.upbound.io/v1alpha1
+kind: Repository
+metadata:
+  name: {{ $repoName | quote }}
+  namespace: "argocd-{{ .Values.tenant.name }}"
+  labels:
+{{ include "common.labels" . | nindent 4 }}
+    platform.fluxdojo.local/tenant: {{ .Values.tenant.name | lower | quote }}
+    platform.fluxdojo.local/github-org: {{ $githubOrg | quote }}
+
+spec:
+  deletionPolicy: Orphan
+
+  providerConfigRef:
+    name: {{ printf "github-%s" $githubOrg | quote }}
+
+  forProvider:
+    name: {{ $repoName | quote }}
+    description: "Tenant environment configuration managed via GitOps and continuously reconciled by Argo CD."
+    visibility: internal
+    autoInit: true
+    defaultBranch: main
+    template:
+      - owner: {{ $githubOrg | quote }}
+        repository: platform-deploy-template
+
+---
+{{- end }}

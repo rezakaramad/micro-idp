@@ -1,0 +1,60 @@
+{{- if .Capabilities.APIVersions.Has "repo.github.upbound.io/v1alpha1/RepositoryFile" }}
+
+{{- $repoName := include "tenant.repoName" .Values.tenant.name }}
+{{- $githubOrg := include "deploy.githubOrg" $ }}
+
+apiVersion: repo.github.upbound.io/v1alpha1
+kind: RepositoryFile
+metadata:
+  name: "{{ .Values.tenant.name }}-support"
+  namespace: "argocd-{{ .Values.tenant.name }}"
+  labels:
+{{ include "common.labels" . | nindent 4 }}
+    platform.fluxdojo.local/tenant: "{{ .Values.tenant.name | lower }}"
+    platform.fluxdojo.local/github-org: "{{ $githubOrg }}"
+
+spec:
+  providerConfigRef:
+    name: "github-{{ $githubOrg }}"
+
+  forProvider:
+    repository: {{ $repoName | quote }}
+    file: SUPPORT.md
+    branch: main
+    commitMessage: "chore: post tenant details in SUPPORT.md via Crossplane"
+
+    content: |
+      # Tenant Guide
+
+      ⚠️ **This file is automatically managed by Crossplane. Do not edit manually.**
+
+      ---
+
+      ## 🏷 Tenant
+
+          {{ .Values.tenant.name }}
+
+      ---
+
+      ## 🌐 DNS
+
+      | Environment     | Hostname                                           |
+      |-----------------|----------------------------------------------------|
+      | Workload `wl`   | `*.{{ .Values.tenant.dnsName }}.wl.fluxdojo.local` |
+
+      ---
+
+      ## 🚦 HTTPRoute / Gateway
+      This is how tenants need to create their HTTPRoute resources, either directly or through an abstraction provided by DevEx:
+
+      ```yaml
+      parentRefs:
+        - group: gateway.networking.k8s.io
+          kind: Gateway
+          name: "{{ .Values.tenant.name }}"
+          namespace: platform-system
+          sectionName: https
+      ```
+
+---
+{{- end }}

@@ -26,7 +26,7 @@ spec:
 # ------------------------------------------------------------
 # GitOps Bootstrap
 # ------------------------------------------------------------
-          - name: tenant-gitops
+          - name: gitops-tenant
             base:
               apiVersion: argoproj.io/v1alpha1
               kind: Application
@@ -41,7 +41,7 @@ spec:
                 source:
                   repoURL: https://github.com/rezakaramad/micro-idp.git
                   targetRevision: HEAD
-                  path: charts/tenant-gitops
+                  path: charts/gitops-tenant
                   helm:
                     values: ""
                 destination:
@@ -99,7 +99,7 @@ spec:
 # ------------------------------------------------------------
 # Namespace baseline
 # ------------------------------------------------------------
-          - name: tenant-ns-baseline
+          - name: baseline-tenant
             base:
               apiVersion: argoproj.io/v1alpha1
               kind: Application
@@ -107,14 +107,14 @@ spec:
                 namespace: argocd
                 labels:
                   idp.fluxdojo.local/tenant: ""
-                  idp.fluxdojo.local/component: ns-baseline
+                  idp.fluxdojo.local/component: baseline
                   idp.fluxdojo.local/managed-by: crossplane
               spec:
                 project: default
                 source:
                   repoURL: https://github.com/rezakaramad/micro-idp.git
                   targetRevision: HEAD
-                  path: charts/tenant-ns-baseline
+                  path: charts/baseline-tenant
                   helm:
                     values: ""
                 destination:
@@ -141,7 +141,7 @@ spec:
                   - type: string
                     string:
                       type: Format
-                      fmt: "ns-%s"
+                      fmt: "baseline-%s"
 
               - type: FromCompositeFieldPath
                 fromFieldPath: spec.name

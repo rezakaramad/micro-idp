@@ -1,3 +1,15 @@
+commonLabels:
+  platform.fluxdojo.local/owner: platform
+
+commonAnnotations: {}
+
+commonNamespaces:
+  - name: platform-system
+    extraLabels: {}
+    extraAnnotations: {}
+
+namespaces: []
+
 # -------------------------------------------------------------------------------
 # -- Argo CD clusters
 # -------------------------------------------------------------------------------
@@ -7,4 +19,3 @@
 clusterCredentials:
   - name: minikube-workload
     environmentPrefix: wl
-

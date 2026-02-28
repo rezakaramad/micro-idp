@@ -1,14 +1,14 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: platform-ns-baseline-mgmt
+  name: baseline-platform-mgmt
   namespace: argocd
 spec:
   project: platform-system
   source:
     repoURL: https://github.com/rezakaramad/micro-idp
     targetRevision: HEAD
-    path: charts/platform-ns-baseline
+    path: charts/baseline-platform
     helm:
       valueFiles:
         - values-mgmt.yaml

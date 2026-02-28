@@ -1,0 +1,62 @@
+{{- $tenant := .Values.tenant }}
+
+{{- $hostname := include "hostname" (dict "name" .Values.tenant.shortName "environmentPrefix" .Values.gateway.environmentPrefix) -}}
+{{- $wildcardHostname := printf "*.%s" $hostname -}}
+{{- $certificateName := printf "%s-cert-traefik" (include "certificateName" $hostname) -}}
+
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: {{ .Values.tenant.name | lower }}
+  namespace: platform-system
+  labels:
+{{- include "common.labels" . | nindent 4 }}
+    platform.fluxdojo.local/tenant: {{ .Values.tenant.name | lower | quote }}
+spec:
+  gatewayClassName: {{ .Values.gateway.gatewayClass }}
+  listeners:
+    - name: https
+      protocol: HTTPS
+      port: 8443
+      hostname: {{ $wildcardHostname | quote }}
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - group: ""
+            kind: Secret
+            name: {{ $certificateName | quote }}
+            namespace: platform-system
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              platform.fluxdojo.local/tenant: {{ .Values.tenant.name | lower }}
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ $certificateName | quote }}
+  namespace: platform-system
+  labels:
+{{ include "common.labels" . | nindent 4 }}
+    platform.fluxdojo.local/tenant: "{{ .Values.tenant.name | lower }}"
+spec:
+  secretName: {{ $certificateName | quote }}
+  issuerRef:
+    group: cert-manager.io
+    name: "selfsigned"
+    kind: "ClusterIssuer"
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS1
+    size: 2048
+  dnsNames:
+    - {{ $hostname | quote }}
+    - {{ $wildcardHostname | quote }}
+  usages:
+    - digital signature
+    - key encipherment
+
+---

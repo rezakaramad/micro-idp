@@ -1,0 +1,4 @@
+apiVersion: v2
+name: gitops-tenant
+description: Creates GitOps related tenant resources in platform management cluster where Argo CD lives.
+version: 0.0.1
