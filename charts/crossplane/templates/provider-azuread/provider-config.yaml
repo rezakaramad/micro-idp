@@ -1,3 +1,6 @@
+{{- if .Capabilities.APIVersions.Has "azuread.m.upbound.io/v1beta1/ProviderConfig" }}
+{{- if .Values.azureADProvider.enabled }}
+
 apiVersion: azuread.m.upbound.io/v1beta1
 kind: ProviderConfig
 metadata:
@@ -10,3 +13,6 @@ spec:
       namespace: crossplane
       name: crossplane-admin
       key: credentials
+
+{{- end }}
+{{- end }}
