@@ -1,0 +1,6 @@
+clusterRole: "workload"
+
+namespaces:
+  - name: platform-system
+    extraLabels: {}
+    extraAnnotations: {}

@@ -147,8 +147,8 @@ curl -fsSL \
 kubectl apply --server-side -f "$CHART_PATH/crds/"
 
 # Install charts
-helm_install platform-ns-baseline platform-ns-baseline default \
-  -f $CHARTS_DIR/platform-ns-baseline/values-mgmt.yaml
+helm_install baseline-platform baseline-platform default \
+  -f $CHARTS_DIR/baseline-platform/values-mgmt.yaml
 helm_install cert-manager cert-manager "$PLATFORM_NAMESPACE"
 helm_install vault vault "$VAULT_NAMESPACE"
 helm_install external-secrets external-secrets "$PLATFORM_NAMESPACE"

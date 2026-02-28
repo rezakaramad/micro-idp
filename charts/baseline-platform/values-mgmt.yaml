@@ -1,4 +1,9 @@
+clusterRole: "management"
+
 namespaces:
+  - name: platform-system
+    extraLabels: {}
+    extraAnnotations: {}
   - name: argocd
     extraLabels: {}
     extraAnnotations: {}
