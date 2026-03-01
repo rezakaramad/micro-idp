@@ -8,6 +8,7 @@ metadata:
 spec:
   hostnames:
   - vault.fluxdojo.local
+  - vault.default.svc.cluster.local
   parentRefs:
   - group: gateway.networking.k8s.io
     kind: Gateway
