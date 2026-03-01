@@ -1,3 +1,4 @@
+{{- if .Capabilities.APIVersions.Has "external-secrets.io/v1alpha1/PushSecret" }}
 {{- if eq .Values.clusterRole "management" }}
 
 apiVersion: external-secrets.io/v1alpha1
@@ -22,4 +23,5 @@ spec:
           remoteKey: management/pki
           property: ca.crt
 
+{{- end }}
 {{- end }}

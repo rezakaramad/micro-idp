@@ -1,3 +1,4 @@
+{{- if .Capabilities.APIVersions.Has "cert-manager.io/v1/Certificate" }}
 {{- if eq .Values.clusterRole "management" }}
 
 apiVersion: cert-manager.io/v1
@@ -15,4 +16,5 @@ spec:
   privateKey:
     rotationPolicy: Always
 
+{{- end }}
 {{- end }}
