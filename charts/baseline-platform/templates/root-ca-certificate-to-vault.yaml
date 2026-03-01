@@ -1,6 +1,6 @@
 {{- if eq .Values.clusterRole "management" }}
 
-apiVersion: external-secrets.io/v1
+apiVersion: external-secrets.io/v1alpha1
 kind: PushSecret
 metadata:
   name: root-ca-cert-to-vault
