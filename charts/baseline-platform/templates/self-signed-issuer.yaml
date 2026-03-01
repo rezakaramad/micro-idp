@@ -1,5 +1,4 @@
 # This is required in clusters that rely on self-signed certificates; otherwise the need depends on your PKI design.
-{{- if .Capabilities.APIVersions.Has "cert-manager.io/v1/ClusterIssuer" }}
 {{- if eq .Values.clusterRole "management" }}
 
 apiVersion: cert-manager.io/v1
@@ -9,5 +8,4 @@ metadata:
 spec:
   selfSigned: {}
 
-{{- end }}
 {{- end }}
