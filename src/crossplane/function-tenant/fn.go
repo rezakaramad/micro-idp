@@ -366,7 +366,7 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) 
 		},
 		"syncPolicy": map[string]any{
 			"automated": map[string]any{
-				"prune":    true,
+				"prune":    false,
 				"selfHeal": true,
 			},
 		},
@@ -412,6 +412,10 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) 
 
 	baseline := composed.New()
 
+	if existing, ok := desired[resource.Name(baselineResourceName)]; ok {
+		baseline = existing.Resource
+	}
+
 	f.log.Info(
 		"Ensuring baseline application",
 		"tenant", name,
@@ -436,6 +440,12 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) 
 		"destination": map[string]any{
 			"name":      "minikube-workload",
 			"namespace": name,
+		},
+		"syncPolicy": map[string]any{
+			"automated": map[string]any{
+				"prune":    false,
+				"selfHeal": true,
+			},
 		},
 	})
 	if err != nil {
