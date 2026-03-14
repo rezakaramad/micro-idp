@@ -1,0 +1,5 @@
+defaultGateway:
+  hostname: '*.fluxdojo.local'
+  allowedRoutes:
+    namespaces:
+      from: All

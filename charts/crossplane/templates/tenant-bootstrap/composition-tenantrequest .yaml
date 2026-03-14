@@ -1,0 +1,25 @@
+{{- if .Capabilities.APIVersions.Has "apiextensions.crossplane.io/v1/Composition" }}
+{{- if .Values.tenantBootstrap.enabled }}
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: tenantrequest-default
+  labels:
+    crossplane.io/xrd: tenantrequests.idp.fluxdojo.local
+
+spec:
+  compositeTypeRef:
+    apiVersion: idp.fluxdojo.local/v1alpha1
+    kind: TenantRequest
+
+  mode: Pipeline
+
+  pipeline:
+    - step: render
+      functionRef:
+        name: function-tenantrequest
+
+---
+{{- end }}
+{{- end }}

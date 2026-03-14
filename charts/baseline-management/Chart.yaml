@@ -1,0 +1,4 @@
+apiVersion: v2
+name: baseline-management
+description: Creates platform namespaces with default resources in management cluster.
+version: 0.0.1

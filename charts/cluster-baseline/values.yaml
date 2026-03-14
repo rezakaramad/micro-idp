@@ -1,0 +1,9 @@
+crossplane:
+  githubProvider:
+    enabled: false
+    providerPackage: xpkg.upbound.io/crossplane-contrib/provider-upjet-github:v0.18.7
+
+  keycloakProvider:
+    enabled: false
+    providerPackage: xpkg.upbound.io/crossplane-contrib/provider-keycloak:v0.12.0
+    keycloakUrl: http://keycloak-service.keycloak.svc.cluster.local:8080

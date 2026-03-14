@@ -2,7 +2,7 @@ defaultGateway:
   # The hostname for defeault gateway resource in management cluster
   hostname: '*.fluxdojo.local'
   # In tenant environments, we don't allow tenants to send traffic
-  # to platform-owned default Gateway in 'platform-resources' namespace.
+  # to platform-owned default Gateway in 'platform-system' namespace.
   allowedRoutes:
     namespaces:
       from: All
@@ -59,3 +59,11 @@ traefik:
       # Alternative logging levels are TRACE, DEBUG, INFO, WARN, ERROR, FATAL, and PANIC.
       level: "WARN"
 
+  ports:
+    websecure:
+      forwardedHeaders:
+        insecure: false
+        trustedIPs:
+          - 10.0.0.0/8
+          - 172.16.0.0/12
+          - 192.168.0.0/16

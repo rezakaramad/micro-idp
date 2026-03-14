@@ -1,0 +1,309 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: bootstrap
+  namespace: keycloak
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  backoffLimit: 2
+  activeDeadlineSeconds: 260
+  template:
+    spec:
+      serviceAccountName: bootstrap
+      restartPolicy: Never
+      containers:
+        - name: bootstrap
+          image: "{{ .Values.bootstrap.image.repository }}:{{ .Values.bootstrap.image.tag }}"
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/bash
+            - -ec
+            - |
+              KEYCLOAK_SERVICE_NAME=keycloak-service
+              KEYCLOAK_SERVICE_PORT=8080
+              KEYCLOAK_URL=http://$KEYCLOAK_SERVICE_NAME:$KEYCLOAK_SERVICE_PORT
+              CLIENT_ID="crossplane-admin"
+              REALM="master"
+              VAULT_PATH="local/management/keycloak/crossplane"
+
+              # verify Keycloak is reachable
+              echo "🔌 Check Keycloak socket"
+              SOCKET_OK=false
+              # Retry loop (max ~60 seconds)
+              for i in {1..12}; do
+                # Try to open a TCP socket to $KEYCLOAK_SERVICE_NAME:$KEYCLOAK_SERVICE_PORT
+                if (echo > /dev/tcp/$KEYCLOAK_SERVICE_NAME/$KEYCLOAK_SERVICE_PORT) >/dev/null 2>&1; then
+                  SOCKET_OK=true
+                  break
+                fi
+                echo "🛑 Socket not ready yet"
+                sleep 5
+              done
+              [ "$SOCKET_OK" != "true" ] && echo "🛑 ERROR: Keycloak service unreachable" && exit 1
+
+              if [[ "$BOOTSTRAP_DISABLED" == "1" ]]; then
+                USER="$ADMINISTRATOR_USER"
+                PASSWORD="$ADMINISTRATOR_PASSWORD"
+              else
+                USER="$BOOTSTRAP_USER"
+                PASSWORD="$BOOTSTRAP_PASSWORD"
+              fi
+
+              echo "🔐 Authenticate to Keycloak"
+              LOGIN_SUCCESS=false
+              for i in {1..12}; do
+                if /opt/keycloak/bin/kcadm.sh config credentials \
+                  --realm $REALM \
+                  --server "$KEYCLOAK_URL" \
+                  --user "$USER" \
+                  --password "$PASSWORD"; then
+                  LOGIN_SUCCESS=true
+                  break
+                fi
+                echo "🛑 Login not ready yet"
+                sleep 5
+              done
+              [ "$LOGIN_SUCCESS" != "true" ] && echo "🛑 ERROR: Keycloak not ready for authentication" && exit 1
+
+              echo "🔎 Resolve bootstrap user ID"
+              BOOTSTRAP_USER_ID=$(/opt/keycloak/bin/kcadm.sh get users \
+                -r $REALM \
+                -q username="$BOOTSTRAP_USER" \
+                --fields id,username \
+                --format csv --noquotes \
+                | grep -E ",$BOOTSTRAP_USER$" \
+                | head -n 1 \
+                | cut -d',' -f1)
+
+              echo "🔎 Check if administrator user already exists"
+              ADMINISTRATOR_USER_ID=$(/opt/keycloak/bin/kcadm.sh get users \
+                -r $REALM \
+                -q username="$ADMINISTRATOR_USER" \
+                --fields id,username \
+                --format csv --noquotes \
+                | grep -E ",$ADMINISTRATOR_USER$" \
+                | head -n 1 \
+                | cut -d',' -f1)
+
+              if [ -z "$ADMINISTRATOR_USER_ID" ]; then
+                echo "👤 Create administrator user"
+
+                /opt/keycloak/bin/kcadm.sh create users \
+                  -r $REALM \
+                  -s username="$ADMINISTRATOR_USER" \
+                  -s firstName="$ADMINISTRATOR_FIRSTNAME" \
+                  -s lastName="$ADMINISTRATOR_LASTNAME" \
+                  -s email="$ADMINISTRATOR_EMAIL" \
+                  -s emailVerified=true \
+                  -s enabled=true
+
+                sleep 5
+
+                echo "🔎 Resolve bootstrap user ID"
+                ADMINISTRATOR_USER_ID=$(/opt/keycloak/bin/kcadm.sh get users \
+                  -r $REALM \
+                  -q username="$ADMINISTRATOR_USER" \
+                  --fields id,username \
+                  --format csv --noquotes \
+                  | grep -E ",$ADMINISTRATOR_USER$" \
+                  | head -n 1 \
+                  | cut -d',' -f1)
+              else
+                echo "🤷 Administrator user already exists"
+              fi
+
+              [ -z "$ADMINISTRATOR_USER" ] && echo "🛑 ERROR: Could not resolve user $ADMINISTRATOR_USER" && exit 1
+
+              echo "🔑 Set permanent password for administrator user"
+              /opt/keycloak/bin/kcadm.sh set-password \
+                -r $REALM \
+                --userid "$ADMINISTRATOR_USER_ID" \
+                --new-password "$ADMINISTRATOR_PASSWORD"
+
+              echo "🛡️ Grant admin role to administrator user"
+              /opt/keycloak/bin/kcadm.sh add-roles \
+                -r $REALM \
+                --uid "$ADMINISTRATOR_USER_ID" \
+                --rolename admin || true
+
+              echo "🔐 Login to Vault"
+              export VAULT_ADDR="http://vault.vault:8200"
+
+              # Wait for Vault API
+              echo "⏳ Waiting for Vault API"
+              for i in {1..30}; do
+                if curl -sf "$VAULT_ADDR/v1/sys/health" >/dev/null; then
+                  break
+                fi
+                sleep 2
+              done
+
+              SA_TOKEN_PATH="/var/run/secrets/kubernetes.io/serviceaccount/token"
+              if [[ ! -f "$SA_TOKEN_PATH" ]]; then
+                echo "🛑 ServiceAccount token not found"
+                exit 1
+              fi
+
+              # Authenticate (retry because auth backend may not be ready yet)
+              echo "🔑 Authenticating with Kubernetes auth"
+              LOGIN_OK=false
+              for i in {1..10}; do
+                VAULT_TOKEN="$(vault write -field=token auth/kubernetes/login \
+                  role=keycloak-bootstrap \
+                  jwt=@"$SA_TOKEN_PATH" 2>/dev/null || true)"
+
+                if [[ -n "$VAULT_TOKEN" && "$VAULT_TOKEN" != "null" ]]; then
+                  LOGIN_OK=true
+                  break
+                fi
+
+                sleep 3
+              done
+
+              if [[ "$LOGIN_OK" != "true" ]]; then
+                echo "🛑 Vault authentication failed"
+                exit 1
+              fi
+
+              export VAULT_TOKEN
+              echo "✅ Vault authentication successful"
+
+              echo "🧯 Disable bootstrap login in Vault"
+              vault kv patch local/management/keycloak/bootstrap disabled=1 >/dev/null
+
+              echo "🟢 Administrator user ready"
+
+              echo "🤖 Ensure Crossplane bootstrap client exists"
+              CLIENT_ID=crossplane-admin
+
+              echo "🔎 Check if client exists"
+              CID=$(kcadm.sh get clients \
+                -r "$REALM" \
+                -q clientId="$CLIENT_ID" \
+                --fields id \
+                --format csv --noquotes | head -n1)
+
+              if [[ -z "$CID" ]]; then
+                echo "➕ Create client $CLIENT_ID"
+
+                kcadm.sh create clients \
+                  -r "$REALM" \
+                  -s "clientId=$CLIENT_ID" \
+                  -s enabled=true \
+                  -s protocol=openid-connect \
+                  -s publicClient=false \
+                  -s serviceAccountsEnabled=true \
+                  -s standardFlowEnabled=false \
+                  -s directAccessGrantsEnabled=false
+
+                # Wait until client appears
+                for i in {1..20}; do
+                  CID=$(kcadm.sh get clients \
+                    -r "$REALM" \
+                    -q clientId="$CLIENT_ID" \
+                    --fields id \
+                    --format csv \
+                    --noquotes | head -n1)
+                  if [[ -n "$CID" ]]; then
+                    SA_UID=$(kcadm.sh get "clients/$CID/service-account-user" \
+                      -r "$REALM" \
+                      --fields id \
+                      --format csv \
+                      --noquotes 2>/dev/null || true)
+                    [[ -n "$SA_UID" ]] && break
+                  fi
+                  sleep 1
+                done
+              else
+                echo "🤷 Client already exists"
+              fi
+
+              if [[ -z "$CID" ]]; then
+                echo "🛑 Failed to resolve client ID"
+                exit 1
+              fi
+
+              # ---- Resolve service account ----
+              echo "🔎 Resolve service account"
+              SA_UID=$(kcadm.sh get "clients/$CID/service-account-user" \
+                -r "$REALM" \
+                --fields id \
+                --format csv --noquotes)
+
+              if [[ -z "$SA_UID" ]]; then
+                echo "🛑 Failed to resolve service account user"
+                exit 1
+              fi
+
+              echo "Service account UID: $SA_UID"
+
+              # Grant admin role (idempotent) ----
+              echo "🛡️ Ensure admin role"
+              HAS_ADMIN=$(kcadm.sh get-roles \
+                -r "$REALM" \
+                --uid "$SA_UID" \
+                | jq -r '.[]?.name' \
+                | grep -c '^admin$' || true)
+
+              if [[ "$HAS_ADMIN" == "0" ]]; then
+                kcadm.sh add-roles \
+                  -r "$REALM" \
+                  --uid "$SA_UID" \
+                  --rolename admin
+                echo "👑 Admin role granted"
+              else
+                echo "🟢 Admin role already present"
+              fi
+
+              # ---- Fetch client secret ----
+              echo "🔑 Fetch client secret"
+              CLIENT_SECRET=$(kcadm.sh get "clients/$CID/client-secret" -r "$REALM" | jq -r .value)
+
+              if [[ -z "$CLIENT_SECRET" || "$CLIENT_SECRET" == "null" ]]; then
+                echo "🛑 Failed to fetch secret"
+                exit 1
+              fi
+
+              echo "📤 Save Crossplane client secret in Vault"
+              vault kv put "$VAULT_PATH" \
+                client_id="$CLIENT_ID" \
+                client_secret="$CLIENT_SECRET" >/dev/null
+              
+              echo "✅ Crossplane client stored in Vault"
+
+              echo "🎉 Bootstrap phase completed"
+          env:
+            - name: BOOTSTRAP_USER
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-bootstrap
+                  key: username
+            - name: BOOTSTRAP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-bootstrap
+                  key: password
+            - name: BOOTSTRAP_DISABLED
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-bootstrap
+                  key: disabled
+            - name: ADMINISTRATOR_USER
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-administrator
+                  key: username
+            - name: ADMINISTRATOR_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-administrator
+                  key: password
+            - name: ADMINISTRATOR_EMAIL
+              value: r.karamad@gmail.com
+            - name: ADMINISTRATOR_FIRSTNAME
+              value: Keycloak
+            - name: ADMINISTRATOR_LASTNAME
+              value: Administrator
+
+---

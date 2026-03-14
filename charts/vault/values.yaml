@@ -7,6 +7,7 @@ vault:
       - /bin/sh
       - -c
       - |
+        set -euo pipefail
         export VAULT_ADDR=http://127.0.0.1:8200
 
         echo "=== Vault bootstrap starting ==="
@@ -61,13 +62,28 @@ vault:
         vault write auth/kubernetes/config \
           token_reviewer_jwt="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \
           kubernetes_host="https://${KUBERNETES_PORT_443_TCP_ADDR}:443" \
-          kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+          kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
+          issuer="https://kubernetes.default.svc.cluster.local"
 
         echo "Writing ESO policy..."
 
         vault policy write eso-policy - <<EOF
+        path "local/metadata/*" {
+          capabilities = ["read", "list", "create", "update", "delete"]
+        }
+
         path "local/data/*" {
-          capabilities = ["read", "create", "update"]
+          capabilities = ["read", "create", "update", "patch", "delete"]
+        }
+        EOF
+
+        vault policy write keycloak-bootstrap - <<'EOF'
+        path "local/data/management/keycloak/*" {
+          capabilities = ["read", "create", "update", "patch"]
+        }
+
+        path "local/metadata/management/keycloak/*" {
+          capabilities = ["read", "list"]
         }
         EOF
 
@@ -75,9 +91,17 @@ vault:
 
         vault write auth/kubernetes/role/external-secrets \
           bound_service_account_names=external-secrets \
-          bound_service_account_namespaces=platform-resources \
+          bound_service_account_namespaces=platform-system \
           policies=eso-policy \
-          ttl=1h
+          ttl=1h \
+          audience="https://kubernetes.default.svc.cluster.local"
+
+        vault write auth/kubernetes/role/keycloak-bootstrap \
+          bound_service_account_names="bootstrap" \
+          bound_service_account_namespaces="keycloak" \
+          policies="keycloak-bootstrap" \
+          ttl="1h" \
+          audience="https://kubernetes.default.svc.cluster.local"
 
         ########################################
         # 5. Enable secrets engines

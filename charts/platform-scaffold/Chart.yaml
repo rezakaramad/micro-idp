@@ -1,4 +1,0 @@
-apiVersion: v2
-name: platform-scaffold
-description: Create namespaces.
-version: 0.0.1

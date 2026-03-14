@@ -1,0 +1,96 @@
+name: Build and publish Crossplane function package
+
+on:
+  push:
+    paths:
+      - "src/crossplane/**"
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  CROSSPLANE_FUNCTIONS_DIR: src/crossplane
+
+concurrency:
+  group: crossplane-functions
+  cancel-in-progress: true
+
+jobs:
+
+  discover:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - id: set-matrix
+        run: |
+          DIRS=$(find "$CROSSPLANE_FUNCTIONS_DIR" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | jq -R -s -c 'split("\n")[:-1]')
+          echo "matrix={\"function\":$DIRS}" >> $GITHUB_OUTPUT
+
+  build:
+    needs: discover
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix: ${{ fromJson(needs.discover.outputs.matrix) }}
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Set variables
+        run: |
+          echo "FUNCTION_NAME=${{ matrix.function }}" >> $GITHUB_ENV
+          echo "FUNCTION_PATH=${{ env.CROSSPLANE_FUNCTIONS_DIR }}/${{ matrix.function }}" >> $GITHUB_ENV
+          echo "PACKAGE_FILE=${{ env.CROSSPLANE_FUNCTIONS_DIR }}/${{ matrix.function }}/${{ matrix.function }}.xpkg" >> $GITHUB_ENV
+          echo "RUNTIME_IMAGE=${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.function }}-runtime:${{ github.sha }}" >> $GITHUB_ENV
+
+      - name: Install Crossplane CLI
+        run: |
+          mkdir tmp && cd tmp
+          curl -sL https://raw.githubusercontent.com/crossplane/crossplane/main/install.sh | sh
+          sudo mv crossplane /usr/local/bin
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build runtime image
+        run: |
+          docker build \
+            --platform linux/amd64 \
+            -t $RUNTIME_IMAGE \
+            $FUNCTION_PATH
+
+      - name: Build Crossplane package
+        run: |
+          crossplane xpkg build \
+            --package-root $FUNCTION_PATH/package \
+            --embed-runtime-image $RUNTIME_IMAGE \
+            --package-file $PACKAGE_FILE
+
+      - name: Push Crossplane package
+        run: |
+          crossplane xpkg push \
+            -f $PACKAGE_FILE \
+            ghcr.io/${{ github.repository_owner }}/${FUNCTION_NAME}:${{ github.sha }}
+
+          crossplane xpkg push \
+            -f $PACKAGE_FILE \
+            ghcr.io/${{ github.repository_owner }}/${FUNCTION_NAME}:latest

@@ -1,0 +1,13 @@
+{{- if .Capabilities.APIVersions.Has "pkg.crossplane.io/v1/Function" }}
+{{- if .Values.tenantBootstrap.enabled }}
+
+apiVersion: pkg.crossplane.io/v1
+kind: Function
+metadata:
+  name: function-tenantrequest
+spec:
+  package: {{ .Values.tenantBootstrap.functions.tenantrequest.providerPackage }}
+
+---
+{{- end }}
+{{- end }}

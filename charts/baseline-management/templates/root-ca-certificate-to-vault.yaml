@@ -1,0 +1,38 @@
+{{- if .Capabilities.APIVersions.Has "external-secrets.io/v1alpha1/PushSecret" }}
+
+apiVersion: external-secrets.io/v1alpha1
+kind: PushSecret
+metadata:
+  name: root-ca-cert-to-vault
+  namespace: platform-system
+spec:
+  refreshInterval: 1h0m0s
+  deletionPolicy: Delete
+  secretStoreRefs:
+    - name: vault-local
+      kind: ClusterSecretStore
+  selector:
+    secret:
+      name: root-ca
+  data:
+    - conversionStrategy: None
+      match:
+        secretKey: ca.crt
+        remoteRef:
+          remoteKey: management/pki
+          property: ca.crt
+    - conversionStrategy: None
+      match:
+        secretKey: tls.crt
+        remoteRef:
+          remoteKey: management/pki
+          property: tls.crt
+    - conversionStrategy: None
+      match:
+        secretKey: tls.key
+        remoteRef:
+          remoteKey: management/pki
+          property: tls.key
+
+---
+{{- end }}

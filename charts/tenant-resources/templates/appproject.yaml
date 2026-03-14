@@ -1,0 +1,105 @@
+{{- range $cluster := $.Values.argocd.clusters -}}
+
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: "{{ $.Values.tenant.name }}-{{ $cluster.environmentPrefix }}"
+  namespace: argocd
+  labels:
+{{ include "common.labels" . | nindent 4 }}
+    platform.fluxdojo.local/tenant: "{{ $.Values.tenant.name | lower }}"
+    platform.fluxdojo.local/rbac-group-id: "{{ $.Values.tenant.argoCD.aadGroupId | lower }}"
+    platform.fluxdojo.local/cluster: "{{ $cluster.clusterName | lower }}"
+spec:
+  sourceNamespaces:
+    - "argocd-{{ $.Values.tenant.name }}"
+  clusterResourceWhitelist:
+    - group: ""
+      kind: ""
+  description: ArgoCD AppProject for {{ $.Values.tenant.name }}
+  destinations:
+  - namespace: {{ $.Values.tenant.name }}
+    name: {{ $cluster.clusterName}}
+  namespaceResourceWhitelist:
+    - group: ""
+      kind: "Endpoints"
+    - group: ""
+      kind: "Pod"
+    - group: ""
+      kind: "ConfigMap"
+    - group: ""
+      kind: "Service"
+    - group: "gateway.networking.k8s.io"
+      kind: "HTTPRoute"
+    - group: ""
+      kind: "Secret"
+    - group: ""
+      kind: "ServiceAccount"
+    - group: "discovery.k8s.io"
+      kind: "EndpointSlice"
+    - group: "apps"
+      kind: "Deployment"
+    - group: "apps"
+      kind: "ReplicaSet"
+    - group: "networking.k8s.io"
+      kind: "Ingress"
+    - group: "networking.k8s.io"
+      kind: "NetworkPolicy"
+    - group: "rbac.authorization.k8s.io"
+      kind: "Role"
+    - group: "rbac.authorization.k8s.io"
+      kind: "RoleBinding"
+    - group: "batch"
+      kind: "Job"
+    - group: "batch"
+      kind: "CronJob"
+    - group: "cilium.io"
+      kind: "CiliumEndpoint"
+    - group: "cert-manager.io"
+      kind: "Certificate"
+    - group: "cert-manager.io"
+      kind: "CertificateRequest"
+    - group: "acme.cert-manager.io"
+      kind: "Order"
+    - group: "storage.cnrm.cloud.google.com"
+      kind: "StorageBucket"
+    - group: "sql.cnrm.cloud.google.com"
+      kind: "SQLUser"
+    - group: "sql.cnrm.cloud.google.com"
+      kind: "SQLDatabase"
+    - group: "sql.cnrm.cloud.google.com"
+      kind: "SQLInstance"
+    - group: "iam.cnrm.cloud.google.com"
+      kind: "IAMServiceAccount"
+    - group: "iam.cnrm.cloud.google.com"
+      kind: "IAMServiceAccountKey"
+    - group: "iam.cnrm.cloud.google.com"
+      kind: "IAMPartialPolicy"
+    - group: "iam.cnrm.cloud.google.com"
+      kind: "IAMPolicyMember"
+    - group: "pubsub.cnrm.cloud.google.com"
+      kind: "PubSubTopic"
+    - group: "pubsub.cnrm.cloud.google.com"
+      kind: "PubSubSubscription"
+    - group: "pubsub.cnrm.cloud.google.com"
+      kind: "PubSubSchema"
+    - group: "policy"
+      kind: "PodDisruptionBudget"
+    - group: "example.crossplane.io"
+      kind: "App"
+  sourceRepos:
+    - {{ include "tenant.repoURL" $.Values.tenant.name | quote }}
+  roles:
+  - name: default
+    description: Default roles for {{ $.Values.tenant.name }}
+    policies:
+{{- range $policy := $cluster.tenantAppProject.policies }}
+{{- range $action := $policy.actions }}
+      - p, proj:{{ $.Values.tenant.name }}-{{ $cluster.environmentPrefix }}:default, {{ $policy.resource }}, {{ $action }}, {{ $.Values.tenant.name }}-{{ $cluster.environmentPrefix }}/*, allow
+{{- end }}
+{{- end }}
+    groups:
+      - {{ $.Values.tenant.argoCD.aadGroupId }}
+
+---
+{{- end }}

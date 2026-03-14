@@ -1,0 +1,4 @@
+bootstrap:
+  image:
+    repository: ghcr.io/rezakaramad/kubepave-bootstrap
+    tag: sha-9ebe327

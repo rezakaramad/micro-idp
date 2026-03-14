@@ -1,14 +1,14 @@
 {{- $certificateName := printf "%s-cert-traefik" (include "certificateName" .Values.defaultGateway.hostname) -}}
 
 #
-# Generate a default Gateway resource in 'platform-resources' namespace
+# Generate a default Gateway resource in 'platform-system' namespace
 ###########################################################################################
 
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
   name: default-traefik
-  namespace: platform-resources
+  namespace: platform-system
   annotations:
     cert-manager.io/cluster-issuer: "root-ca"
 spec:
