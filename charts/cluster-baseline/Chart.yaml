@@ -1,4 +1,0 @@
-apiVersion: v2
-name: cluster-baseline
-description: Deploys the common resources in clusters.
-version: 0.0.1
