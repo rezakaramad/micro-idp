@@ -75,38 +75,82 @@ type ClusterConnection struct {
 	CAData      []byte
 }
 
+// Visual flow
+// Reconcile starts
+//
+//	↓
+//
+// GET object
+//
+//	├── fail → return (ignore if err is “NotFound”, or error if err is something else)
+//	↓
+//
+// Check deletion
+//
+//	├── yes → return reconcileDelete(...)
+//	↓
+//
+// Check finalizer
+//
+//	├── missing → add it
+//	│      ├── update fails → return error
+//	│      └── success → return Requeue:true
+//	↓
+//
+// (continues to next part of code...)
 func (r *TenantReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := ctrl.LoggerFrom(ctx).WithValues("tenant", req.Name)
 
+	// Create an empty struct
+	// tenant = {}
 	var tenant midpv1alpha1.Tenant
+
 	// Get the Tenant object from Kubernetes
+	// 'r.Get(...)' fetches data from Kubernetes and fills the object.
+	// The below line means “using this request context, fetch the object identified by this name, and store it in tenant”
 	if err := r.Get(ctx, req.NamespacedName, &tenant); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
 	// If deletion timestamp is set: Kubernetes is deleting this object
+	// Checking DeletionTimestamp is the canonical way to detect deletion in controllers
+	// In K8s, deletion is not immediate but when you delete something,
+	// K8s basically marks the object for deletion by stamptimg the time deletion happened.
 	// Must clean up external resources first
 	if !tenant.DeletionTimestamp.IsZero() {
 		return r.reconcileDelete(ctx, log, &tenant)
 	}
 
-	// Block deletion until I clean up
+	// Block deletion until I finish clean up
 	if !controllerutil.ContainsFinalizer(&tenant, TenantFinalizer) {
 		log.Info("Adding finalizer")
 		controllerutil.AddFinalizer(&tenant, TenantFinalizer)
 
+		// r.Update(...) = “send this modified object to the Kubernetes API server and store it”
+		// A little about the syntax: if <initialization>; <condition> {...}
 		if err := r.Update(ctx, &tenant); err != nil {
 			return ctrl.Result{}, err
 		}
 
-		// Run reconcile again
+		// What is reconcile
+		// controller-runtime (the system) calls your Reconcile function
+		// What is requeue
+		// requeue = call my Reconcile function again for this object
+		// ctrl.Result{} = Reconcile(tenant-a) → (done) → WAIT for new event
+		// ctrl.Result{Requeue: true} = Reconcile(tenant-a) → (done) → IMMEDIATELY call again → Reconcile(tenant-a)
+		// Think of it like a queue; controller-runtime has a queue like:
+		// [tenant-a, tenant-b, tenant-c]
+		// Requeue means: put tenant-a back into the queue
+
+		// Run Reconcile again immediately
 		return ctrl.Result{Requeue: true}, nil
 	}
 
 	return r.reconcileUpsert(ctx, log, &tenant)
 }
 
-// Tenant exists -> namespace exists in all clusters
+// Tenant exists → ensure “for this Tenant, a namespace exists in all clusters”
+// Controller r processes this tenant and decides what happens next
 func (r *TenantReconciler) reconcileUpsert(
 	ctx context.Context,
 	log logr.Logger,
@@ -118,29 +162,49 @@ func (r *TenantReconciler) reconcileUpsert(
 	clusterSecrets, err := r.listClusterSecrets(ctx)
 	if err != nil {
 		log.Error(err, "Failed to list cluster secrets")
+		// Can’t even discover clusters → retry later
 		return ctrl.Result{}, err
 	}
 
 	log.Info("Discovered cluster secrets", "count", len(clusterSecrets))
 
 	// For each cluster, connect and then creates resources
-	err = r.forEachCluster(ctx, log, clusterSecrets, func(ctx context.Context, clusterLog logr.Logger, clusterClient client.Client, conn *ClusterConnection) error {
-		clusterLog.Info("Ensuring namespace", "namespace", tenant.Name)
+	// Briefly about how we call 'forEachCluster' function:
+	// We are passing a function into another function, so it can run your logic for each cluster
+	// forEachCluster = “loop over clusters + setup connection”
+	// And then we say: what should happen inside each cluster
+	// Means “for each cluster: run THIS function I’m giving you”
+	err = r.forEachCluster(
+		ctx,
+		log,
+		clusterSecrets,
+		func(
+			ctx context.Context,
+			clusterLog logr.Logger,
+			clusterClient client.Client,
+			conn *ClusterConnection,
+		) error {
+			clusterLog.Info("Ensuring namespace", "namespace", tenant.Name)
 
-		if err := r.ensureNamespace(ctx, clusterClient, tenant.Name); err != nil {
-			return fmt.Errorf("ensure namespace in cluster %q: %w", conn.Name, err)
-		}
+			if err := r.ensureNamespace(ctx, clusterClient, tenant.Name); err != nil {
+				return fmt.Errorf("ensure namespace in cluster %q: %w", conn.Name, err)
+			}
 
-		clusterLog.Info("Namespace ensured", "namespace", tenant.Name)
-		return nil
-	})
+			clusterLog.Info("Namespace ensured", "namespace", tenant.Name)
+			return nil
+		})
 
+	// If partial failure:
+	// 	1. Mark Tenant as NOT ready
+	// 	2. Schedule retry after some time
 	if err != nil {
 		log.Error(err, "Tenant reconciled with partial failures")
 		_ = r.setTenantReadyCondition(ctx, tenant, metav1.ConditionFalse, "PartiallyReady", err.Error())
+		// Try again after some time
 		return ctrl.Result{RequeueAfter: RetryAfter}, nil
 	}
 
+	// All clusters succeeded → mark Tenant as Ready
 	if err := r.setTenantReadyCondition(ctx, tenant, metav1.ConditionTrue, "Reconciled", "Tenant namespace ensured in all clusters"); err != nil {
 		log.Error(err, "Failed to update tenant status")
 		return ctrl.Result{}, err
@@ -157,6 +221,7 @@ func (r *TenantReconciler) reconcileDelete(
 ) (ctrl.Result, error) {
 	log.Info("Reconciling deletion")
 
+	// If no cleanup (finalizer) → do nothing
 	if !controllerutil.ContainsFinalizer(tenant, TenantFinalizer) {
 		return ctrl.Result{}, nil
 	}
@@ -196,7 +261,9 @@ func (r *TenantReconciler) reconcileDelete(
 
 // SetupWithManager sets up the controller with the Manager.
 // Watch Tenant objects, call Reconcile when they change
+// Register my controller and tell the system what I watch
 func (r *TenantReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	// The controller looks for cluster secrets, it needs to know which name should it look in
 	if r.WatchNamespace == "" {
 		r.WatchNamespace = os.Getenv("POD_NAMESPACE")
 		if r.WatchNamespace == "" {
@@ -204,13 +271,18 @@ func (r *TenantReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		}
 	}
 
+	// clientCache = connection pool for clusters
 	if r.clientCache == nil {
 		r.clientCache = make(map[string]client.Client)
 	}
 
+	// Register controller
 	return ctrl.NewControllerManagedBy(mgr).
+		// This tells controller-runtime: whenever a Tenant changes → call Reconcile
 		For(&midpv1alpha1.Tenant{}).
+		// Give this controller a name (used in logs/metrics)
 		Named("tenant").
+		// Use r (TenantReconciler) as the Reconcile implementation
 		Complete(r)
 }
 

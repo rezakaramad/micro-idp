@@ -4,6 +4,34 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// +kubebuilder:object:root=true
+// +kubebuilder:resource:scope=Cluster
+// +kubebuilder:subresource:status
+// Tenant is the Schema for the tenants API
+// Lifecycle of this object: user creates Tenant → K8s stores it → controller watches it → controller reads Spec → controller updates Status.
+type Tenant struct {
+	// What kind of object this is
+	// Basically contains
+	// apiVersion: m.idp.rezakaramad.local/v1alpha1
+	// kind: Tenant
+	metav1.TypeMeta `json:",inline"`
+	// Identity + metadata
+	// Contains
+	// Contains:
+	// metadata:
+	//   name:
+	//   labels:
+	//   annotations:
+	//   finalizers:
+	//   generation:
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	// Desired state (user input)
+	Spec TenantSpec `json:"spec,omitempty"`
+	// Observed state (controller output)
+	Status TenantStatus `json:"status,omitempty"`
+}
+
 // TenantSpec defines the desired state of Tenant
 type TenantSpec struct {
 	// Reserved for future configuration.
@@ -17,24 +45,7 @@ type TenantStatus struct {
 	ObservedGeneration int64              `json:"observedGeneration,omitempty"`
 }
 
-//+kubebuilder:resource:scope=Cluster
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
-
-// Tenant is the Schema for the tenants API
-type Tenant struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-
-	// Spec defines the desired state of Tenant
-	Spec TenantSpec `json:"spec,omitempty"`
-
-	// Status defines the observed state of Tenant
-	Status TenantStatus `json:"status,omitempty"`
-}
-
-//+kubebuilder:object:root=true
-
+// +kubebuilder:object:root=true
 // TenantList contains a list of Tenant
 type TenantList struct {
 	metav1.TypeMeta `json:",inline"`
@@ -42,6 +53,15 @@ type TenantList struct {
 	Items           []Tenant `json:"items"`
 }
 
+// Why is TenantList a root object?
+// Because K8s API needs it. K8s supports two types of requests:
+// 1. Get one object → 'GET /apis/.../tenants/team-a'
+// 2. List objects → 'GET /apis/.../tenants'
+// TenantList must a root object because it appears at the API boundary.
+
+// Registrer a new type called Tenant
 func init() {
 	SchemeBuilder.Register(&Tenant{}, &TenantList{})
 }
+
+// 'init' function is a special Go function running automatically when the package is imported - we never call it manually.
