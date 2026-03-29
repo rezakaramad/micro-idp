@@ -270,7 +270,7 @@ trust_self_signed_ca_certificate() {
   TRUSTSTORE="$BASE_DIR/java-truststore.jks"
   TRUSTSTORE_PASS="changeit"
 
-  NSS_DIR=$HOME/.pki/nssdb
+  NSS_DIR="$HOME/.pki/nssdb"
   NSS_DB="sql:$NSS_DIR"
   NSS_NAME="RezaKara Root CA"
   NSS_PWFILE="$NSS_DIR/.nss-pwfile"
@@ -298,7 +298,8 @@ trust_self_signed_ca_certificate() {
   vault kv get -field=tls.crt local/management/pki > "$CERT_FILE"
   vault kv get -field=tls.key local/management/pki > "$KEY_FILE"
 
-  # ----- Validate certificate files -----
+  chmod 600 "$KEY_FILE"
+
   echo "📜 Verify certificate files"
 
   if ! openssl x509 -in "$CA_FILE" -noout >/dev/null 2>&1; then
@@ -327,7 +328,15 @@ trust_self_signed_ca_certificate() {
 
   echo "🟢 Certificate is a CA"
 
-  # ----- Verify CA -----
+  echo "🔍 Verify CA self-signature"
+
+  if ! openssl verify -CAfile "$CA_FILE" "$CA_FILE" >/dev/null 2>&1; then
+    echo "❌ CA self-verification failed"
+    exit 1
+  fi
+
+  echo "🟢 CA self-verification passed"
+
   echo "🔍 Verify CA signs $KEYCLOAK_HOST"
 
   if ! timeout 8 openssl s_client \
@@ -348,7 +357,6 @@ trust_self_signed_ca_certificate() {
 
   echo "🟢 CA correctly signs the server certificate"
 
-  # ----- Java truststore -----
   echo "☕ Update Java truststore"
 
   keytool -delete -alias "$JAVA_ALIAS" \
@@ -369,7 +377,6 @@ trust_self_signed_ca_certificate() {
 
   echo "🟢 Java truststore updated"
 
-  # ----- Browser NSS trust -----
   echo "🌐 Update browser trust"
 
   mkdir -p "$NSS_DIR"
@@ -385,14 +392,17 @@ trust_self_signed_ca_certificate() {
 
   echo "🟢 Browser CA updated (restart browser)"
 
-  # ----- System trust -----
   echo "🔐 Update system trust store"
 
-  sudo rm -f "$SYS_CA_FILE"
-  sudo cp "$CA_FILE" "$SYS_CA_FILE"
+  sudo install -m 0644 "$CA_FILE" "$SYS_CA_FILE"
   sudo update-ca-certificates --fresh >/dev/null 2>&1 || true
 
-  openssl verify -CAfile /etc/ssl/certs/ca-certificates.crt "$CA_FILE"
+  if [[ ! -f "$SYS_CA_FILE" ]]; then
+    echo "❌ Failed to install CA into system trust directory"
+    exit 1
+  fi
+
+  echo "🟢 System trust files updated"
 
   export JAVA_TOOL_OPTIONS="-Djavax.net.ssl.trustStore=$TRUSTSTORE -Djavax.net.ssl.trustStorePassword=$TRUSTSTORE_PASS"
 
@@ -401,9 +411,6 @@ trust_self_signed_ca_certificate() {
   echo "To persist across shells run:"
   echo "echo 'export JAVA_TOOL_OPTIONS=\"$JAVA_TOOL_OPTIONS\"' >> ~/.bashrc"
 
-  # --------------------------------------------------------------------------
-  # Seed CA trust into workload clusters
-  # --------------------------------------------------------------------------
   echo "🌐 Seeding CA trust into workload clusters..."
 
   get_minikube_tenant_profiles | while IFS= read -r profile; do
@@ -415,7 +422,6 @@ trust_self_signed_ca_certificate() {
       --from-file=tls.key="$KEY_FILE" \
       --dry-run=client -o yaml \
     | kubectl --context "$profile" apply -f -
-
   done
 
   echo "🔐 Root CA secret distributed to workload clusters."

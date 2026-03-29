@@ -1,0 +1,25 @@
+; Default TTL (how long DNS responses are cached by clients)
+$TTL 60
+
+; SOA = Start Of Authority (defines this DNS zone)
+@   IN SOA ns.wl.rezakara.demo. admin.rezakara.demo. (
+        1       ; serial number (increment if zone is manually changed)
+        7200    ; refresh
+        3600    ; retry
+        1209600 ; expire
+        60      ; negative cache TTL
+)
+
+; NS record = declares the authoritative nameserver for this zone
+@   IN NS ns.wl.rezakara.demo.
+
+; A record for the nameserver (must exist so it can be resolved)
+; Host machine IP as seen from minikube-workload cluster
+ns  IN A  192.168.39.1
+
+; wl.rezakara.demo
+;  ├── SOA → I'm authoritative
+;  ├── NS  → my DNS server is ns.wl.rezakara.demo
+;  └── ns  → that server lives at 192.168.39.1
+
+; --- external-dns will dynamically add records below ---

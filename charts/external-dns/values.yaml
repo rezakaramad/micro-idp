@@ -57,11 +57,9 @@ external-dns:
 
   extraArgs:
     - --rfc2136-host=host.minikube.internal
-    - --rfc2136-port=1053
     - --rfc2136-zone=rezakara.demo
-
+    - --rfc2136-port=1053
     - --rfc2136-tsig-keyname=$(TSIG_KEY_NAME)
     - --rfc2136-tsig-secret=$(TSIG_SECRET)
     - --rfc2136-tsig-secret-alg=$(TSIG_ALGORITHM)
-
     - --gateway-namespace=platform-system
