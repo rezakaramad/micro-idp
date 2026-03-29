@@ -1,0 +1,5 @@
+external-dns:
+  # Sets a unique identifier written into TXT registry records so ExternalDNS knows which DNS records it owns and can
+  # safely manage them without clashing with other ExternalDNS instances.
+  # MUST be unique for each cluster and must not change.
+  txtOwnerId: minikube-workload
