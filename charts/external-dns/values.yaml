@@ -58,3 +58,4 @@ external-dns:
   extraArgs:
     - --rfc2136-port=1053
     - --gateway-namespace=platform-system
+    - --publish-internal-services
