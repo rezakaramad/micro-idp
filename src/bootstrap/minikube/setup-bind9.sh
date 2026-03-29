@@ -180,13 +180,15 @@ start_bind9() {
 # ----------------------------------------------------------------------------
 # Output helpers
 # ----------------------------------------------------------------------------
-print_help() {
-  echo ""
-  echo "🔍 Test DNS:"
-  echo "dig @127.0.0.1 -p ${PORT} fluxdojo.demo"
-  echo ""
-  echo "📜 Logs:"
-  echo "docker logs -f bind9"
+verify() {
+  echo "🔍 Running DNS checks..."
+  echo "Checking nameserver record"
+  dig @127.0.0.1 -p ${PORT} ns.fluxdojo.demo +short
+  echo "Checking zone authority"
+  dig @127.0.0.1 -p ${PORT} fluxdojo.demo +noall +authority
+  echo "Checking recursion is disabled"
+  dig @127.0.0.1 -p ${PORT} google.com | grep status
+  echo "✅ DNS sanity checks complete"
 }
 
 # ----------------------------------------------------------------------------
@@ -201,7 +203,7 @@ main() {
   check_port
   cleanup_existing_container
   start_bind9
-  print_help
+  verify
 }
 
 main "$@"

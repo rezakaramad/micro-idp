@@ -106,7 +106,7 @@ configure_cluster() {
   local AUTH_PATH="kubernetes-${profile}"
 
   echo ""
-  echo "➡️ Configuring Vault auth for $profile"
+  echo "➡️  Configuring Vault auth for $profile"
 
   kubectl --context="$profile" wait \
     --for=condition=Ready nodes \
