@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: baseline-mgmt
+  namespace: argocd
+spec:
+  project: platform-system
+  source:
+    repoURL: https://github.com/rezakaramad/kubepave
+    targetRevision: HEAD
+    path: charts/baseline-management
+  destination:
+    name: in-cluster
+  syncPolicy:
+    syncOptions:
+    - ServerSideApply=true
+    - ApplyOutOfSyncOnly=true
+    - SkipDryRunOnMissingResource=true

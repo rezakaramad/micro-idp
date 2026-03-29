@@ -1,3 +1,4 @@
 .platform.env
 .local
 .ideas
+*.key

@@ -17,7 +17,9 @@ spec:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Tenant is the Schema for the tenants API
+        description: |-
+          Tenant is the Schema for the tenants API
+          Lifecycle of this object: user creates Tenant → K8s stores it → controller watches it → controller reads Spec → controller updates Status.
         properties:
           apiVersion:
             description: |-
@@ -37,10 +39,10 @@ spec:
           metadata:
             type: object
           spec:
-            description: Spec defines the desired state of Tenant
+            description: Desired state (user input)
             type: object
           status:
-            description: Status defines the observed state of Tenant
+            description: Observed state (controller output)
             properties:
               conditions:
                 description: Conditions represent the latest available observations

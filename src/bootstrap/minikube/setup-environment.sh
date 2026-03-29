@@ -477,6 +477,32 @@ install_kubectl_plugins() {
 }
 
 # ----------------------------------------------------------------------------
+# TSIG secret for external-dns (RFC2136)
+# ----------------------------------------------------------------------------
+
+create_external_dns_tsig_secret() {
+  echo "🔐 Generating TSIG secret for external-dns..."
+
+  VAULT_PATH="local/management/external-dns/rfc2136"
+
+  # Check if secret already exists (idempotency)
+  if vault kv get "$VAULT_PATH" >/dev/null 2>&1; then
+    echo "⚠️  TSIG secret already exists in Vault. Skipping generation."
+    return
+  fi
+
+  # Generate secure base64 secret (compatible with BIND + external-dns)
+  TSIG_SECRET="$(openssl rand -base64 32)"
+
+  vault kv put "$VAULT_PATH" \
+    tsig_key_name="externaldns-key" \
+    tsig_secret="$TSIG_SECRET" \
+    algorithm="hmac-sha256" > /dev/null
+
+  echo "✅ TSIG secret stored in Vault at $VAULT_PATH"
+}
+
+# ----------------------------------------------------------------------------
 # Main
 # ----------------------------------------------------------------------------
 
@@ -492,6 +518,7 @@ main() {
   trust_self_signed_ca_certificate
   create_crossplane_azure_secret
   install_kubectl_plugins
+  create_external_dns_tsig_secret
 
   echo "✅ Bootstrap complete"
 }
