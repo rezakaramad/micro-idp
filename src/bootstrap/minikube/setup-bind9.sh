@@ -30,7 +30,7 @@ vault_login() {
   VAULT_TOKEN=$(kubectl exec -n "$VAULT_NAMESPACE" "$VAULT_POD" -- \
     sh -c "grep 'Initial Root Token:' /vault/data/init.txt | awk '{print \$4}'")
 
-  export VAULT_ADDR="https://vault.fluxdojo.local"
+  export VAULT_ADDR="https://vault.rezakara.demo"
   export VAULT_TOKEN="$VAULT_TOKEN"
   export VAULT_SKIP_VERIFY=true
 
@@ -183,9 +183,9 @@ start_bind9() {
 verify() {
   echo "🔍 Running DNS checks..."
   echo "Checking nameserver record"
-  dig @127.0.0.1 -p ${PORT} ns.fluxdojo.demo +short
+  dig @127.0.0.1 -p ${PORT} ns.rezakara.demo +short
   echo "Checking zone authority"
-  dig @127.0.0.1 -p ${PORT} fluxdojo.demo +noall +authority
+  dig @127.0.0.1 -p ${PORT} rezakara.demo +noall +authority
   echo "Checking recursion is disabled"
   dig @127.0.0.1 -p ${PORT} google.com | grep status
   echo "✅ DNS sanity checks complete"

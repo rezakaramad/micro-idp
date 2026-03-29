@@ -36,7 +36,7 @@ type Tenant struct {
 
 This becomes:
 ```
-apiVersion: m.idp.rezakaramad.local/v1alpha1
+apiVersion: m.idp.rezakara.demo/v1alpha1
 kind: Tenant
 ```
 
@@ -169,7 +169,7 @@ Makefile = “kubebuilder CLI wrapper”
 PROJECT
 ```
 Tracks:
-- group: `m.idp.rezakaramad.local`
+- group: `m.idp.rezakara.demo`
 - version: `v1alpha1`
 - kind: `Tenant`
 
@@ -281,7 +281,7 @@ type Tenant struct { ... }
 And somewhere Kubernetes receives JSON like:
 ```
 {
-  "apiVersion": "m.idp.rezakaramad.local/v1alpha1",
+  "apiVersion": "m.idp.rezakara.demo/v1alpha1",
   "kind": "Tenant",
   ...
 }
@@ -308,7 +308,7 @@ Scheme = {}
 After registering
 ```
 Scheme = {
-  ("m.idp.rezakaramad.local/v1alpha1", "Tenant") → Tenant struct
+  ("m.idp.rezakara.demo/v1alpha1", "Tenant") → Tenant struct
 }
 ```
 Another way to put this:
@@ -321,7 +321,7 @@ Example (conceptually)
 Scheme:
 ("v1", "Pod") → Pod struct
 ("apps/v1", "Deployment") → Deployment struct
-("m.idp.rezakaramad.local/v1alpha1", "Tenant") → Tenant struct
+("m.idp.rezakara.demo/v1alpha1", "Tenant") → Tenant struct
 ```
 
 In `main.go`:
@@ -342,7 +342,7 @@ associate Tenant with GroupVersion
 ```
 We mean:
 ```
-("m.idp.rezakaramad.local/v1alpha1", "Tenant") → Tenant struct
+("m.idp.rezakara.demo/v1alpha1", "Tenant") → Tenant struct
 ```
 
 This is a two-step job:

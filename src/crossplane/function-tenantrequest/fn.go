@@ -161,7 +161,7 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) 
 	)
 
 	// Declare the desired tenant resource.
-	tenant.SetAPIVersion("idp.fluxdojo.local/v1alpha1")
+	tenant.SetAPIVersion("idp.rezakara.demo/v1alpha1")
 	tenant.SetKind("Tenant")
 	tenant.SetName(name)
 

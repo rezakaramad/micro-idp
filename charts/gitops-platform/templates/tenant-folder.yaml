@@ -35,7 +35,7 @@ spec:
   - name:  in-cluster
     namespace: '*'
   clusterResourceWhitelist:
-    - group: idp.fluxdojo.local
+    - group: idp.rezakara.demo
       kind: TenantRequest
 
 ---

@@ -12,6 +12,6 @@ metadata:
     argocd.argoproj.io/sync-wave: "-10"
   labels:
 {{ include "common.labels" . | nindent 4 }}
-    platform.fluxdojo.local/tenant: "{{ .Values.tenant.name | lower }}"
+    platform.rezakara.demo/tenant: "{{ .Values.tenant.name | lower }}"
 
 ---

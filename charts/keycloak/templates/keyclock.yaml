@@ -15,7 +15,7 @@
 #       secret: keycloak-bootstrap
 #   hostname:
 #     strict: false
-#     hostname: oidc.fluxdojo.local
+#     hostname: oidc.rezakara.demo
 #   # Required if you're behind Traefik or Gateway API
 #   proxy:
 #     headers: xforwarded

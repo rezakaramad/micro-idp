@@ -12,7 +12,7 @@ import (
 type Tenant struct {
 	// What kind of object this is
 	// Basically contains
-	// apiVersion: m.idp.rezakaramad.local/v1alpha1
+	// apiVersion: m.idp.rezakara.demo/v1alpha1
 	// kind: Tenant
 	metav1.TypeMeta `json:",inline"`
 	// Identity + metadata

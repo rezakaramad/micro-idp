@@ -4,13 +4,13 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: tenant.idp.fluxdojo.local
+  name: tenant.idp.rezakara.demo
   labels:
-    crossplane.io/xrd: tenants.idp.fluxdojo.local
+    crossplane.io/xrd: tenants.idp.rezakara.demo
 
 spec:
   compositeTypeRef:
-    apiVersion: idp.fluxdojo.local/v1alpha1
+    apiVersion: idp.rezakara.demo/v1alpha1
     kind: Tenant
 
   mode: Pipeline

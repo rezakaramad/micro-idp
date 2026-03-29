@@ -1,4 +1,4 @@
-apiVersion: idp.fluxdojo.local/v1alpha1
+apiVersion: idp.rezakara.demo/v1alpha1
 kind: TenantRequest
 metadata:
   name: payment

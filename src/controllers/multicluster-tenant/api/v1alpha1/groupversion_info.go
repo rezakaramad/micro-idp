@@ -3,7 +3,7 @@
 // and how do I register them into a Scheme?”
 
 // +kubebuilder:object:generate=true
-// +groupName=m.idp.rezakaramad.local
+// +groupName=m.idp.rezakara.demo
 package v1alpha1
 
 import (
@@ -16,7 +16,7 @@ var (
 	// The namespace of API
 	// Kubernetes identifies objects using: (apiVersion, kind)
 	GroupVersion = schema.GroupVersion{
-		Group:   "m.idp.rezakaramad.local",
+		Group:   "m.idp.rezakara.demo",
 		Version: "v1alpha1",
 	}
 
@@ -25,7 +25,7 @@ var (
 	// 		SchemeBuilder.Register(&Tenant{}, &TenantList{})
 	// It prepares something like:
 	//   scheme.AddKnownTypes(
-	//     "m.idp.rezakaramad.local/v1alpha1",
+	//     "m.idp.rezakara.demo/v1alpha1",
 	//     Tenant,
 	//     TenantList
 	//   )

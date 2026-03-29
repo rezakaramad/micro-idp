@@ -1,7 +1,7 @@
 {{- define "hostname" -}}
 {{- $tenant := .name | replace " " "-" | lower -}}
 {{- $environmentPrefix := .environmentPrefix | replace " " "-" | lower -}}
-{{- printf "%s.%s.fluxdojo.local" $tenant $environmentPrefix -}}
+{{- printf "%s.%s.rezakara.demo" $tenant $environmentPrefix -}}
 {{- end -}}
 
 {{- define "certificateName" -}}
@@ -15,8 +15,8 @@
 Common labels for all resources in this chart
 */}}
 {{- define "common.labels" -}}
-platform.fluxdojo.local/part-of: idp
-platform.fluxdojo.local/component: tenant-gateway
+platform.rezakara.demo/part-of: idp
+platform.rezakara.demo/component: tenant-gateway
 {{- end }}
 
 {{- define "projectDisplayName" }}

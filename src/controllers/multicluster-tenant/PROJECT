@@ -3,7 +3,7 @@
 # and allow the plugins properly work.
 # More info: https://book.kubebuilder.io/reference/project-config.html
 cliVersion: 4.13.0
-domain: rezakaramad.local
+domain: rezakara.demo
 layout:
 - go.kubebuilder.io/v4
 projectName: multicluster-tenant
@@ -13,7 +13,7 @@ resources:
     crdVersion: v1
     namespaced: true
   controller: true
-  domain: rezakaramad.local
+  domain: rezakara.demo
   group: m.idp
   kind: Tenant
   path: github.com/rezakaramad/kubepave/src/controllers/tenant/api/v1alpha1

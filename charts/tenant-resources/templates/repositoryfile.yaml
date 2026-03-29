@@ -8,8 +8,8 @@ metadata:
   namespace: "argocd-{{ .Values.tenant.name }}"
   labels:
 {{ include "common.labels" . | nindent 4 }}
-    platform.fluxdojo.local/tenant: "{{ .Values.tenant.name | lower }}"
-    platform.fluxdojo.local/github-org: "{{ $githubOrg }}"
+    platform.rezakara.demo/tenant: "{{ .Values.tenant.name | lower }}"
+    platform.rezakara.demo/github-org: "{{ $githubOrg }}"
 
 spec:
   providerConfigRef:
@@ -38,7 +38,7 @@ spec:
 
       | Environment     | Hostname                                           |
       |-----------------|----------------------------------------------------|
-      | Workload `wl`   | `*.{{ .Values.tenant.dnsName }}.wl.fluxdojo.local` |
+      | Workload `wl`   | `*.{{ .Values.tenant.dnsName }}.wl.rezakara.demo` |
 
       ---
 

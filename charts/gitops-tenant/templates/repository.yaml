@@ -10,8 +10,8 @@
 #   namespace: "argocd-{{ .Values.tenant.name }}"
 #   labels:
 # {{ include "common.labels" . | nindent 4 }}
-#     platform.fluxdojo.local/tenant: {{ .Values.tenant.name | lower | quote }}
-#     platform.fluxdojo.local/github-org: {{ $githubOrg | quote }}
+#     platform.rezakara.demo/tenant: {{ .Values.tenant.name | lower | quote }}
+#     platform.rezakara.demo/github-org: {{ $githubOrg | quote }}
 
 # spec:
 #   deletionPolicy: Orphan

@@ -12,7 +12,6 @@ pkill -f "kubectl.*proxy" || true
 echo "🧹 Cleaning BIND9 container..."
 
 if docker ps -a --format '{{.Names}}' | grep -q '^bind9$'; then
-  echo "🧨 Removing bind9 container"
   docker rm -f bind9 >/dev/null 2>&1 || true
 else
   echo "✔ No bind9 container found"
@@ -41,14 +40,14 @@ echo "✅ Clean slate ready"
 # -------------------------------
 echo "🧼 Cleaning /etc/hosts entries..."
 
-if grep -q 'fluxdojo.local' /etc/hosts; then
-  echo "🧹 Removing fluxdojo.local entries from /etc/hosts"
+if grep -q 'rezakara.demo' /etc/hosts; then
+  echo "🧹 Removing rezakara.demo entries from /etc/hosts"
 
   sudo cp /etc/hosts /etc/hosts.bak
 
-  sudo sed -i.bak '/fluxdojo\.local/d' /etc/hosts
+  sudo sed -i.bak '/rezakara\.demo/d' /etc/hosts
 
   echo "✅ /etc/hosts cleaned"
 else
-  echo "✔ No fluxdojo.local entries found"
+  echo "✔ No rezakara.demo entries found"
 fi

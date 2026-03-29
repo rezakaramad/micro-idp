@@ -4,13 +4,13 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: tenant.idp.fluxdojo.local
+  name: tenant.idp.rezakara.demo
   labels:
-    crossplane.io/xrd: tenants.idp.fluxdojo.local
+    crossplane.io/xrd: tenants.idp.rezakara.demo
 
 spec:
   compositeTypeRef:
-    apiVersion: idp.fluxdojo.local/v1alpha1
+    apiVersion: idp.rezakara.demo/v1alpha1
     kind: Tenant
 
   mode: Pipeline
@@ -33,9 +33,9 @@ spec:
               metadata:
                 namespace: argocd
                 labels:
-                  idp.fluxdojo.local/tenant: ""
-                  idp.fluxdojo.local/component: gitops
-                  idp.fluxdojo.local/managed-by: crossplane
+                  idp.rezakara.demo/tenant: ""
+                  idp.rezakara.demo/component: gitops
+                  idp.rezakara.demo/managed-by: crossplane
               spec:
                 project: default
                 source:
@@ -74,7 +74,7 @@ spec:
               # Tenant labels
               - type: FromCompositeFieldPath
                 fromFieldPath: spec.name
-                toFieldPath: metadata.labels[idp.fluxdojo.local/tenant]
+                toFieldPath: metadata.labels[idp.rezakara.demo/tenant]
 
               # Helm values
               - type: CombineFromComposite
@@ -106,9 +106,9 @@ spec:
               metadata:
                 namespace: argocd
                 labels:
-                  idp.fluxdojo.local/tenant: ""
-                  idp.fluxdojo.local/component: baseline
-                  idp.fluxdojo.local/managed-by: crossplane
+                  idp.rezakara.demo/tenant: ""
+                  idp.rezakara.demo/component: baseline
+                  idp.rezakara.demo/managed-by: crossplane
               spec:
                 project: default
                 source:
@@ -149,7 +149,7 @@ spec:
 
               - type: FromCompositeFieldPath
                 fromFieldPath: spec.name
-                toFieldPath: metadata.labels[idp.fluxdojo.local/tenant]
+                toFieldPath: metadata.labels[idp.rezakara.demo/tenant]
 
               - type: CombineFromComposite
                 toFieldPath: spec.source.helm.values

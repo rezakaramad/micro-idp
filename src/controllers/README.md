@@ -15,7 +15,7 @@ Initialize the project:
 
 ```
 kubebuilder init \
-    --domain rezakaramad.local \
+    --domain rezakara.local \
     --repo github.com/rezakaramad/kubepave/src/controllers/tenant
 ```
 Create the Tenant API and controller:

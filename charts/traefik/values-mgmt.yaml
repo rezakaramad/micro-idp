@@ -1,5 +1,5 @@
 defaultGateway:
-  hostname: '*.fluxdojo.local'
+  hostname: '*.rezakara.demo'
   allowedRoutes:
     namespaces:
       from: All

@@ -4,9 +4,9 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.20.1
-  name: tenants.m.idp.rezakaramad.local
+  name: tenants.m.idp.rezakara.demo
 spec:
-  group: m.idp.rezakaramad.local
+  group: m.idp.rezakara.demo
   names:
     kind: Tenant
     listKind: TenantList

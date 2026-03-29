@@ -24,7 +24,7 @@ MANAGEMENT_PROFILE="minikube-management"
 # CoreDNS Adjustment
 COREDNS_NS="kube-system"
 TRAEFIK_SVC="traefik-mgmt"
-DNS_DOMAIN="fluxdojo.local"
+DNS_DOMAIN="rezakara.demo"
 DNS_HOSTS=(
   vault
 )
@@ -158,7 +158,7 @@ update_dns() {
   corefile=$(kubectl --context "$profile" -n "$COREDNS_NS" \
     get cm coredns -o jsonpath='{.data.Corefile}')
 
-  corefile=$(sed '/# BEGIN fluxdojo DNS/,/# END fluxdojo DNS/d' <<< "$corefile")
+  corefile=$(sed '/# BEGIN rezakara DNS/,/# END rezakara DNS/d' <<< "$corefile")
 
   for host in "${hosts[@]}"; do
     hosts_block+="        $ip $host.$DNS_DOMAIN"$'\n'
@@ -166,14 +166,14 @@ update_dns() {
 
   corefile="$corefile
 
-# BEGIN fluxdojo DNS
+# BEGIN rezakara DNS
 $DNS_DOMAIN:53 {
     hosts {
 $hosts_block        fallthrough
     }
     cache 30
 }
-# END fluxdojo DNS
+# END rezakara DNS
 "
 
   kubectl --context "$profile" -n "$COREDNS_NS" patch cm coredns \

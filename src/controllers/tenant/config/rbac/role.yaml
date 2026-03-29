@@ -5,7 +5,7 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - idp.rezakaramad.local
+  - idp.rezakara.demo
   resources:
   - tenants
   verbs:
@@ -17,13 +17,13 @@ rules:
   - update
   - watch
 - apiGroups:
-  - idp.rezakaramad.local
+  - idp.rezakara.demo
   resources:
   - tenants/finalizers
   verbs:
   - update
 - apiGroups:
-  - idp.rezakaramad.local
+  - idp.rezakara.demo
   resources:
   - tenants/status
   verbs:

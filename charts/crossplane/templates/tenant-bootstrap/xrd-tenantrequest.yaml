@@ -4,11 +4,11 @@
 apiVersion: apiextensions.crossplane.io/v2
 kind: CompositeResourceDefinition
 metadata:
-  name: tenantrequests.idp.fluxdojo.local
+  name: tenantrequests.idp.rezakara.demo
 
 spec:
   scope: Cluster
-  group: idp.fluxdojo.local
+  group: idp.rezakara.demo
 
   names:
     kind: TenantRequest

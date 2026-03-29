@@ -2,7 +2,7 @@
 $TTL 60
 
 ; SOA = Start Of Authority (defines this DNS zone)
-@   IN SOA ns.fluxdojo.demo. admin.fluxdojo.demo. (
+@   IN SOA ns.rezakara.demo. admin.rezakara.demo. (
         1       ; serial number (increment if zone is manually changed)
         7200    ; refresh (secondary DNS checks for updates every 2h; not relevant in this setup, there is no secondary DNS server)
         3600    ; retry (if refresh fails, retry after 1h)
@@ -11,14 +11,14 @@ $TTL 60
 )
 
 ; NS record = declares the authoritative nameserver for this zone
-@   IN NS ns.fluxdojo.demo.
+@   IN NS ns.rezakara.demo.
 
 ; A record for the nameserver (must exist so it can be resolved)
 ns  IN A  127.0.0.1
 
-; fluxdojo.demo
+; rezakara.demo
 ;  ├── SOA → I'm authoritative
-;  ├── NS  → my DNS server is ns.fluxdojo.demo
+;  ├── NS  → my DNS server is ns.rezakara.demo
 ;  └── ns  → that server lives at 127.0.0.1
 
 ; --- external-dns will dynamically add records below ---

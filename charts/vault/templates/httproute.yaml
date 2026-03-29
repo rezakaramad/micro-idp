@@ -7,7 +7,7 @@ metadata:
   namespace: vault
 spec:
   hostnames:
-  - vault.fluxdojo.local
+  - vault.rezakara.demo
   - vault.default.svc.cluster.local
   parentRefs:
   - group: gateway.networking.k8s.io

@@ -12,8 +12,8 @@ COREDNS_NS="kube-system"
 TRAEFIK_NS="platform-system"
 TRAEFIK_SVC="traefik-mgmt"
 
-DNS_DOMAIN="fluxdojo.local"
-DNS_HOST="vault.fluxdojo.local"
+DNS_DOMAIN="rezakara.demo"
+DNS_HOST="vault.rezakara.demo"
 
 # -----------------------------------------------------------------------------
 # Discover workload clusters
@@ -70,7 +70,7 @@ update_dns() {
     get cm coredns -o jsonpath='{.data.Corefile}')
 
   # Remove previous block if it exists
-  corefile=$(sed '/^fluxdojo.local:53 {/,/^}/d' <<< "$corefile")
+  corefile=$(sed '/^rezakara.demo:53 {/,/^}/d' <<< "$corefile")
 
   # Append new DNS mapping block
   corefile="$corefile

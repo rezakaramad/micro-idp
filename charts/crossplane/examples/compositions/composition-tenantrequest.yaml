@@ -6,11 +6,11 @@ kind: Composition
 metadata:
   name: tenantrequest-default
   labels:
-    crossplane.io/xrd: tenantrequests.idp.fluxdojo.local
+    crossplane.io/xrd: tenantrequests.idp.rezakara.demo
 
 spec:
   compositeTypeRef:
-    apiVersion: idp.fluxdojo.local/v1alpha1
+    apiVersion: idp.rezakara.demo/v1alpha1
     kind: TenantRequest
 
   mode: Pipeline
@@ -83,7 +83,7 @@ spec:
 # ------------------------------------------------------------
           - name: tenant-xr
             base:
-              apiVersion: idp.fluxdojo.local/v1alpha1
+              apiVersion: idp.rezakara.demo/v1alpha1
               kind: Tenant
               spec:
                 name: ""

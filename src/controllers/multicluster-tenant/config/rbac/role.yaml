@@ -13,7 +13,7 @@ rules:
   - list
   - watch
 - apiGroups:
-  - m.idp.rezakaramad.local
+  - m.idp.rezakara.demo
   resources:
   - tenants
   verbs:
@@ -25,13 +25,13 @@ rules:
   - update
   - watch
 - apiGroups:
-  - m.idp.rezakaramad.local
+  - m.idp.rezakara.demo
   resources:
   - tenants/finalizers
   verbs:
   - update
 - apiGroups:
-  - m.idp.rezakaramad.local
+  - m.idp.rezakara.demo
   resources:
   - tenants/status
   verbs:

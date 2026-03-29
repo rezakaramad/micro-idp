@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VAULT_ADDR="https://vault.fluxdojo.local"
+VAULT_ADDR="https://vault.rezakara.demo"
 MANAGEMENT_PROFILE="minikube-management"
 VAULT_NAMESPACE="vault"
 

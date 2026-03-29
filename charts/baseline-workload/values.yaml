@@ -1,5 +1,5 @@
 commonLabels:
-  platform.fluxdojo.local/owner: platform
+  platform.rezakara.demo/owner: platform
 
 commonAnnotations: {}
 

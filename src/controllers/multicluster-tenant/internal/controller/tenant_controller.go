@@ -1,8 +1,8 @@
 package controller
 
-// +kubebuilder:rbac:groups=m.idp.rezakaramad.local,resources=tenants,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=m.idp.rezakaramad.local,resources=tenants/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=m.idp.rezakaramad.local,resources=tenants/finalizers,verbs=update
+// +kubebuilder:rbac:groups=m.idp.rezakara.demo,resources=tenants,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=m.idp.rezakara.demo,resources=tenants/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=m.idp.rezakara.demo,resources=tenants/finalizers,verbs=update
 // +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
 
 import (
@@ -37,13 +37,13 @@ import (
 
 // Defines your platform conventions
 const (
-	TenantFinalizer = "m.idp.rezakaramad.local/finalizer"
+	TenantFinalizer = "m.idp.rezakara.demo/finalizer"
 
-	ClusterSecretLabelKey   = "m.idp.rezakaramad.local/type"
+	ClusterSecretLabelKey   = "m.idp.rezakara.demo/type"
 	ClusterSecretLabelValue = "cluster"
 
-	ManagedByLabel = "m.idp.rezakaramad.local/managed"
-	TenantLabel    = "m.idp.rezakaramad.local/tenant"
+	ManagedByLabel = "m.idp.rezakara.demo/managed"
+	TenantLabel    = "m.idp.rezakara.demo/tenant"
 
 	ConditionReady = "Ready"
 

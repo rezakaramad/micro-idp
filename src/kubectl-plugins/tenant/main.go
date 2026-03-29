@@ -45,7 +45,7 @@ func approve(name string) {
 	cmd := exec.Command(
 		"kubectl",
 		"patch",
-		"tenantrequests.idp.fluxdojo.local",
+		"tenantrequests.idp.rezakara.demo",
 		name,
 		"--subresource=status",
 		"--type=merge",

@@ -75,12 +75,12 @@ update_hosts() {
   done
 
   sudo cp /etc/hosts /etc/hosts.bak
-  sudo sed -i.bak '/fluxdojo.local/d' /etc/hosts
+  sudo sed -i.bak '/rezakara.demo/d' /etc/hosts
 
   {
-    echo "$LB_IP argocd.fluxdojo.local"
-    echo "$LB_IP vault.fluxdojo.local"
-    echo "$LB_IP oidc.fluxdojo.local"
+    echo "$LB_IP argocd.rezakara.demo"
+    echo "$LB_IP vault.rezakara.demo"
+    echo "$LB_IP oidc.rezakara.demo"
   } | sudo tee -a /etc/hosts >/dev/null
 }
 
@@ -106,7 +106,7 @@ vault_login() {
   VAULT_TOKEN=$(kubectl exec -n "$VAULT_NAMESPACE" "$VAULT_POD" -- \
     sh -c "grep 'Initial Root Token:' /vault/data/init.txt | awk '{print \$4}'")
 
-  export VAULT_ADDR="https://vault.fluxdojo.local"
+  export VAULT_ADDR="https://vault.rezakara.demo"
   export VAULT_TOKEN="$VAULT_TOKEN"
   export VAULT_SKIP_VERIFY=true
 
@@ -202,9 +202,9 @@ EOF
 create_keycloak_azure_secret_management_realm() {
   echo "🔐 Writing Entra ID App secret..."
 
-  VAULT_PATH="local/management/keycloak/azure/apps/fluxdojo-keycloak-management-idp"
+  VAULT_PATH="local/management/keycloak/azure/apps/rezakara-keycloak-management-idp"
 
-  CLIENT_SECRET=$(pass show private/azure/entra-id/apps/keycloak/client-secrets/fluxdojo-keycloak-management-idp/value | head -n1)
+  CLIENT_SECRET=$(pass show private/azure/entra-id/apps/keycloak/client-secrets/rezakara-keycloak-management-idp/value | head -n1)
   CLIENT_ID=$(pass show private/azure/entra-id/apps/keycloak/client-id | head -n1)
 
   if [[ -z "$CLIENT_SECRET" ]]; then
@@ -261,22 +261,22 @@ create_keycloak_administrator_secret() {
 }
 
 trust_self_signed_ca_certificate() {
-  BASE_DIR="$HOME/.local/share/fluxdojo"
+  BASE_DIR="$HOME/.local/share/rezakara"
   CA_FILE="$BASE_DIR/ca.crt"
   CERT_FILE="$BASE_DIR/tls.crt"
   KEY_FILE="$BASE_DIR/tls.key"
 
-  JAVA_ALIAS="fluxdojo-root-ca"
+  JAVA_ALIAS="rezakara-root-ca"
   TRUSTSTORE="$BASE_DIR/java-truststore.jks"
   TRUSTSTORE_PASS="changeit"
 
   NSS_DIR=$HOME/.pki/nssdb
   NSS_DB="sql:$NSS_DIR"
-  NSS_NAME="Fluxdojo Root CA"
+  NSS_NAME="RezaKara Root CA"
   NSS_PWFILE="$NSS_DIR/.nss-pwfile"
 
-  SYS_CA_FILE="/usr/local/share/ca-certificates/fluxdojo-local.crt"
-  KEYCLOAK_HOST="oidc.fluxdojo.local"
+  SYS_CA_FILE="/usr/local/share/ca-certificates/rezakara-demo.crt"
+  KEYCLOAK_HOST="oidc.rezakara.demo"
 
   mkdir -p "$BASE_DIR"
 
@@ -428,9 +428,9 @@ trust_self_signed_ca_certificate() {
 create_crossplane_azure_secret() {
   echo "🔐 Writing Entra ID App secret..."
 
-  VAULT_PATH="local/management/crossplane/azure/apps/fluxdojo-crossplane"
+  VAULT_PATH="local/management/crossplane/azure/apps/rezakara-crossplane"
 
-  CLIENT_SECRET=$(pass show private/azure/entra-id/apps/crossplane/client-secrets/fluxdojo-crossplane/value | head -n1)
+  CLIENT_SECRET=$(pass show private/azure/entra-id/apps/crossplane/client-secrets/rezakara-crossplane/value | head -n1)
   CLIENT_ID=$(pass show private/azure/entra-id/apps/crossplane/client-id | head -n1)
   TENANT_ID=$(pass show private/azure/entra-id/apps/crossplane/tenant-id | head -n1)
 

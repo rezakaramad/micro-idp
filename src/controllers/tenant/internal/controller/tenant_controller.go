@@ -20,7 +20,7 @@ import (
 	idpv1alpha1 "github.com/rezakaramad/kubepave/src/controllers/tenant/api/v1alpha1"
 )
 
-const tenantFinalizer = "idp.rezakaramad.local/finalizer"
+const tenantFinalizer = "idp.rezakara.demo/finalizer"
 
 // TenantReconciler reconciles a Tenant object
 type TenantReconciler struct {
@@ -28,9 +28,9 @@ type TenantReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=idp.rezakaramad.local,resources=tenants,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=idp.rezakaramad.local,resources=tenants/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=idp.rezakaramad.local,resources=tenants/finalizers,verbs=update
+// +kubebuilder:rbac:groups=idp.rezakara.demo,resources=tenants,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=idp.rezakara.demo,resources=tenants/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=idp.rezakara.demo,resources=tenants/finalizers,verbs=update
 // +kubebuilder:rbac:groups="",resources=namespaces,verbs=get;list;watch;create;delete
 func (r *TenantReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 

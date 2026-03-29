@@ -4,7 +4,7 @@ metadata:
   name: {{ .Values.tenant.name | lower }}  
   labels:
 {{ include "common.labels" . | nindent 4 }}
-    platform.fluxdojo.local/tenant: {{ .Values.tenant.name | lower }}  
+    platform.rezakara.demo/tenant: {{ .Values.tenant.name | lower }}  
     pod-security.kubernetes.io/enforce: restricted
     pod-security.kubernetes.io/audit: restricted
     pod-security.kubernetes.io/warn: restricted

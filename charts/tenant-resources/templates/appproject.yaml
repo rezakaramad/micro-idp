@@ -7,9 +7,9 @@ metadata:
   namespace: argocd
   labels:
 {{ include "common.labels" . | nindent 4 }}
-    platform.fluxdojo.local/tenant: "{{ $.Values.tenant.name | lower }}"
-    platform.fluxdojo.local/rbac-group-id: "{{ $.Values.tenant.argoCD.aadGroupId | lower }}"
-    platform.fluxdojo.local/cluster: "{{ $cluster.clusterName | lower }}"
+    platform.rezakara.demo/tenant: "{{ $.Values.tenant.name | lower }}"
+    platform.rezakara.demo/rbac-group-id: "{{ $.Values.tenant.argoCD.aadGroupId | lower }}"
+    platform.rezakara.demo/cluster: "{{ $cluster.clusterName | lower }}"
 spec:
   sourceNamespaces:
     - "argocd-{{ $.Values.tenant.name }}"
