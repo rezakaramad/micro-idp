@@ -11,3 +11,4 @@ external-dns:
     - --rfc2136-zone=wl.rezakara.demo
     - --gateway-namespace=platform-system
     - --publish-internal-services
+    - --rfc2136-min-ttl=60

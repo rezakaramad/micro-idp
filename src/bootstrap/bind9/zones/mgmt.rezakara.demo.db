@@ -4,10 +4,10 @@ $TTL 60
 ; SOA = Start Of Authority (defines this DNS zone)
 @   IN SOA ns.mgmt.rezakara.demo. admin.rezakara.demo. (
         1       ; serial number (increment if zone is manually changed)
-        7200    ; refresh (secondary DNS checks for updates every 2h; not relevant here)
-        3600    ; retry (if refresh fails, retry after 1h)
-        1209600 ; expire (after 14d, secondary DNS stops trusting data)
-        60      ; negative cache TTL (cache "not found" for 60s)
+        7200    ; refresh
+        3600    ; retry
+        1209600 ; expire
+        60      ; negative cache TTL
 )
 
 ; NS record = declares the authoritative nameserver for this zone

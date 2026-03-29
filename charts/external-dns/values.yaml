@@ -54,8 +54,3 @@ external-dns:
         secretKeyRef:
           name: external-dns-tsig
           key: algorithm
-
-  extraArgs:
-    - --rfc2136-port=1053
-    - --gateway-namespace=platform-system
-    - --publish-internal-services

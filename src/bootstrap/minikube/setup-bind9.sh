@@ -7,7 +7,7 @@ BIND9_DIR="${SCRIPT_DIR}/../bind9"
 PORT=1053
 VAULT_PATH="local/management/external-dns/rfc2136"
 
-echo "⚙️ Using bind9 config from: ${BIND9_DIR}"
+echo "⚙️  Using bind9 config from: ${BIND9_DIR}"
 
 # ----------------------------------------------------------------------------
 # Vault login
