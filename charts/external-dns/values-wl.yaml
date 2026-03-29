@@ -7,4 +7,7 @@ external-dns:
     - wl.rezakara.demo
   extraArgs:
     - --rfc2136-host=192.168.39.1
+    - --rfc2136-port=1053
     - --rfc2136-zone=wl.rezakara.demo
+    - --gateway-namespace=platform-system
+    - --publish-internal-services
