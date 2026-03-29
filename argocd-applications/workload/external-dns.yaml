@@ -13,7 +13,7 @@ spec:
       valueFiles:
         - values-wl.yaml
   destination:
-    name: in-cluster
+    name: minikube-workload
     namespace: platform-system
   syncPolicy:
     syncOptions:
