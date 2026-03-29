@@ -8,6 +8,14 @@ external-dns:
   # Interval for DNS updates.
   interval: 1m
   
+  # -- Specify the registry for storing ownership and labels.
+  # Valid values are `txt`, `aws-sd`, `dynamodb` & `noop`.
+  registry: txt
+
+  # -- (string) Specify a prefix for the domain names of TXT records created for the `txt` registry.
+  # Mutually exclusive with `txtSuffix`.
+  txtPrefix: externaldns-
+
   # How DNS records are synchronized between sources and providers; available values are `create-only`, `sync`, & `upsert-only`.
   # - create-only: only create records, don't update or delete
   # - upsert-only: create and update records as needed, never remove records.
@@ -55,9 +63,5 @@ external-dns:
     - --rfc2136-tsig-keyname=$(TSIG_KEY_NAME)
     - --rfc2136-tsig-secret=$(TSIG_SECRET)
     - --rfc2136-tsig-secret-alg=$(TSIG_ALGORITHM)
-
-    - --registry=txt
-    - --txt-prefix=externaldns-
-
 
     - --gateway-namespace=platform-system
