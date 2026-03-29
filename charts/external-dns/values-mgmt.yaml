@@ -3,6 +3,8 @@ external-dns:
   # safely manage them without clashing with other ExternalDNS instances.
   # MUST be unique for each cluster and must not change.
   txtOwnerId: minikube-management
+  domainFilters:
+    - mgmt.rezakara.demo
   extraArgs:
     - --rfc2136-host=10.200.0.1
     - --rfc2136-zone=mgmt.rezakara.demo
