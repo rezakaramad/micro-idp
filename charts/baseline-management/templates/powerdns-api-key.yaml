@@ -12,7 +12,7 @@ spec:
     name: powerdns-api-key
     creationPolicy: Owner
   data:
-    - secretKey: pdns_api_key
+    - secretKey: key
       remoteRef:
         key: local/powerdns/api
         property: key

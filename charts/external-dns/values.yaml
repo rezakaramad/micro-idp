@@ -34,7 +34,7 @@ external-dns:
       valueFrom:
         secretKeyRef:
           name: powerdns-api-key
-          key: PDNS_API_KEY
+          key: key
 
   extraArgs:
     - --pdns-server=http://host.minikube.internal:8081
