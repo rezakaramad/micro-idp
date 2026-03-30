@@ -14,7 +14,7 @@ external-dns:
 
   # -- (string) Specify a prefix for the domain names of TXT records created for the `txt` registry.
   # Mutually exclusive with `txtSuffix`.
-  txtPrefix: externaldns-
+  txtPrefix: "externaldns"
 
   # How DNS records are synchronized between sources and providers; available values are `create-only`, `sync`, & `upsert-only`.
   # - create-only: only create records, don't update or delete
@@ -26,31 +26,17 @@ external-dns:
   sources:
     - gateway-httproute
 
-  # Sets a unique identifier written into TXT registry records so ExternalDNS knows which DNS records it owns and can
-  # safely manage them without clashing with other ExternalDNS instances.
-  # MUST be unique for each cluster and must not change.
-  txtOwnerId: minikube
-
-  # Limit possible target zones by domain suffixes.
-  domainFilters:
-    - rezakara.demo
-
   # DNS Provider
-  provider: rfc2136
+  provider: pdns
 
   env:
-    - name: EXTERNAL_DNS_RFC2136_TSIG_SECRET
+    - name: PDNS_API_KEY
       valueFrom:
         secretKeyRef:
-          name: external-dns-tsig
-          key: tsig_secret
-    - name: EXTERNAL_DNS_RFC2136_TSIG_KEYNAME
-      valueFrom:
-        secretKeyRef:
-          name: external-dns-tsig
-          key: tsig_key_name
-    - name: EXTERNAL_DNS_RFC2136_TSIG_SECRET_ALG
-      valueFrom:
-        secretKeyRef:
-          name: external-dns-tsig
-          key: algorithm
+          name: external-dns
+          key: PDNS_API_KEY
+
+  extraArgs:
+    - --pdns-server=http://host.minikube.internal:8081
+    - --pdns-api-key=$(PDNS_API_KEY)
+    - --publish-internal-services

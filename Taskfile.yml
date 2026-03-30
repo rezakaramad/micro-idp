@@ -20,11 +20,7 @@ tasks:
       - ./src/bootstrap/minikube/update-coredns.sh
       - ./src/bootstrap/minikube/setup-environment.sh
       - ./src/bootstrap/minikube/setup-vault.sh
-      - ./src/bootstrap/minikube/setup-bind9.sh
-  bind:
-    desc: "Start Bind9 DNS server"
-    cmds:
-      - ./src/bootstrap/minikube/setup-bind9.sh
+      - ./src/bootstrap/minikube/setup-powerdns.sh
   tuns:
     desc: "List Minikube tunnels"
     cmds:

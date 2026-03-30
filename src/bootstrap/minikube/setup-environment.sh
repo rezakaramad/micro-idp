@@ -509,6 +509,38 @@ create_external_dns_tsig_secret() {
 }
 
 # ----------------------------------------------------------------------------
+# TSIG secret for external-dns (RFC2136)
+# ----------------------------------------------------------------------------
+
+create_powerdns_secrets() {
+  VAULT_BASE_PATH="local/powerdns"
+  VAULT_DB_PATH="$VAULT_BASE_PATH/db"
+  VAULT_API_PATH="$VAULT_BASE_PATH/api"
+  VAULT_ADMIN_PATH="$VAULT_BASE_PATH/admin"
+
+  POSTGRES_USER="pdns"
+
+  echo "🔐 Generating and storing secrets for PowerDNS..."
+
+  POSTGRES_PASSWORD="$(openssl rand -hex 32)"
+  POWERDNS_API_KEY="$(openssl rand -hex 32)"
+  POWERDNS_ADMIN_PASSWORD="$(openssl rand -hex 32)"
+
+  vault kv put "$VAULT_DB_PATH" \
+      user="$POSTGRES_USER" \
+      password="$POSTGRES_PASSWORD" > /dev/null
+
+  vault kv put "$VAULT_API_PATH" \
+      key="$POWERDNS_API_KEY" > /dev/null
+
+  vault kv put "$VAULT_ADMIN_PATH" \
+  password="$POWERDNS_ADMIN_PASSWORD" > /dev/null
+
+  echo "✅ Secrets stored in Vault"
+}
+
+
+# ----------------------------------------------------------------------------
 # Main
 # ----------------------------------------------------------------------------
 
@@ -525,6 +557,7 @@ main() {
   create_crossplane_azure_secret
   install_kubectl_plugins
   create_external_dns_tsig_secret
+  create_powerdns_secrets
 
   echo "✅ Bootstrap complete"
 }

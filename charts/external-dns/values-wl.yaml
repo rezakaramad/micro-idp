@@ -3,12 +3,6 @@ external-dns:
   # safely manage them without clashing with other ExternalDNS instances.
   # MUST be unique for each cluster and must not change.
   txtOwnerId: minikube-workload
+  # Limit possible target zones by domain suffixes.
   domainFilters:
     - wl.rezakara.demo
-  extraArgs:
-    - --rfc2136-host=192.168.39.1
-    - --rfc2136-port=1053
-    - --rfc2136-zone=wl.rezakara.demo
-    - --gateway-namespace=platform-system
-    - --publish-internal-services
-    - --rfc2136-min-ttl=60

@@ -1,0 +1,107 @@
+services:
+  db:
+    image: postgres:17
+    container_name: pdns-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  pdns-init:
+    image: postgres:17
+    container_name: pdns-init
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./schema.pgsql.sql:/schema/schema.pgsql.sql
+    entrypoint: >
+      sh -c "
+      echo 'Checking if schema exists...' &&
+      EXISTS=$$(psql -h db -U ${POSTGRES_USER} -d ${POSTGRES_DB} -tAc \"SELECT 1 FROM information_schema.tables WHERE table_name='domains'\") &&
+      if [ \"$$EXISTS\" = \"1\" ]; then
+        echo 'Schema already exists, skipping';
+      else
+        echo 'Initializing PowerDNS schema...' &&
+        psql -h db -U ${POSTGRES_USER} -d ${POSTGRES_DB} -f /schema/schema.pgsql.sql;
+      fi
+      "
+    restart: "no"
+
+  pdns:
+    image: pschiffe/pdns-pgsql
+    container_name: pdns
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      pdns-init:
+        condition: service_completed_successfully
+    environment:
+      PDNS_gpgsql_host: db
+      PDNS_gpgsql_port: 5432
+      PDNS_gpgsql_user: ${POSTGRES_USER}
+      PDNS_gpgsql_password: ${POSTGRES_PASSWORD}
+      PDNS_gpgsql_dbname: ${POSTGRES_DB}
+
+      PDNS_api: "yes"
+      PDNS_api_key: ${PDNS_API_KEY}
+
+      PDNS_webserver: "yes"
+      PDNS_webserver_address: 0.0.0.0
+      PDNS_webserver_allow_from: 0.0.0.0/0
+    ports:
+      - "8081:8081"
+      - "1053:53/udp"
+      - "1053:53/tcp"
+
+  pdns-zones:
+    image: postgres:17
+    container_name: pdns-zones
+    depends_on:
+      db:
+        condition: service_healthy
+      pdns:
+        condition: service_started
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./zones.sql:/zones.sql
+    entrypoint: >
+      sh -c "
+      echo 'Applying zones...' &&
+      psql -h db -U ${POSTGRES_USER} -d ${POSTGRES_DB} -f /zones.sql &&
+      echo 'Zones applied'
+      "
+    restart: "no"
+
+  pdns-admin:
+    image: powerdnsadmin/pda-legacy:latest
+    container_name: pdns-admin
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      pdns:
+        condition: service_started
+    environment:
+      SQLALCHEMY_DATABASE_URI: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      GUNICORN_TIMEOUT: 60
+      GUNICORN_WORKERS: 2
+      GUNICORN_LOGLEVEL: INFO
+      SIGNUP_ENABLED: "true"
+    ports:
+      - "8080:80"
+
+volumes:
+  db_data:
