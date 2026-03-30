@@ -6,3 +6,4 @@ external-dns:
   # Limit possible target zones by domain suffixes.
   domainFilters:
     - mgmt.rezakara.demo
+    - rezakara.demo
