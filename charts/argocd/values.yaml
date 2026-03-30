@@ -27,7 +27,7 @@ argocd:
       labels:
         external-dns-create: "true"
       hostnames:
-        - argocd.rezakara.demo
+        - argocd.mgmt.rezakara.demo
       parentRefs:
         - group: gateway.networking.k8s.io
           kind: Gateway
@@ -48,7 +48,7 @@ argocd:
       labels:
         external-dns-create: "true"
       hostnames:
-        - argocd.rezakara.demo
+        - argocd.mgmt.rezakara.demo
       parentRefs:
         - name: traefik-gateway
           namespace: platform-system
@@ -85,7 +85,7 @@ argocd:
       create: true
 
       # -- External Argo CD URL used by the UI, CLI, and notifications.
-      url: https://argocd.rezakara.demo
+      url: https://argocd.mgmt.rezakara.demo
 
       # -- Disable built-in local 'admin' user
       admin.enabled: true

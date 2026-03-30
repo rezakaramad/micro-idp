@@ -78,9 +78,9 @@ update_hosts() {
   sudo sed -i.bak '/rezakara.demo/d' /etc/hosts
 
   {
-    echo "$LB_IP argocd.rezakara.demo"
-    echo "$LB_IP vault.rezakara.demo"
-    echo "$LB_IP oidc.rezakara.demo"
+    echo "$LB_IP argocd.mgmt.rezakara.demo"
+    echo "$LB_IP vault.mgmt.rezakara.demo"
+    echo "$LB_IP oidc.mgmt.rezakara.demo"
   } | sudo tee -a /etc/hosts >/dev/null
 }
 
@@ -106,7 +106,7 @@ vault_login() {
   VAULT_TOKEN=$(kubectl exec -n "$VAULT_NAMESPACE" "$VAULT_POD" -- \
     sh -c "grep 'Initial Root Token:' /vault/data/init.txt | awk '{print \$4}'")
 
-  export VAULT_ADDR="https://vault.rezakara.demo"
+  export VAULT_ADDR="https://vault.mgmt.rezakara.demo"
   export VAULT_TOKEN="$VAULT_TOKEN"
   export VAULT_SKIP_VERIFY=true
 

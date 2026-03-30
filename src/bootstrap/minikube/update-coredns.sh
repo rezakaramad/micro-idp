@@ -13,7 +13,7 @@ TRAEFIK_NS="platform-system"
 TRAEFIK_SVC="traefik-mgmt"
 
 DNS_DOMAIN="rezakara.demo"
-DNS_HOST="vault.rezakara.demo"
+DNS_HOST="vault.mgmt.rezakara.demo"
 
 # -----------------------------------------------------------------------------
 # Discover workload clusters

@@ -71,8 +71,8 @@ services:
       --webserver-allow-from=0.0.0.0/0
     ports:
       - "5380:8081"
-      - "1053:53/udp"
-      - "1053:53/tcp"
+      - "127.0.0.1:53:53/tcp"
+      - "127.0.0.1:53:53/udp"
 
   # One-shot init container that seeds the PowerDNS database with predefined DNS zones after schema exists
   pdns-zones:
