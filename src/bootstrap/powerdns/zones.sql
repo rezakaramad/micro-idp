@@ -7,17 +7,18 @@ VALUES
 ON CONFLICT (name) DO NOTHING;
 
 -- SOA
-INSERT INTO records (domain_id, name, type, content, ttl)
+INSERT INTO records (domain_id, name, type, content, ttl, prio)
 SELECT id, name, 'SOA',
-       'ns1.rezakara.demo admin.rezakara.demo 1 10800 3600 604800 3600',
-       3600
+       'ns1.rezakara.demo. admin.rezakara.demo. 2024031801 10800 3600 604800 3600',
+       3600,
+       NULL
 FROM domains
 WHERE name IN ('rezakara.demo', 'mgmt.rezakara.demo', 'wl.rezakara.demo')
 ON CONFLICT DO NOTHING;
 
 -- NS
-INSERT INTO records (domain_id, name, type, content, ttl)
-SELECT id, name, 'NS', 'ns1.rezakara.demo', 3600
+INSERT INTO records (domain_id, name, type, content, ttl, prio)
+SELECT id, name, 'NS', 'ns1.rezakara.demo.', 3600, NULL
 FROM domains
 WHERE name IN ('rezakara.demo', 'mgmt.rezakara.demo', 'wl.rezakara.demo')
 ON CONFLICT DO NOTHING;

@@ -516,7 +516,6 @@ create_powerdns_secrets() {
   VAULT_BASE_PATH="local/powerdns"
   VAULT_DB_PATH="$VAULT_BASE_PATH/db"
   VAULT_API_PATH="$VAULT_BASE_PATH/api"
-  VAULT_ADMIN_PATH="$VAULT_BASE_PATH/admin"
 
   POSTGRES_USER="pdns"
 
@@ -532,9 +531,6 @@ create_powerdns_secrets() {
 
   vault kv put "$VAULT_API_PATH" \
       key="$POWERDNS_API_KEY" > /dev/null
-
-  vault kv put "$VAULT_ADMIN_PATH" \
-  password="$POWERDNS_ADMIN_PASSWORD" > /dev/null
 
   echo "✅ Secrets stored in Vault"
 }

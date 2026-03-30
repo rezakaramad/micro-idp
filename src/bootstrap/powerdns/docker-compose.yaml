@@ -1,20 +1,23 @@
 services:
+  # PostgreSQL database container used as the backend storage for PowerDNS data (zones, records, metadata)
   db:
     image: postgres:17
     container_name: pdns-db
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_DB: ${POSTGRES_DB:-pdns}
+      POSTGRES_USER: ${POSTGRES_USER:-pdns}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pdns}"]
       interval: 5s
       timeout: 5s
       retries: 5
 
+
+  # One-shot init container that ensures the PowerDNS PostgreSQL schema exists before starting pdns
   pdns-init:
     image: postgres:17
     container_name: pdns-init
@@ -24,22 +27,28 @@ services:
     environment:
       PGPASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - ./schema.pgsql.sql:/schema/schema.pgsql.sql
+      - ./schema.pgsql.sql:/schema.pgsql.sql
     entrypoint: >
       sh -c "
-      echo 'Checking if schema exists...' &&
-      EXISTS=$$(psql -h db -U ${POSTGRES_USER} -d ${POSTGRES_DB} -tAc \"SELECT 1 FROM information_schema.tables WHERE table_name='domains'\") &&
-      if [ \"$$EXISTS\" = \"1\" ]; then
-        echo 'Schema already exists, skipping';
-      else
-        echo 'Initializing PowerDNS schema...' &&
-        psql -h db -U ${POSTGRES_USER} -d ${POSTGRES_DB} -f /schema/schema.pgsql.sql;
-      fi
+      set -e &&
+      POSTGRES_DB=${POSTGRES_DB:-pdns} &&
+      POSTGRES_DB_ADMIN=${POSTGRES_DB_ADMIN:-pdns_admin} &&
+      POSTGRES_USER=${POSTGRES_USER:-pdns} &&
+
+      echo 'Creating admin database if not exists...' &&
+      psql -h db -U $$POSTGRES_USER -d $$POSTGRES_DB -tc \"SELECT 1 FROM pg_database WHERE datname='$$POSTGRES_DB_ADMIN'\" | grep -q 1 || \
+      psql -h db -U $$POSTGRES_USER -d $$POSTGRES_DB -c \"CREATE DATABASE $$POSTGRES_DB_ADMIN;\" &&
+
+      echo 'Applying PowerDNS schema...' &&
+      psql -v ON_ERROR_STOP=1 -h db -U $$POSTGRES_USER -d $$POSTGRES_DB -f /schema.pgsql.sql &&
+
+      echo 'Init complete'
       "
     restart: "no"
 
+  # PowerDNS authoritative server container exposing DNS and HTTP API backed by PostgreSQL
   pdns:
-    image: pschiffe/pdns-pgsql
+    image: powerdns/pdns-auth-51:latest
     container_name: pdns
     restart: unless-stopped
     depends_on:
@@ -47,61 +56,79 @@ services:
         condition: service_healthy
       pdns-init:
         condition: service_completed_successfully
-    environment:
-      PDNS_gpgsql_host: db
-      PDNS_gpgsql_port: 5432
-      PDNS_gpgsql_user: ${POSTGRES_USER}
-      PDNS_gpgsql_password: ${POSTGRES_PASSWORD}
-      PDNS_gpgsql_dbname: ${POSTGRES_DB}
-
-      PDNS_api: "yes"
-      PDNS_api_key: ${PDNS_API_KEY}
-
-      PDNS_webserver: "yes"
-      PDNS_webserver_address: 0.0.0.0
-      PDNS_webserver_allow_from: 0.0.0.0/0
+    command: >
+      --config-dir=/dev/null
+      --launch=gpgsql
+      --gpgsql-host=db
+      --gpgsql-port=5432
+      --gpgsql-user=${POSTGRES_USER:-pdns}
+      --gpgsql-password=${POSTGRES_PASSWORD}
+      --gpgsql-dbname=${POSTGRES_DB:-pdns}
+      --api=yes
+      --api-key=${PDNS_API_KEY:-changeme}
+      --webserver=yes
+      --webserver-address=0.0.0.0
+      --webserver-allow-from=0.0.0.0/0
     ports:
-      - "8081:8081"
+      - "5380:8081"
       - "1053:53/udp"
       - "1053:53/tcp"
 
+  # One-shot init container that seeds the PowerDNS database with predefined DNS zones after schema exists
   pdns-zones:
     image: postgres:17
     container_name: pdns-zones
     depends_on:
-      db:
-        condition: service_healthy
-      pdns:
-        condition: service_started
+      pdns-init:
+        condition: service_completed_successfully
     environment:
       PGPASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - ./zones.sql:/zones.sql
     entrypoint: >
       sh -c "
+      set -e &&
+      POSTGRES_DB=${POSTGRES_DB:-pdns} &&
+      POSTGRES_USER=${POSTGRES_USER:-pdns} &&
+
+      echo 'Waiting for schema...' &&
+      until psql -h db -U $$POSTGRES_USER -d $$POSTGRES_DB -c 'SELECT 1 FROM domains' >/dev/null 2>&1; do
+        sleep 2;
+      done &&
       echo 'Applying zones...' &&
-      psql -h db -U ${POSTGRES_USER} -d ${POSTGRES_DB} -f /zones.sql &&
+      psql -v ON_ERROR_STOP=1 -h db -U $$POSTGRES_USER -d $$POSTGRES_DB -f /zones.sql &&
       echo 'Zones applied'
       "
     restart: "no"
 
+  # Web UI container providing PowerDNS-Admin for managing zones, records, and users via the PowerDNS API
   pdns-admin:
     image: powerdnsadmin/pda-legacy:latest
     container_name: pdns-admin
     restart: unless-stopped
     depends_on:
-      db:
-        condition: service_healthy
       pdns:
         condition: service_started
     environment:
-      SQLALCHEMY_DATABASE_URI: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER:-pdns}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB_ADMIN: ${POSTGRES_DB_ADMIN:-pdns_admin}
+
+      SQLALCHEMY_DATABASE_URI: postgresql://${POSTGRES_USER:-pdns}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB_ADMIN:-pdns_admin}
+
+      PDNS_API_URL: http://pdns:8081
+      PDNS_API_KEY: ${PDNS_API_KEY:-changeme}
+
       GUNICORN_TIMEOUT: 60
       GUNICORN_WORKERS: 2
       GUNICORN_LOGLEVEL: INFO
       SIGNUP_ENABLED: "true"
     ports:
-      - "8080:80"
+      - "5388:80"
 
 volumes:
   db_data:
+
+networks:
+  default:
+    name: powerdns_default

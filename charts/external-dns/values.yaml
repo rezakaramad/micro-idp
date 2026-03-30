@@ -37,6 +37,6 @@ external-dns:
           key: key
 
   extraArgs:
-    - --pdns-server=http://host.minikube.internal:8081
+    - --pdns-server=http://host.minikube.internal:5380
     - --pdns-api-key=$(PDNS_API_KEY)
     - --publish-internal-services
