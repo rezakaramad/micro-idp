@@ -27,7 +27,7 @@ spec:
         - start
         env:
         - name: KC_HOSTNAME
-          value: oidc.rezakara.demo
+          value: oidc.mgmt.rezakara.demo
         - name: KC_HOSTNAME_STRICT
           value: "false"
         - name: KC_HTTP_ENABLED

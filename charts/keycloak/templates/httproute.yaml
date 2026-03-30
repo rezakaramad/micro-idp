@@ -7,7 +7,7 @@ metadata:
   namespace: keycloak
 spec:
   hostnames:
-  - oidc.rezakara.demo
+  - oidc.mgmt.rezakara.demo
   parentRefs:
   - group: gateway.networking.k8s.io
     kind: Gateway

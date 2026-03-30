@@ -8,6 +8,7 @@ metadata:
 spec:
   hostnames:
   - vault.mgmt.rezakara.demo
+  - vault.default.svc.cluster.local
   parentRefs:
   - group: gateway.networking.k8s.io
     kind: Gateway

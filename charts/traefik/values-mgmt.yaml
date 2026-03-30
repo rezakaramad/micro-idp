@@ -1,5 +1,5 @@
 defaultGateway:
-  hostname: '*.rezakara.demo'
+  hostname: '*.mgmt.rezakara.demo'
   allowedRoutes:
     namespaces:
       from: All

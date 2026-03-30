@@ -12,7 +12,7 @@ COREDNS_NS="kube-system"
 TRAEFIK_NS="platform-system"
 TRAEFIK_SVC="traefik-mgmt"
 
-DNS_DOMAIN="rezakara.demo"
+DNS_DOMAIN="mgmt.rezakara.demo"
 DNS_HOST="vault.mgmt.rezakara.demo"
 
 # -----------------------------------------------------------------------------

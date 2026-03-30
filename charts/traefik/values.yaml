@@ -1,6 +1,6 @@
 defaultGateway:
   # The hostname for defeault gateway resource in management cluster
-  hostname: '*.rezakara.demo'
+  hostname: '*.mgmt.rezakara.demo'
   # In tenant environments, we don't allow tenants to send traffic
   # to platform-owned default Gateway in 'platform-system' namespace.
   allowedRoutes:

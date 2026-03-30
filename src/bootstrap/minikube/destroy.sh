@@ -7,15 +7,16 @@ pkill -f "minikube tunnel" || true
 pkill -f "kubectl.*proxy" || true
 
 # -------------------------------
-# Stop and remove BIND9 container
+# Stop and remove PowerDNS containers
 # -------------------------------
-echo "🧹 Cleaning BIND9 container..."
-
-if docker ps -a --format '{{.Names}}' | grep -q '^bind9$'; then
-  docker rm -f bind9 >/dev/null 2>&1 || true
-else
-  echo "✔ No bind9 container found"
-fi
+for container in pdns pdns-admin pdns-db; do
+  if docker ps -a --format '{{.Names}}' | grep -q "^${container}$"; then
+    docker rm -f "$container" >/dev/null 2>&1 || true
+    echo "🗑 Removed $container"
+  else
+    echo "✅ No $container container found"
+  fi
+done
 
 # -------------------------------
 # Delete all Minikube clusters and clean kubeconfig
@@ -51,3 +52,10 @@ if grep -q 'rezakara.demo' /etc/hosts; then
 else
   echo "✔ No rezakara.demo entries found"
 fi
+
+# -------------------------------
+# Flush DNS cache
+# -------------------------------
+echo "🔄 Flushing DNS cache..."
+sudo resolvectl flush-caches 2>/dev/null || true
+echo "✅ DNS cache flushed"

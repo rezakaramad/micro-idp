@@ -276,7 +276,7 @@ trust_self_signed_ca_certificate() {
   NSS_PWFILE="$NSS_DIR/.nss-pwfile"
 
   SYS_CA_FILE="/usr/local/share/ca-certificates/rezakara-demo.crt"
-  KEYCLOAK_HOST="oidc.rezakara.demo"
+  KEYCLOAK_HOST="oidc.mgmt.rezakara.demo"
 
   mkdir -p "$BASE_DIR"
 

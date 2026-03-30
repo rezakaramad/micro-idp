@@ -24,7 +24,7 @@ MANAGEMENT_PROFILE="minikube-management"
 # CoreDNS Adjustment
 COREDNS_NS="kube-system"
 TRAEFIK_SVC="traefik-mgmt"
-DNS_DOMAIN="rezakara.demo"
+DNS_DOMAIN="mgmt.rezakara.demo"
 DNS_HOSTS=(
   vault
 )
