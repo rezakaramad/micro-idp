@@ -33,7 +33,7 @@ external-dns:
     - name: PDNS_API_KEY
       valueFrom:
         secretKeyRef:
-          name: external-dns
+          name: powerdns-api-key
           key: PDNS_API_KEY
 
   extraArgs:
