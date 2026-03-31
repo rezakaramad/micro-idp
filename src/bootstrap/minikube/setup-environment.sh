@@ -106,9 +106,7 @@ vault_login() {
   VAULT_TOKEN=$(kubectl exec -n "$VAULT_NAMESPACE" "$VAULT_POD" -- \
     sh -c "grep 'Initial Root Token:' /vault/data/init.txt | awk '{print \$4}'")
 
-  kubectl -n vault port-forward svc/vault 8200:8200 >/dev/null 2>&1 &
-  export VAULT_ADDR="http://127.0.0.1:8200"
-  # export VAULT_ADDR="https://vault.mgmt.rezakara.demo"
+  export VAULT_ADDR="https://vault.mgmt.rezakara.demo"
   export VAULT_TOKEN="$VAULT_TOKEN"
   export VAULT_SKIP_VERIFY=true
 
@@ -564,7 +562,11 @@ EOF
 
 main() {
   start_minikube_tunnel
-  # update_hosts
+  # Updating /etc/hosts is necessary for bootstrapping because the management cluster's Traefik LoadBalancer IP is dynamic 
+  # and must be resolved to access Argo CD, Vault, and Keycloak during setup. 
+  # Also it's needed to ensure that the self-signed certificate issued for *.mgmt.rezakara.demo is trusted and matches the hostname used to access the services.
+  # After bootstrapping, it will be cleaned up and DNS requestes will be responded by the local PowerDNS instance.
+  update_hosts
   configure_resolved
   vault_login
   create_github_app_secret
