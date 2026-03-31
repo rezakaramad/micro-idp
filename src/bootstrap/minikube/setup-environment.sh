@@ -535,6 +535,26 @@ create_powerdns_secrets() {
   echo "✅ Secrets stored in Vault"
 }
 
+configure_resolved() {
+  echo "Backing up existing config..."
+  sudo cp /etc/systemd/resolved.conf /etc/systemd/resolved.conf.bak.$(date +%s)
+
+  echo "Applying new DNS config..."
+
+  sudo tee /etc/systemd/resolved.conf > /dev/null <<EOF
+[Resolve]
+DNSStubListener=no
+DNS=127.0.0.1
+FallbackDNS=8.8.8.8 1.1.1.1
+Domains=~demo
+EOF
+
+  echo "Restarting systemd-resolved..."
+  sudo systemctl restart systemd-resolved
+
+  echo "Verifying..."
+  resolvectl status | grep -E "DNS Servers|DNS Domain"
+}
 
 # ----------------------------------------------------------------------------
 # Main
@@ -543,6 +563,7 @@ create_powerdns_secrets() {
 main() {
   start_minikube_tunnel
   update_hosts
+  configure_resolved
   vault_login
   create_github_app_secret
   register_clusters_argocd

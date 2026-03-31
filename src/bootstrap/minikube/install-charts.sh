@@ -269,6 +269,7 @@ install_platform_components() {
   helm_install cert-manager cert-manager "$PLATFORM_NAMESPACE"
   helm_install vault vault "$VAULT_NAMESPACE"
   helm_install external-secrets external-secrets "$PLATFORM_NAMESPACE"
+  helm_install external-dns external-dns "$PLATFORM_NAMESPACE"
   helm_install traefik-mgmt traefik "$PLATFORM_NAMESPACE"
 
   # Argo CD has dependancy to all the above services and controllers, 

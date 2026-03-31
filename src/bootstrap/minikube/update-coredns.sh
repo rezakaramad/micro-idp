@@ -70,7 +70,7 @@ update_dns() {
     get cm coredns -o jsonpath='{.data.Corefile}')
 
   # Remove previous block if it exists
-  corefile=$(sed '/^rezakara.demo:53 {/,/^}/d' <<< "$corefile")
+  corefile=$(sed '/^mgmt.rezakara.demo:53 {/,/^}/d' <<< "$corefile")
 
   # Append new DNS mapping block
   corefile="$corefile

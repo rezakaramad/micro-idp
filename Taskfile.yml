@@ -21,6 +21,7 @@ tasks:
       - ./src/bootstrap/minikube/setup-environment.sh
       - ./src/bootstrap/minikube/setup-vault.sh
       - ./src/bootstrap/minikube/setup-powerdns.sh
+      - ./src/bootstrap/minikube/clean-hosts.sh
   tuns:
     desc: "List Minikube tunnels"
     cmds:
