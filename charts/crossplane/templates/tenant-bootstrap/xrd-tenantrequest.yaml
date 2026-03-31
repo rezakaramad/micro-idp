@@ -26,6 +26,8 @@ spec:
 
           x-kubernetes-validations:
             - rule: >
+                has(oldSelf.status) &&
+                has(oldSelf.status.conditions) &&
                 oldSelf.status.conditions.exists(c,
                   c.type == 'Approved' && c.status == 'True'
                 ) ? self.spec == oldSelf.spec : true
