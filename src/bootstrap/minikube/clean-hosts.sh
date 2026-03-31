@@ -13,7 +13,7 @@ if grep -q 'rezakara.demo' /etc/hosts; then
 
   sudo sed -i.bak '/rezakara\.demo/d' /etc/hosts
 
-  echo "✅ /etc/hosts cleaned"
+  echo "✅ /etc/hosts cleaned. We use PowerDNS going forward, so no need for local entries."
 else
   echo "✔ No rezakara.demo entries found"
 fi
