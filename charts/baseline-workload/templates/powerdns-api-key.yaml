@@ -1,3 +1,5 @@
+{{- if .Capabilities.APIVersions.Has "external-secrets.io/v1" }}
+
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
@@ -16,3 +18,6 @@ spec:
       remoteRef:
         key: local/powerdns/api
         property: key
+
+---
+{{- end }}
