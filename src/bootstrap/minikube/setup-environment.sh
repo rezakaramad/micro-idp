@@ -564,7 +564,7 @@ EOF
 
 main() {
   start_minikube_tunnel
-  update_hosts
+  # update_hosts
   configure_resolved
   vault_login
   create_github_app_secret
