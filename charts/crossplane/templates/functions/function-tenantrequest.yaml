@@ -1,13 +1,42 @@
-{{- if .Capabilities.APIVersions.Has "pkg.crossplane.io/v1/Function" }}
 {{- if .Values.tenantBootstrap.enabled }}
 
+{{- if .Capabilities.APIVersions.Has "pkg.crossplane.io/v1/Function" }}
 apiVersion: pkg.crossplane.io/v1
 kind: Function
 metadata:
   name: function-tenantrequest
 spec:
-  package: {{ .Values.tenantBootstrap.functions.tenantrequest.providerPackage }}
+  package: {{ required "tenantrequest.providerPackage is required" .Values.tenantBootstrap.functions.tenantrequest.providerPackage }}
+  runtimeConfigRef:
+    name: function-tenantrequest
 
 ---
 {{- end }}
+
+{{- if .Capabilities.APIVersions.Has "pkg.crossplane.io/v1/RuntimeConfig" }}
+apiVersion: pkg.crossplane.io/v1
+kind: RuntimeConfig
+metadata:
+  name: function-tenantrequest
+spec:
+  deploymentTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: package-runtime
+              env:
+                - name: PDNS_API_URL
+                  value: "http://host.minikube.internal:5380/api/v1"
+                - name: PDNS_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: powerdns-api-key
+                      key: key
+                - name: DNS_BASE_DOMAIN
+                  value: "rezakara.demo"
+
+---
+{{- end }}
+
 {{- end }}

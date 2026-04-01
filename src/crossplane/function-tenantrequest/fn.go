@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/crossplane/crossplane-runtime/v2/pkg/errors"
@@ -12,22 +13,33 @@ import (
 	"github.com/crossplane/function-sdk-go/resource"
 	"github.com/crossplane/function-sdk-go/resource/composed"
 	"github.com/crossplane/function-sdk-go/response"
+	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
+
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
 const (
 	tenantResourceName = "tenant-xr"
 
+	PhaseValidating      = "Validating"
 	PhasePendingApproval = "PendingApproval"
 	PhaseProvisioning    = "Provisioning"
 	PhaseReady           = "Ready"
+	PhaseFailed          = "Failed"
 )
 
 type Function struct {
 	fnv1.UnimplementedFunctionRunnerServiceServer
 	log logging.Logger
+
+	kube ctrlclient.Client
+	pdns PDNSClient
+
+	dnsBaseDomain string
 }
 
-func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) (*fnv1.RunFunctionResponse, error) {
+func (f *Function) RunFunction(ctx context.Context, req *fnv1.RunFunctionRequest) (*fnv1.RunFunctionResponse, error) {
 
 	start := time.Now()
 
@@ -59,8 +71,11 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) 
 	name, _ := xr.Resource.GetString("spec.name")
 	dnsName, _ := xr.Resource.GetString("spec.dnsName")
 	envPrefix, _ := xr.Resource.GetString("spec.environmentPrefix")
+	displayName, _ := xr.Resource.GetString("spec.displayName")
 	team, _ := xr.Resource.GetString("spec.owner.team")
 	email, _ := xr.Resource.GetString("spec.owner.email")
+
+	syncRepos, _ := xr.Resource.GetValue("spec.argocd.syncRepos")
 
 	f.log.Info(
 		"Reconciling tenant",
@@ -69,17 +84,40 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) 
 		"team", team,
 	)
 
-	if name == "" {
-		response.Fatal(rsp, fmt.Errorf("spec.name is required"))
+	// ---------------------------------------------------------------------
+	// Validation (DO NOT fatal)
+	// ---------------------------------------------------------------------
+
+	_ = xr.Resource.SetValue("status.phase", PhaseValidating)
+
+	if verr := f.validate(ctx, xr); verr != nil {
+		f.log.Info("TenantRequest validation failed",
+			"reason", verr.Reason,
+			"message", verr.Message,
+		)
+
+		if verr.Retryable {
+			_ = xr.Resource.SetValue("status.phase", PhaseValidating)
+		} else {
+			_ = xr.Resource.SetValue("status.phase", PhaseFailed)
+		}
+
+		response.ConditionFalse(rsp, "Valid", verr.Reason).
+			WithMessage(verr.Message).
+			TargetCompositeAndClaim()
+
+		response.ConditionFalse(rsp, "Ready", "ValidationFailed").
+			WithMessage("TenantRequest is not valid, provisioning is blocked").
+			TargetCompositeAndClaim()
+
+		xr.Resource.SetManagedFields(nil)
+		_ = response.SetDesiredCompositeResource(rsp, xr)
+
 		return rsp, nil
 	}
 
-	// erros.Wrap creates a new error that contains the original error.
-	syncRepos, err := xr.Resource.GetValue("spec.gitops.syncRepos")
-	if err != nil {
-		response.Fatal(rsp, errors.Wrap(err, "spec.gitops.syncRepos is required"))
-		return rsp, nil
-	}
+	response.ConditionTrue(rsp, "Valid", "ValidationPassed").
+		TargetCompositeAndClaim()
 
 	// ---------------------------------------------------------------------
 	// Approval gate
@@ -150,7 +188,7 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) 
 	}
 
 	// ---------------------------------------------------------------------
-	// Create Tenant XR
+	// Create Tenant XR (only after Valid + Approved)
 	// ---------------------------------------------------------------------
 
 	tenant := composed.New()
@@ -165,7 +203,9 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) 
 	tenant.SetKind("Tenant")
 	tenant.SetName(name)
 
-	if err := tenant.SetValue("spec", buildTenantSpec(name, dnsName, envPrefix, team, email, syncRepos)); err != nil {
+	if err := tenant.SetValue("spec",
+		buildTenantSpec(name, dnsName, envPrefix, displayName, team, email, syncRepos),
+	); err != nil {
 		response.Fatal(rsp, err)
 		return rsp, nil
 	}
@@ -191,6 +231,7 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) 
 	// update the phase accordingly.
 	if tenantReady {
 		_ = xr.Resource.SetValue("status.phase", PhaseReady)
+		_ = xr.Resource.SetValue("status.tenantName", name)
 
 		response.ConditionTrue(rsp, "Ready", "TenantReady").
 			TargetCompositeAndClaim()
@@ -198,6 +239,7 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) 
 		// Otherwise the Tenant is still being created or configured, so
 		// keep the XR in the Provisioning phase and report Ready=false.
 		_ = xr.Resource.SetValue("status.phase", PhaseProvisioning)
+		_ = xr.Resource.SetValue("status.tenantName", name)
 
 		response.ConditionFalse(rsp, "Ready", "TenantProvisioning").
 			TargetCompositeAndClaim()
@@ -225,20 +267,190 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) 
 	return rsp, nil
 }
 
+// ---------------------------------------------------------------------
+// Validation
+// ---------------------------------------------------------------------
+
+type ValidationError struct {
+	Reason    string
+	Message   string
+	Retryable bool
+}
+
+func (f *Function) validate(ctx context.Context, xr *resource.Composite) *ValidationError {
+
+	// -----------------------------------------------------------------
+	// 1. Required fields
+	// -----------------------------------------------------------------
+	if err := validateRequiredFields(xr); err != nil {
+		return err
+	}
+
+	name, _ := xr.Resource.GetString("spec.name")
+	dnsName, _ := xr.Resource.GetString("spec.dnsName")
+	envPrefix, _ := xr.Resource.GetString("spec.environmentPrefix")
+
+	// -----------------------------------------------------------------
+	// 2. Cluster uniqueness: Tenant
+	// -----------------------------------------------------------------
+	if err := f.checkTenantNameUnique(ctx, name); err != nil {
+		return &ValidationError{
+			Reason:    "TenantNameTaken",
+			Message:   err.Error(),
+			Retryable: false,
+		}
+	}
+
+	// -----------------------------------------------------------------
+	// 3. Cluster uniqueness: DNS
+	// -----------------------------------------------------------------
+	if err := f.checkDNSNameUnique(ctx, dnsName); err != nil {
+		return &ValidationError{
+			Reason:    "DnsNameTaken",
+			Message:   err.Error(),
+			Retryable: false,
+		}
+	}
+
+	// -----------------------------------------------------------------
+	// 4. PowerDNS check
+	// -----------------------------------------------------------------
+	fqdn := buildFQDN(dnsName, envPrefix, f.dnsBaseDomain)
+
+	result, err := f.pdns.CheckDNSAvailable(ctx, fqdn)
+	if err != nil {
+		return &ValidationError{
+			Reason:    "DnsCheckFailed",
+			Message:   err.Error(),
+			Retryable: isRetryable(err),
+		}
+	}
+
+	if !result.Available {
+		return &ValidationError{
+			Reason:    "DnsNameTaken",
+			Message:   result.Message,
+			Retryable: false,
+		}
+	}
+
+	return nil
+}
+
+func validateRequiredFields(xr *resource.Composite) *ValidationError {
+
+	name, _ := xr.Resource.GetString("spec.name")
+	if name == "" {
+		return &ValidationError{"InvalidSpec", "spec.name is required", false}
+	}
+
+	dnsName, _ := xr.Resource.GetString("spec.dnsName")
+	if dnsName == "" {
+		return &ValidationError{"InvalidSpec", "spec.dnsName is required", false}
+	}
+
+	envPrefix, _ := xr.Resource.GetString("spec.environmentPrefix")
+	if envPrefix == "" {
+		return &ValidationError{"InvalidSpec", "spec.environmentPrefix is required", false}
+	}
+
+	team, _ := xr.Resource.GetString("spec.owner.team")
+	if team == "" {
+		return &ValidationError{"InvalidSpec", "spec.owner.team is required", false}
+	}
+
+	repos, err := xr.Resource.GetValue("spec.argocd.syncRepos")
+	if err != nil || repos == nil {
+		return &ValidationError{"InvalidSpec", "spec.argocd.syncRepos is required", false}
+	}
+
+	reposList, ok := repos.([]any)
+	if !ok || len(reposList) == 0 {
+		return &ValidationError{"InvalidSpec", "spec.argocd.syncRepos must not be empty", false}
+	}
+
+	return nil
+}
+
+func (f *Function) checkTenantNameUnique(ctx context.Context, name string) error {
+
+	list := &unstructured.UnstructuredList{}
+	list.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "idp.rezakara.demo",
+		Version: "v1alpha1",
+		Kind:    "TenantList",
+	})
+
+	if err := f.kube.List(ctx, list); err != nil {
+		return err
+	}
+
+	for _, item := range list.Items {
+		if item.GetName() == name {
+			return fmt.Errorf("tenant '%s' already exists", name)
+		}
+	}
+
+	return nil
+}
+
+func (f *Function) checkDNSNameUnique(ctx context.Context, dns string) error {
+
+	list := &unstructured.UnstructuredList{}
+	list.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "idp.rezakara.demo",
+		Version: "v1alpha1",
+		Kind:    "TenantList",
+	})
+
+	if err := f.kube.List(ctx, list); err != nil {
+		return err
+	}
+
+	for _, item := range list.Items {
+		val, _, _ := unstructured.NestedString(item.Object, "spec", "dnsName")
+		if val == dns {
+			return fmt.Errorf("dns '%s' already in use", dns)
+		}
+	}
+
+	return nil
+}
+
+func buildFQDN(dnsName, env, base string) string {
+	base = strings.TrimSuffix(base, ".")
+	return fmt.Sprintf("%s.%s.%s.", dnsName, env, base)
+}
+
+func isRetryable(err error) bool {
+	return strings.Contains(err.Error(), "timeout") ||
+		strings.Contains(err.Error(), "connection") ||
+		strings.Contains(err.Error(), "refused")
+}
+
+// ---------------------------------------------------------------------
+// Build Tenant spec
+// ---------------------------------------------------------------------
 // buildTenantSpec constructs the spec map for the Tenant resource.
 func buildTenantSpec(
 	name string,
 	dnsName string,
 	env string,
+	displayName string,
 	team string,
 	email string,
 	repos any,
 ) map[string]any {
+
+	if displayName == "" {
+		displayName = name
+	}
+
 	spec := map[string]any{
 		"name":              name,
 		"dnsName":           dnsName,
 		"environmentPrefix": env,
-		"displayName":       name,
+		"displayName":       displayName,
 		"owner": map[string]any{
 			"team": team,
 		},
@@ -254,6 +466,9 @@ func buildTenantSpec(
 	return spec
 }
 
+// ---------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------
 // isApproved checks whether the Composite Resource has been approved
 // by looking for an Approved=True condition in status.conditions.
 // If the condition is not present or the status cannot be read,

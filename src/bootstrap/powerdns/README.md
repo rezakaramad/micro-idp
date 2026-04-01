@@ -27,6 +27,11 @@ This setup provides a PowerDNS authoritative server backed by PostgreSQL, along 
 
 **NOTE:** PowerDNS Admin does NOT read the database directly — it talks to the API.
 
+You can access the UI via:
+```
+http://localhost:5388
+```
+
 ## API
 
 PowerDNS exposes a REST API:

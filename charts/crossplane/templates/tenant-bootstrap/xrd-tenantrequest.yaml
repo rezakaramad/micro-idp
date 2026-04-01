@@ -32,14 +32,14 @@ spec:
                   self.spec.environmentPrefix == oldSelf.spec.environmentPrefix &&
                   self.spec.displayName == oldSelf.spec.displayName &&
                   self.spec.owner == oldSelf.spec.owner &&
-                  self.spec.gitops == oldSelf.spec.gitops
+                  self.spec.argocd == oldSelf.spec.argocd
                 )
               message: "user-controlled spec fields are immutable after creation"
 
           properties:
             spec:
               type: object
-              required: ["name", "dnsName", "environmentPrefix", "owner", "gitops"]
+              required: ["name", "dnsName", "environmentPrefix", "owner", "argocd"]
 
               properties:
                 name:
@@ -75,7 +75,7 @@ spec:
                     email:
                       type: string
 
-                gitops:
+                argocd:
                   type: object
                   required: ["syncRepos"]
                   properties:
@@ -98,6 +98,7 @@ spec:
                   type: string
                   description: Current lifecycle phase of the request.
                   enum:
+                    - Validating
                     - PendingApproval
                     - Provisioning
                     - Ready

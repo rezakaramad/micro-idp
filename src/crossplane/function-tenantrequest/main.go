@@ -2,9 +2,17 @@
 package main
 
 import (
-	"github.com/alecthomas/kong"
+	"os"
 
+	"github.com/alecthomas/kong"
 	"github.com/crossplane/function-sdk-go"
+
+	"k8s.io/apimachinery/pkg/runtime"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+
+	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
+	ctrlconfig "sigs.k8s.io/controller-runtime/pkg/client/config"
 )
 
 // CLI of this Function.
@@ -25,11 +33,53 @@ func (c *CLI) Run() error {
 		return err
 	}
 
-	return function.Serve(&Function{log: log},
+	// ------------------------------------------------------------------
+	// Build Kubernetes client
+	// ------------------------------------------------------------------
+
+	cfg, err := ctrlconfig.GetConfig()
+	if err != nil {
+		return err
+	}
+
+	scheme := runtime.NewScheme()
+	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
+
+	kubeClient, err := ctrlclient.New(cfg, ctrlclient.Options{
+		Scheme: scheme,
+	})
+	if err != nil {
+		return err
+	}
+
+	pdnsClient := NewPowerDNSClient(
+		getEnv("PDNS_API_URL", "http://host.minikube.internal:5380/api/v1"),
+		getEnv("PDNS_API_KEY", ""),
+	)
+
+	// ------------------------------------------------------------------
+	// Function setup
+	// ------------------------------------------------------------------
+
+	fn := &Function{
+		log:           log,
+		kube:          kubeClient,
+		pdns:          pdnsClient,
+		dnsBaseDomain: getEnv("DNS_BASE_DOMAIN", "rezakara.demo"),
+	}
+
+	return function.Serve(fn,
 		function.Listen(c.Network, c.Address),
 		function.MTLSCertificates(c.TLSCertsDir),
 		function.Insecure(c.Insecure),
 		function.MaxRecvMessageSize(c.MaxRecvMessageSize*1024*1024))
+}
+
+func getEnv(key, fallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return fallback
 }
 
 func main() {
