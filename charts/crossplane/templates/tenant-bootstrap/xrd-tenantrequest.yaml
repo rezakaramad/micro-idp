@@ -25,8 +25,16 @@ spec:
           required: ["spec"]
 
           x-kubernetes-validations:
-            - rule: "oldSelf == null || self.spec == oldSelf.spec"
-              message: "spec is immutable and cannot be changed after creation"
+            - rule: >
+                oldSelf == null || (
+                  self.spec.name == oldSelf.spec.name &&
+                  self.spec.dnsName == oldSelf.spec.dnsName &&
+                  self.spec.environmentPrefix == oldSelf.spec.environmentPrefix &&
+                  self.spec.displayName == oldSelf.spec.displayName &&
+                  self.spec.owner == oldSelf.spec.owner &&
+                  self.spec.gitops == oldSelf.spec.gitops
+                )
+              message: "user-controlled spec fields are immutable after creation"
 
           properties:
             spec:
