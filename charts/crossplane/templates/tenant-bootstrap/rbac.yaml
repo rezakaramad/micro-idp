@@ -12,9 +12,6 @@ rules:
 - apiGroups: ["idp.rezakara.demo"]
   resources: ["tenants", "tenantrequests"]
   verbs: ["get", "list"]
-- apiGroups: ["idp.rezakara.demo"]
-  resources: ["tenants", "tenants"]
-  verbs: ["get", "list"]
 
 ---
 
