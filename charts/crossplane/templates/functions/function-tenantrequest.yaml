@@ -13,7 +13,7 @@ spec:
 ---
 {{- end }}
 
-{{- if .Capabilities.APIVersions.Has "pkg.crossplane.io/v1/DeploymentRuntimeConfig" }}
+{{- if .Capabilities.APIVersions.Has "pkg.crossplane.io/v1beta1/DeploymentRuntimeConfig" }}
 apiVersion: pkg.crossplane.io/v1beta1
 kind: DeploymentRuntimeConfig
 metadata:
