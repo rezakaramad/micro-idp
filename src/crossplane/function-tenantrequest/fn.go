@@ -286,55 +286,86 @@ func (f *Function) validate(ctx context.Context, xr *resource.Composite) *Valida
 		return err
 	}
 
+	requestName := xr.Resource.GetName()
 	name, _ := xr.Resource.GetString("spec.name")
 	dnsName, _ := xr.Resource.GetString("spec.dnsName")
 	envPrefix, _ := xr.Resource.GetString("spec.environmentPrefix")
 
-	// -----------------------------------------------------------------
-	// 2. Cluster uniqueness: Tenant
-	// -----------------------------------------------------------------
-	if err := f.checkTenantNameUnique(ctx, name); err != nil {
-		return &ValidationError{
-			Reason:    "TenantNameTaken",
-			Message:   err.Error(),
-			Retryable: false,
-		}
-	}
-
-	// -----------------------------------------------------------------
-	// 3. Cluster uniqueness: DNS
-	// -----------------------------------------------------------------
-	if err := f.checkDNSNameUnique(ctx, dnsName); err != nil {
-		return &ValidationError{
-			Reason:    "DnsNameTaken",
-			Message:   err.Error(),
-			Retryable: false,
-		}
-	}
-
-	// -----------------------------------------------------------------
-	// 4. PowerDNS check
-	// -----------------------------------------------------------------
-	fqdn := buildFQDN(dnsName, envPrefix, f.dnsBaseDomain)
-
-	result, err := f.pdns.CheckDNSAvailable(ctx, fqdn)
+	// detect if tenant already exists and is owned by this request
+	ownedTenant, err := f.getOwnedTenant(ctx, requestName)
 	if err != nil {
-		return &ValidationError{
-			Reason:    "DnsCheckFailed",
-			Message:   err.Error(),
-			Retryable: isRetryable(err),
+		return &ValidationError{"ValidationError", err.Error(), true}
+	}
+	isPostProvision := ownedTenant != nil
+
+	// -----------------------------
+	// Phase 1: Pre-provision
+	// -----------------------------
+	if !isPostProvision {
+
+		if err := f.checkTenantNameUnique(ctx, requestName, name); err != nil {
+			return &ValidationError{"TenantNameTaken", err.Error(), false}
 		}
+
+		if err := f.checkDNSNameUnique(ctx, requestName, dnsName); err != nil {
+			return &ValidationError{"DnsNameTaken", err.Error(), false}
+		}
+
+		fqdn := buildFQDN(dnsName, envPrefix, f.dnsBaseDomain)
+
+		result, err := f.pdns.CheckDNSAvailable(ctx, fqdn)
+		if err != nil {
+			return &ValidationError{"DnsCheckFailed", err.Error(), isRetryable(err)}
+		}
+
+		if !result.Available {
+			return &ValidationError{"DnsNameTaken", result.Message, false}
+		}
+
+		return nil
 	}
 
-	if !result.Available {
-		return &ValidationError{
-			Reason:    "DnsNameTaken",
-			Message:   result.Message,
-			Retryable: false,
-		}
+	// -----------------------------
+	// Phase 2: Post-provision
+	// -----------------------------
+	// validate consistency only
+
+	if ownedTenant.GetName() != name {
+		return &ValidationError{"DriftDetected", "tenant name mismatch", false}
+	}
+
+	existingDNS, _, _ := unstructured.NestedString(ownedTenant.Object, "spec", "dnsName")
+	if existingDNS != dnsName {
+		return &ValidationError{"DriftDetected", "dns mismatch", false}
 	}
 
 	return nil
+}
+
+// ---------------------------------------------------------------------
+// Ownership detection
+// ---------------------------------------------------------------------
+
+func (f *Function) getOwnedTenant(ctx context.Context, requestName string) (*unstructured.Unstructured, error) {
+
+	list := &unstructured.UnstructuredList{}
+	list.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "idp.rezakara.demo",
+		Version: "v1alpha1",
+		Kind:    "TenantList",
+	})
+
+	if err := f.kube.List(ctx, list); err != nil {
+		return nil, err
+	}
+
+	for _, item := range list.Items {
+		if item.GetLabels()["crossplane.io/composite"] == requestName {
+			return &item, nil
+		}
+	}
+
+	return nil, nil
 }
 
 func validateRequiredFields(xr *resource.Composite) *ValidationError {
@@ -372,7 +403,11 @@ func validateRequiredFields(xr *resource.Composite) *ValidationError {
 	return nil
 }
 
-func (f *Function) checkTenantNameUnique(ctx context.Context, name string) error {
+// ---------------------------------------------------------------------
+// Updated uniqueness checks
+// ---------------------------------------------------------------------
+
+func (f *Function) checkTenantNameUnique(ctx context.Context, requestName, name string) error {
 
 	list := &unstructured.UnstructuredList{}
 	list.SetGroupVersionKind(schema.GroupVersionKind{
@@ -387,6 +422,9 @@ func (f *Function) checkTenantNameUnique(ctx context.Context, name string) error
 
 	for _, item := range list.Items {
 		if item.GetName() == name {
+			if item.GetLabels()["crossplane.io/composite"] == requestName {
+				continue
+			}
 			return fmt.Errorf("tenant '%s' already exists", name)
 		}
 	}
@@ -394,7 +432,7 @@ func (f *Function) checkTenantNameUnique(ctx context.Context, name string) error
 	return nil
 }
 
-func (f *Function) checkDNSNameUnique(ctx context.Context, dns string) error {
+func (f *Function) checkDNSNameUnique(ctx context.Context, requestName, dns string) error {
 
 	list := &unstructured.UnstructuredList{}
 	list.SetGroupVersionKind(schema.GroupVersionKind{
@@ -410,6 +448,9 @@ func (f *Function) checkDNSNameUnique(ctx context.Context, dns string) error {
 	for _, item := range list.Items {
 		val, _, _ := unstructured.NestedString(item.Object, "spec", "dnsName")
 		if val == dns {
+			if item.GetLabels()["crossplane.io/composite"] == requestName {
+				continue
+			}
 			return fmt.Errorf("dns '%s' already in use", dns)
 		}
 	}
