@@ -1,14 +1,14 @@
-apiVersion: idp.rezakara.demo/v1alpha1
-kind: TenantRequest
-metadata:
-  name: payment
-spec:
-  name: payment
-  dnsName: pay
-  displayName: Payment
-  owner:
-    team: payment
-  environmentPrefix: wl
-  gitops:
-    syncRepos:
-      - https://github.com/rezakaramad/kubepave.git
+# apiVersion: idp.rezakara.demo/v1alpha1
+# kind: TenantRequest
+# metadata:
+#   name: payment
+# spec:
+#   name: payment
+#   dnsName: pay
+#   displayName: Payment
+#   owner:
+#     team: payment
+#   environmentPrefix: wl
+#   argocd:
+#     syncRepos:
+#       - https://github.com/rezakaramad/kubepave.git
