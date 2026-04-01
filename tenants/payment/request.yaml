@@ -5,6 +5,7 @@ metadata:
 spec:
   name: payment
   dnsName: pay
+  displayName: Payment
   owner:
     team: payment
   environmentPrefix: wl
