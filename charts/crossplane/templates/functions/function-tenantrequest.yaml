@@ -13,9 +13,9 @@ spec:
 ---
 {{- end }}
 
-{{- if .Capabilities.APIVersions.Has "pkg.crossplane.io/v1/RuntimeConfig" }}
-apiVersion: pkg.crossplane.io/v1
-kind: RuntimeConfig
+{{- if .Capabilities.APIVersions.Has "pkg.crossplane.io/v1/DeploymentRuntimeConfig" }}
+apiVersion: pkg.crossplane.io/v1beta1
+kind: DeploymentRuntimeConfig
 metadata:
   name: function-tenantrequest
 spec:
