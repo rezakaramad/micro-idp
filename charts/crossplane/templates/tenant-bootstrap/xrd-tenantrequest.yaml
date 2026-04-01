@@ -26,11 +26,13 @@ spec:
 
           x-kubernetes-validations:
             - rule: >
-                has(oldSelf.status) &&
-                has(oldSelf.status.conditions) &&
+                has(oldSelf.spec) &&
+                has(self.spec) &&
                 oldSelf.status.conditions.exists(c,
                   c.type == 'Approved' && c.status == 'True'
-                ) ? self.spec == oldSelf.spec : true
+                )
+                ? self.spec == oldSelf.spec
+                : true
               message: "spec is immutable after approval"
 
           properties:

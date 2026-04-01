@@ -29,18 +29,19 @@ func approve(name string) {
 
 	timestamp := time.Now().UTC().Format(time.RFC3339)
 
-	patch := fmt.Sprintf(`{
-	"status": {
-		"conditions": [
-		{
-			"type": "Approved",
-			"status": "True",
-			"reason": "PlatformApproved",
-			"message": "Tenant approved by platform team",
-			"lastTransitionTime": "%s"
-		}]
+	patch := fmt.Sprintf(`[
+	{
+		"op": "add",
+		"path": "/status/conditions/-",
+		"value": {
+		"type": "Approved",
+		"status": "True",
+		"reason": "PlatformApproved",
+		"message": "Tenant approved by platform team",
+		"lastTransitionTime": "%s"
+		}
 	}
-}`, timestamp)
+	]`, timestamp)
 
 	cmd := exec.Command(
 		"kubectl",
@@ -48,7 +49,7 @@ func approve(name string) {
 		"tenantrequests.idp.rezakara.demo",
 		name,
 		"--subresource=status",
-		"--type=merge",
+		"--type=json",
 		"-p",
 		patch,
 	)
