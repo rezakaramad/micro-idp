@@ -92,12 +92,12 @@ Later it grew to support other environments too (Kind, maybe AWS/GCP in the futu
 
 For local setup, plain **shell scripts** work best — they run everywhere without extra dependencies.
 
-So the repo just uses a few small scripts to:
+So the repo uses a few scripts to:
 - start clusters
 - install components
 - wire everything together
 
-Nothing fancy. Just enough to get you up and running quickly.
+to get you up and running quickly.
 
 In the future, additional approaches may be added for cloud environments.
 
@@ -105,7 +105,7 @@ In the future, additional approaches may be added for cloud environments.
 ## Minikube Driver
 ### Why KVM instead of Docker?
 
-This setup runs multiple Kubernetes clusters (management and workload) that need to talk to each other reliably.
+This setup runs multiple Kubernetes clusters (`management` and `workload`) that need to talk to each other reliably.
 
 The Docker driver is easy to start with, but each Minikube profile runs in its own isolated Docker network. This makes cross-cluster communication difficult and often requires extra workarounds like port forwarding, tunnels, or custom routing.
 
