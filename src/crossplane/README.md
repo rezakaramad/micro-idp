@@ -1,3 +1,127 @@
+# How Crossplane Components Work Together
+
+## Crossplane mental model
+
+**Think of Crossplane like this**
+
+You want to offer a platform API like:
+
+> “Give me a database”
+
+But under the hood, that database may require several real resources:
+- a cloud database instance
+- a network rule
+- a secret
+- maybe monitoring or IAM too
+
+Crossplane lets you hide that complexity behind one custom object.
+
+Look at the diagram below:
+
+```mermaid
+flowchart LR
+    U[User] --> XR[Composite Resource]
+    XR --> XRD[XRD]
+    XRD --> C[Composition]
+    C --> F[Function]
+    F --> MR[Managed Resources]
+```
+
+In plain English:
+
+### XRD
+
+Defines the API users are allowed to create.
+It says:
+- what the new resource is called
+- what fields it has
+- what the schema looks like
+
+So an XRD is basically:
+
+“I am creating a new Kubernetes resource type called something like `XDatabase`.”
+
+
+### XR 
+One actual instance of that API.
+
+If the XRD defines `foo`, then an XR is a real object like:
+- `foo`
+- region: `us-east-1`
+- size: `small`
+
+So:
+- XRD = the definition of the type
+- XR = one object of that type
+
+### Composition
+The blueprint for how to turn that XR into real resources.
+
+It tells Crossplane:
+
+“When someone creates a `foo`, build these underlying resources.”
+```
+kind: XDatabase
+name: foo
+```
+
+So the Composition is the assembly plan. It connects the custom API to the actual managed resources Crossplane should create.
+
+### Function
+
+The logic inside the blueprint.
+
+In modern Crossplane, a Composition can be a pipeline of Functions. Crossplane calls those Functions to decide what resources should be created or updated for the XR. Functions run as pods, and Crossplane talks to them over gRPC.
+
+So the Function is the part that says things like:
+- “Create an RDS instance”
+- “Also create a security group”
+- “Set the region from the XR spec”
+- “If this option is enabled, create one more resource”
+
+
+Simply put:
+```
+XRD = define a new API
+XR = a user's request using that API
+Composition = blueprint for fulfilling it
+Function = logic that builds the blueprint output
+```
+Here’s a detailed view of how Crossplane turns an XR into composed resources using a Composition and Functions:
+```
+flowchart TD
+    U[Platform user / app team] --> XR["Composite Resource instance (XR)
+for example: XBucket"]
+
+    XRD["CompositeResourceDefinition (XRD)
+Defines the XR API/schema"] -. defines .-> XR
+
+    C["Composition
+mode: Pipeline
+selects function steps"] -. configures .-> XR
+
+    XR --> CP[Crossplane reconcile loop]
+
+    CP --> F1["Function step 1
+containerized gRPC server"]
+    F1 --> F2["Function step 2
+optional"]
+    F2 --> DS[Accumulated desired state]
+
+    DS --> MR1["Composed resource A
+for example: Bucket"]
+    DS --> MR2["Composed resource B
+for example: IAM Policy"]
+    DS --> MR3["Composed resource C
+for example: Secret"]
+
+    MR1 --> EXT[Cloud / external APIs via Providers]
+    MR2 --> EXT
+    MR3 --> K8S[Kubernetes resources]
+
+    CP -. observes current XR + composed resources .-> F1
+    F1 -. returns updated desired state + conditions/events/context .-> CP
+```
 # Crossplane Tenant Function Overview
 
 ## 1. The Big Picture
