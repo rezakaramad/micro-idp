@@ -2,9 +2,11 @@ name: Build and publish Crossplane function package
 
 on:
   push:
+    branches: [ main ]
     paths:
       - "src/crossplane/**"
-    branches: [ main ]
+    paths-ignore:
+      - "**/*.md"
   workflow_dispatch:
 
 env:
