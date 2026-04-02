@@ -88,7 +88,8 @@ Composition = blueprint for fulfilling it
 Function = logic that builds the blueprint output
 ```
 Here’s a detailed view of how Crossplane turns an XR into composed resources using a Composition and Functions:
-```
+
+```mermaid
 flowchart TD
     U[Platform user / app team] --> XR["Composite Resource instance (XR)
 for example: XBucket"]
