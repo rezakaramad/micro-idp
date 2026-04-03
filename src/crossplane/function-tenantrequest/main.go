@@ -17,6 +17,7 @@ import (
 
 // CLI of this Function.
 type CLI struct {
+	// Enable debug logging. By default, only info logs are emitted.
 	Debug bool `help:"Emit debug logs in addition to info logs." short:"d"`
 
 	Network            string `default:"tcp"                                                                                        help:"Network on which to listen for gRPC connections."`
@@ -36,15 +37,22 @@ func (c *CLI) Run() error {
 	// ------------------------------------------------------------------
 	// Build Kubernetes client
 	// ------------------------------------------------------------------
-
+	// Load the Kubernetes client configuration for this process.
+	// This figures out how the app should connect to the Kubernetes API server.
+	// If that config cannot be found or built, stop startup and return the error
 	cfg, err := ctrlconfig.GetConfig()
 	if err != nil {
 		return err
 	}
 
+	// Create a registry of Kubernetes resource types the client knows how to work with.
+	// Add the standard built-in Kubernetes objects (like Pods, Services, Deployments) to that registry.
 	scheme := runtime.NewScheme()
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
+	// Build a Kubernetes client using the config and the scheme we prepared above.
+	// This client is what the function will use to talk to the Kubernetes API.
+	// If client creation fails, stop startup and return the error.
 	kubeClient, err := ctrlclient.New(cfg, ctrlclient.Options{
 		Scheme: scheme,
 	})
@@ -52,6 +60,9 @@ func (c *CLI) Run() error {
 		return err
 	}
 
+	// Create a PowerDNS client using settings from environment variables.
+	// PDNS_API_URL tells it where the PowerDNS API is, and PDNS_API_KEY is used for authentication.
+	// If those env vars are missing, fall back to the default URL and an empty API key.
 	pdnsClient := NewPowerDNSClient(
 		getEnv("PDNS_API_URL", "http://host.minikube.internal:5380/api/v1"),
 		getEnv("PDNS_API_KEY", ""),
@@ -60,7 +71,6 @@ func (c *CLI) Run() error {
 	// ------------------------------------------------------------------
 	// Function setup
 	// ------------------------------------------------------------------
-
 	fn := &Function{
 		log:           log,
 		kube:          kubeClient,
