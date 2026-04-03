@@ -78,6 +78,7 @@ func (c *CLI) Run() error {
 		dnsBaseDomain: getEnv("DNS_BASE_DOMAIN", "rezakara.demo"),
 	}
 
+	// Run a server, and whenever a Crossplane request comes in, hand it to this fn object
 	return function.Serve(fn,
 		function.Listen(c.Network, c.Address),
 		function.MTLSCertificates(c.TLSCertsDir),
