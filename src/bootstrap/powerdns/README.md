@@ -1,14 +1,14 @@
 # PowerDNS Setup (PostgreSQL + API + Admin UI)
 
-This setup provides a PowerDNS authoritative server backed by PostgreSQL, along with a web-based management UI and integration with tools like ExternalDNS.
+This setup provides a PowerDNS authoritative server backed by PostgreSQL, along with a web-based management UI which is integrated with Kubernetes using ExternalDNS.
 
 ## Components
 ### PowerDNS (Authoritative Server)
-- Core DNS server responsible for serving zones and records
-- Uses PostgreSQL (gpgsql backend) for storage
+- Uses PostgreSQL for storage
 - Exposes:
-    - DNS (TCP/UDP on port 53 → mapped to 1053)
-    - HTTP API (port 8081 → mapped to 5380)
+    - DNS (TCP/UDP on port `53`)
+    - HTTP API (port `8081` → mapped to `5380`)
+        - `8081` is used internally while `5380` is called externally
 
 ### PostgreSQL
 - Stores:
@@ -22,12 +22,14 @@ This setup provides a PowerDNS authoritative server backed by PostgreSQL, along 
 ### PowerDNS Admin (UI)
 - Web UI for managing DNS zones, records, and users
 - Runs separately from PowerDNS
-- Uses its own database (pdns_admin)
+- Uses its own database (`pdns_admin`)
 - Communicates with PowerDNS via the HTTP API
+    - PowerDNS Admin → PowerDNS API (TCP on port `8081`)
+    - It's an internal call
 
 **NOTE:** PowerDNS Admin does NOT read the database directly — it talks to the API.
 
-You can access the UI via:
+You can access the PowerDNS Admin UI via:
 ```
 http://localhost:5388
 ```
@@ -87,6 +89,16 @@ http://localhost:5380/api/v1/servers/localhost/zones
 Start the stack
 ```
 docker compose up -d
+```
+
+If it starts successfully, you should see something like this when you run:
+```
+❯ docker ps
+CONTAINER ID   IMAGE                             COMMAND                  CREATED      STATUS                PORTS                                                                                     NAMES
+3fa0c3e681ca   powerdnsadmin/pda-legacy:latest   "entrypoint.sh gunic…"   2 days ago   Up 2 days (healthy)   0.0.0.0:5388->80/tcp, [::]:5388->80/tcp                                                   pdns-admin
+5f4131d37303   powerdns/pdns-auth-51:latest      "/usr/bin/tini -- /u…"   2 days ago   Up 2 days             127.0.0.1:53->53/tcp, 127.0.0.1:53->53/udp, 0.0.0.0:5380->8081/tcp, [::]:5380->8081/tcp   pdns
+52f7cd973934   postgres:17                       "docker-entrypoint.s…"   2 days ago   Up 2 days (healthy)   5432/tcp                                                                                  pdns-db
+
 ```
 
 Access UI
