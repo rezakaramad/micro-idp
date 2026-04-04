@@ -94,6 +94,10 @@ func getEnv(key, fallback string) string {
 }
 
 func main() {
+	// Parse command-line arguments and run the function.
+	// CLI{} → create a new empty CLI struct.
+	// &CLI{} → pointer to empty struct
+
 	ctx := kong.Parse(&CLI{}, kong.Description("A Crossplane Composition Function."))
 	ctx.FatalIfErrorf(ctx.Run())
 }
