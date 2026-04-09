@@ -4,9 +4,12 @@ on:
   push:
     branches: [ main ]
     paths:
-      - "src/crossplane/**"
-    paths-ignore:
-      - "**/*.md"
+      - "src/crossplane/**/*.go"
+      - "src/crossplane/**/*.yml"
+      - "src/crossplane/**/*.yaml"
+      - "src/crossplane/**/*.mod"
+      - "src/crossplane/**/*.sum"
+      - "src/crossplane/**/*.sh"
   workflow_dispatch:
 
 env:
