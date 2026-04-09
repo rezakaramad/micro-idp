@@ -1,0 +1,62 @@
+name: Build & Release kubectl plugins
+
+on:
+  push:
+    paths:
+      - 'src/kubectl-plugins/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🏗️ Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: 🔨 Build all plugins (multi-arch)
+        run: |
+          set -euo pipefail
+
+          mkdir -p dist
+
+          for dir in src/kubectl-plugins/*/; do
+            [ -f "$dir/go.mod" ] || continue
+
+            name=$(basename "$dir")
+
+            for GOOS in linux darwin; do
+              for GOARCH in amd64 arm64; do
+                output="dist/kubectl-$name-$GOOS-$GOARCH"
+
+                echo "🔨 Building $name for $GOOS/$GOARCH → $output"
+
+                GOOS=$GOOS GOARCH=$GOARCH \
+                  go build -ldflags="-s -w" -C "$dir" -o "$output"
+              done
+            done
+          done
+
+          echo "📦 Built binaries:"
+          ls -lh dist/
+
+      - name: 📦 Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: kubectl-plugins
+          path: dist/*
+
+      - name: 🚀 Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: plugins-${{ github.run_number }}
+          name: "Kubectl Plugins ${{ github.run_number }}"
+          files: dist/*
