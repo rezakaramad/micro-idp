@@ -40,7 +40,7 @@ jobs:
                 echo "🔨 Building $name for $GOOS/$GOARCH → $output"
 
                 GOOS=$GOOS GOARCH=$GOARCH \
-                  go build -ldflags="-s -w" -C "$dir" -o "$output"
+                  go build -C "$dir" -ldflags="-s -w" -o "$output"
               done
             done
           done
