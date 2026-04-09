@@ -557,6 +557,99 @@ EOF
 }
 
 # ----------------------------------------------------------------------------
+# Install kubectl plugins
+# ----------------------------------------------------------------------------
+install_kubectl_plugins() {
+  local github_repo="${GITHUB_REPO:-rezakaramad/kubepave}"
+  local release_ref="${KUBECTL_PLUGIN_RELEASE_REF:-latest}"
+
+  local os arch
+  os="$(uname | tr '[:upper:]' '[:lower:]')"
+  arch="$(uname -m)"
+
+  case "$arch" in
+    x86_64) arch="amd64" ;;
+    arm64|aarch64) arch="arm64" ;;
+    *)
+      echo "❌ Unsupported architecture: $arch"
+      return 1
+      ;;
+  esac
+
+  if [[ ! -d "$KUBECTL_PLUGIN_DIR" ]]; then
+    echo "❌ Plugin source directory not found: $KUBECTL_PLUGIN_DIR"
+    return 1
+  fi
+
+  echo "🚀 Installing kubectl plugins from GitHub Releases"
+  echo "🔎 Repo: $github_repo"
+  echo "🖥️  Platform: $os/$arch"
+  echo "📁 Discovering plugins from: $KUBECTL_PLUGIN_DIR"
+
+  local found_any=0
+
+  for dir in "$KUBECTL_PLUGIN_DIR"/*/; do
+    [[ -d "$dir" ]] || continue
+    [[ -f "$dir/go.mod" ]] || continue
+
+    found_any=1
+
+    local name binary asset url tmp installed_path
+    name="$(basename "$dir")"
+    binary="kubectl-$name"
+    asset="${binary}-${os}-${arch}"
+
+    if [[ "$release_ref" == "latest" ]]; then
+      url="https://github.com/${github_repo}/releases/latest/download/${asset}"
+    else
+      url="https://github.com/${github_repo}/releases/download/${release_ref}/${asset}"
+    fi
+
+    tmp="$(mktemp)"
+    trap 'rm -f "$tmp"' RETURN
+
+    echo ""
+    echo "⬇️  Processing plugin: $name"
+    echo "   Asset: $asset"
+
+    if ! curl -fsSL "$url" -o "$tmp"; then
+      echo "❌ Failed to download $asset"
+      rm -f "$tmp"
+      trap - RETURN
+      return 1
+    fi
+
+    chmod 0755 "$tmp"
+
+    installed_path="$(command -v "$binary" 2>/dev/null || true)"
+
+    if [[ -n "$installed_path" ]] && cmp -s "$tmp" "$installed_path"; then
+      echo "✅ $binary is already up to date at $installed_path"
+      rm -f "$tmp"
+      trap - RETURN
+      continue
+    fi
+
+    echo "📦 Installing $binary -> /usr/local/bin/$binary"
+    sudo install -m 0755 "$tmp" "/usr/local/bin/$binary"
+
+    echo "✅ Installed kubectl $name"
+    rm -f "$tmp"
+    trap - RETURN
+  done
+
+  if [[ "$found_any" -eq 0 ]]; then
+    echo "⚠️  No plugin directories found under $KUBECTL_PLUGIN_DIR"
+    return 0
+  fi
+
+  echo ""
+  echo "🎉 All kubectl plugins processed."
+  echo "🔍 Available plugins:"
+  kubectl plugin list || true
+}
+
+# ----------------------------------------------------------------------------
 # Main
 # ----------------------------------------------------------------------------
 
@@ -579,6 +672,7 @@ main() {
   install_kubectl_plugins
   create_external_dns_tsig_secret
   create_powerdns_secrets
+  install_kubectl_plugins
 
   echo "✅ Bootstrap complete"
 }
