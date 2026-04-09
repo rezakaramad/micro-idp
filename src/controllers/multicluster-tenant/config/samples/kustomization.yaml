@@ -1,0 +1,4 @@
+## Append samples of your project ##
+resources:
+- m.idp_v1alpha1_tenant.yaml
+# +kubebuilder:scaffold:manifestskustomizesamples

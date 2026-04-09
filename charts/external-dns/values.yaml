@@ -1,0 +1,42 @@
+external-dns:
+  fullnameOverride: external-dns
+
+  # Log configuration
+  logLevel: warning
+  logFormat: json
+
+  # Interval for DNS updates.
+  interval: 1m
+  
+  # -- Specify the registry for storing ownership and labels.
+  # Valid values are `txt`, `aws-sd`, `dynamodb` & `noop`.
+  registry: txt
+
+  # -- (string) Specify a prefix for the domain names of TXT records created for the `txt` registry.
+  # Mutually exclusive with `txtSuffix`.
+  txtPrefix: "externaldns"
+
+  # How DNS records are synchronized between sources and providers; available values are `create-only`, `sync`, & `upsert-only`.
+  # - create-only: only create records, don't update or delete
+  # - upsert-only: create and update records as needed, never remove records.
+  # - sync: full authority over records, create, update and delete records as needed.
+  policy: sync
+
+  # Kubernetes resources to monitor for DNS entries.
+  sources:
+    - gateway-httproute
+
+  # DNS Provider
+  provider: pdns
+
+  env:
+    - name: PDNS_API_KEY
+      valueFrom:
+        secretKeyRef:
+          name: powerdns-api-key
+          key: key
+
+  extraArgs:
+    - --pdns-server=http://host.minikube.internal:5380
+    - --pdns-api-key=$(PDNS_API_KEY)
+    - --publish-internal-services

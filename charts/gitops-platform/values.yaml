@@ -1,0 +1,9 @@
+# -------------------------------------------------------------------------------
+# -- Argo CD clusters
+# -------------------------------------------------------------------------------
+
+# Below is a list of Clusters that ArgoCD needs access for to manage.
+# Minikube clusters credentials are stored at build-time in Vault.
+clusterCredentials:
+  - name: minikube-workload
+    environmentPrefix: wl

@@ -1,0 +1,34 @@
+commonLabels:
+  platform.rezakara.demo/owner: platform
+
+commonAnnotations: {}
+
+namespaces:
+  - name: platform-system
+    extraLabels: {}
+    extraAnnotations: {}
+  - name: argocd
+    extraLabels: {}
+    extraAnnotations: {}
+  - name: vault
+    extraLabels: {}
+    extraAnnotations: {}
+  - name: keycloak
+    extraLabels: {}
+    extraAnnotations: {}
+  - name: postgres
+    extraLabels: {}
+    extraAnnotations: {}
+  - name: crossplane
+    extraLabels: {}
+    extraAnnotations: {}
+
+# -------------------------------------------------------------------------------
+# -- Argo CD clusters
+# -------------------------------------------------------------------------------
+
+# Below is a list of Clusters that ArgoCD needs access for to manage.
+# Minikube clusters credentials are stored at build-time in Vault.
+clusterCredentials:
+  - name: minikube-workload
+    environmentPrefix: wl

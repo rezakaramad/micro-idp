@@ -1,0 +1,32 @@
+version: '3'
+runner: bash
+
+tasks:
+  check:
+    desc: "Verify required dependencies are installed"
+    cmds:
+      - ./src/bootstrap/minikube/check-dependencies.sh
+  start:
+    desc: "Start Minikube clusters"
+    deps: [check]
+    cmds:
+      - ./src/bootstrap/minikube/setup-minikube.sh
+      - ./src/bootstrap/minikube/setup-networking.sh
+  up:
+    desc: "Run Micro IDP"
+    deps: [start]
+    cmds:
+      - ./src/bootstrap/minikube/install-charts.sh
+      - ./src/bootstrap/minikube/update-coredns.sh
+      - ./src/bootstrap/minikube/setup-environment.sh
+      - ./src/bootstrap/minikube/setup-vault.sh
+      - ./src/bootstrap/minikube/setup-powerdns.sh
+      - ./src/bootstrap/minikube/clean-hosts.sh
+  tuns:
+    desc: "List Minikube tunnels"
+    cmds:
+      - ./src/bootstrap/minikube/list-minikube-tunnels.sh
+  down:
+    desc: "Tear down everything"
+    cmds:
+      - ./src/bootstrap/minikube/destroy.sh

@@ -1,0 +1,13 @@
+{{- if .Capabilities.APIVersions.Has "pkg.crossplane.io/v1/Function" }}
+{{- if .Values.tenantBootstrap.enabled }}
+
+apiVersion: pkg.crossplane.io/v1
+kind: Function
+metadata:
+  name: function-patch-and-transform
+spec:
+  package: {{ .Values.tenantBootstrap.functions.patchAndTransform.providerPackage }}
+
+---
+{{- end }}
+{{- end }}

@@ -1,0 +1,134 @@
+services:
+  # PostgreSQL database container used as the backend storage for PowerDNS data (zones, records, metadata)
+  db:
+    image: postgres:17
+    container_name: pdns-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-pdns}
+      POSTGRES_USER: ${POSTGRES_USER:-pdns}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pdns}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+
+  # One-shot init container that ensures the PowerDNS PostgreSQL schema exists before starting pdns
+  pdns-init:
+    image: postgres:17
+    container_name: pdns-init
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./schema.pgsql.sql:/schema.pgsql.sql
+    entrypoint: >
+      sh -c "
+      set -e &&
+      POSTGRES_DB=${POSTGRES_DB:-pdns} &&
+      POSTGRES_DB_ADMIN=${POSTGRES_DB_ADMIN:-pdns_admin} &&
+      POSTGRES_USER=${POSTGRES_USER:-pdns} &&
+
+      echo 'Creating admin database if not exists...' &&
+      psql -h db -U $$POSTGRES_USER -d $$POSTGRES_DB -tc \"SELECT 1 FROM pg_database WHERE datname='$$POSTGRES_DB_ADMIN'\" | grep -q 1 || \
+      psql -h db -U $$POSTGRES_USER -d $$POSTGRES_DB -c \"CREATE DATABASE $$POSTGRES_DB_ADMIN;\" &&
+
+      echo 'Applying PowerDNS schema...' &&
+      psql -v ON_ERROR_STOP=1 -h db -U $$POSTGRES_USER -d $$POSTGRES_DB -f /schema.pgsql.sql &&
+
+      echo 'Init complete'
+      "
+    restart: "no"
+
+  # PowerDNS authoritative server container exposing DNS and HTTP API backed by PostgreSQL
+  pdns:
+    image: powerdns/pdns-auth-51:latest
+    container_name: pdns
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      pdns-init:
+        condition: service_completed_successfully
+    command: >
+      --config-dir=/dev/null
+      --launch=gpgsql
+      --gpgsql-host=db
+      --gpgsql-port=5432
+      --gpgsql-user=${POSTGRES_USER:-pdns}
+      --gpgsql-password=${POSTGRES_PASSWORD}
+      --gpgsql-dbname=${POSTGRES_DB:-pdns}
+      --api=yes
+      --api-key=${PDNS_API_KEY:-changeme}
+      --webserver=yes
+      --webserver-address=0.0.0.0
+      --webserver-allow-from=0.0.0.0/0
+    ports:
+      - "5380:8081"
+      - "127.0.0.1:53:53/tcp"
+      - "127.0.0.1:53:53/udp"
+
+  # One-shot init container that seeds the PowerDNS database with predefined DNS zones after schema exists
+  pdns-zones:
+    image: postgres:17
+    container_name: pdns-zones
+    depends_on:
+      pdns-init:
+        condition: service_completed_successfully
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./zones.sql:/zones.sql
+    entrypoint: >
+      sh -c "
+      set -e &&
+      POSTGRES_DB=${POSTGRES_DB:-pdns} &&
+      POSTGRES_USER=${POSTGRES_USER:-pdns} &&
+
+      echo 'Waiting for schema...' &&
+      until psql -h db -U $$POSTGRES_USER -d $$POSTGRES_DB -c 'SELECT 1 FROM domains' >/dev/null 2>&1; do
+        sleep 2;
+      done &&
+      echo 'Applying zones...' &&
+      psql -v ON_ERROR_STOP=1 -h db -U $$POSTGRES_USER -d $$POSTGRES_DB -f /zones.sql &&
+      echo 'Zones applied'
+      "
+    restart: "no"
+
+  # Web UI container providing PowerDNS-Admin for managing zones, records, and users via the PowerDNS API
+  pdns-admin:
+    image: powerdnsadmin/pda-legacy:latest
+    container_name: pdns-admin
+    restart: unless-stopped
+    depends_on:
+      pdns:
+        condition: service_started
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-pdns}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB_ADMIN: ${POSTGRES_DB_ADMIN:-pdns_admin}
+
+      SQLALCHEMY_DATABASE_URI: postgresql://${POSTGRES_USER:-pdns}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB_ADMIN:-pdns_admin}
+
+      PDNS_API_URL: http://pdns:8081
+      PDNS_API_KEY: ${PDNS_API_KEY:-changeme}
+
+      GUNICORN_TIMEOUT: 60
+      GUNICORN_WORKERS: 2
+      GUNICORN_LOGLEVEL: INFO
+      SIGNUP_ENABLED: "true"
+    ports:
+      - "5388:80"
+
+volumes:
+  db_data:
+
+networks:
+  default:
+    name: powerdns_default

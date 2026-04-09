@@ -1,0 +1,28 @@
+{{- if .Capabilities.APIVersions.Has "apiextensions.crossplane.io/v1/Composition" }}
+{{- if .Values.tenantBootstrap.enabled }}
+
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: tenant.idp.rezakara.demo
+  labels:
+    crossplane.io/xrd: tenants.idp.rezakara.demo
+
+spec:
+  compositeTypeRef:
+    apiVersion: idp.rezakara.demo/v1alpha1
+    kind: Tenant
+
+  mode: Pipeline
+
+  pipeline:
+    - step: provision
+      functionRef:
+        name: function-tenant
+
+    - step: ready
+      functionRef:
+        name: function-auto-ready
+
+{{- end }}
+{{- end }}

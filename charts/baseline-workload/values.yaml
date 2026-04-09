@@ -1,0 +1,9 @@
+commonLabels:
+  platform.rezakara.demo/owner: platform
+
+commonAnnotations: {}
+
+namespaces:
+  - name: platform-system
+    extraLabels: {}
+    extraAnnotations: {}

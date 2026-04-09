@@ -1,0 +1,21 @@
+
+{{- if .Capabilities.APIVersions.Has "group.keycloak.m.crossplane.io/v1alpha1/Group" }}
+
+apiVersion: group.keycloak.m.crossplane.io/v1alpha1
+kind: Group
+metadata:
+  name: platform-admins
+  namespace: keycloak
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
+spec:
+  forProvider:
+    name: platform-admins
+    realmIdRef:
+      name: management
+  providerConfigRef:
+    kind: ProviderConfig
+    name: keycloak
+
+---
+{{- end }}
