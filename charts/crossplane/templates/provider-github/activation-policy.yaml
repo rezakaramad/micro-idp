@@ -1,0 +1,11 @@
+{{- if .Values.githubProvider.enabled }}
+apiVersion: apiextensions.crossplane.io/v1alpha1
+kind: ManagedResourceActivationPolicy
+metadata:
+  name: github-resources
+  annotations:
+    argocd.argoproj.io/sync-wave: "-5"
+spec:
+  activate: {{ .Values.githubProvider.activatedResources | toYaml | nindent 4 }}
+{{- end }}
+
