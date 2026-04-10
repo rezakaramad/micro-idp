@@ -7,10 +7,10 @@ metadata:
   name: {{ $.Values.tenant.name | quote }}
   namespace: "gitops-{{ $.Values.tenant.name }}"
   labels:
-    {{- include "common.labels" . | nindent 4 }}
-        platform.rezakara.demo/tenant: "{{ $.Values.tenant.name | lower }}"
-        platform.rezakara.demo/rbac-group-id: "{{ $.Values.tenant.argocd.aadGroupId | lower }}"
-        platform.rezakara.demo/cluster: "{{ $cluster.clusterName | lower }}"
+  {{ include "common.labels" . | nindent 4 }}
+    platform.rezakara.demo/tenant: "{{ $.Values.tenant.name | lower }}"
+    platform.rezakara.demo/rbac-group-id: "{{ $.Values.tenant.argocd.aadGroupId | lower }}"
+    platform.rezakara.demo/cluster: "{{ $cluster.clusterName | lower }}"
 spec:
   goTemplate: true
   goTemplateOptions:
