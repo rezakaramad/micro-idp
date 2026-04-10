@@ -1,4 +1,4 @@
-{{- if .Capabilities.APIVersions.Has "repo.github.m.upbound.io/v1alpha1/Repository" }}
+{{- if .Capabilities.APIVersions.Has "repo.github.m.upbound.io/v1alpha1" }}
 
 {{- $repoName := include "tenant.repoName" .Values.tenant.name }}
 {{- $githubOrg := include "deploy.githubOrg" $ }}
