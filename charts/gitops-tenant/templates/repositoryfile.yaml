@@ -1,7 +1,7 @@
 {{- $repoName := include "tenant.repoName" .Values.tenant.name }}
 {{- $githubOrg := include "deploy.githubOrg" $ }}
 
-apiVersion: repo.github.upbound.io/v1alpha1
+apiVersion: repo.github.m.upbound.io/v1alpha1
 kind: RepositoryFile
 metadata:
   name: "{{ .Values.tenant.name }}-readme"
