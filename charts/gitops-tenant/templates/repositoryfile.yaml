@@ -28,10 +28,8 @@ spec:
       </p>
 
       <h1 align="center">
-        <span style="font-size: 0.6em;">Deployment Repository for</span><br>
-        <span style="font-size: 1.4em; font-weight: bold;">
-          {{ .Values.tenant.name | replace "-" " " | title }}
-        </span>
+        <small>Deployment Repository for</small><br>
+        <b>{{ .Values.tenant.name | replace "-" " " | title }}</b>
       </h1>
 
       <p align="center">
