@@ -1,9 +1,9 @@
-{{- if .Capabilities.APIVersions.Has "repo.github.upbound.io/v1alpha1/Repository" }}
+{{- if .Capabilities.APIVersions.Has "repo.github.m.upbound.io/v1alpha1/Repository" }}
 
 {{- $repoName := include "tenant.repoName" .Values.tenant.name }}
 {{- $githubOrg := include "deploy.githubOrg" $ }}
 
-apiVersion: repo.github.upbound.io/v1alpha1
+apiVersion: repo.github.m.upbound.io/v1alpha1
 kind: Repository
 metadata:
   name: {{ $repoName | quote }}
@@ -14,10 +14,11 @@ metadata:
     platform.rezakara.demo/github-org: {{ $githubOrg | quote }}
 
 spec:
-  deletionPolicy: Orphan
-
   providerConfigRef:
+    kind: ClusterProviderConfig
     name: {{ printf "github-%s" $githubOrg | quote }}
+
+  managementPolicies: ["Create", "Observe"]
 
   forProvider:
     name: {{ $repoName | quote }}
