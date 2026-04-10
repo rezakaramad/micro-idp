@@ -21,7 +21,6 @@ spec:
     file: README.md
     branch: main
     commitMessage: "chore: post tenant details in README.md via Crossplane"
-
     content: |
-      {{ tpl (.Files.Get "files/README.md") . | indent 6 }}
+          {{ tpl (.Files.Get "files/README.md") . | indent 6 }}
 ---
