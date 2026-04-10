@@ -92,7 +92,6 @@ helm_install () {
     -n "$namespace" \
     --kube-context "$profile" \
     --timeout 10m \
-    --force \
     "$@" # Forward any additional Helm arguments
 }
 
