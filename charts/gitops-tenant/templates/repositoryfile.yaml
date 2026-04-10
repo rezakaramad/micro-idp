@@ -27,7 +27,7 @@ spec:
         <img width="22%" src="./logo.png">
       </p>
 
-      <h1 align="center">Tenant Deployment Repository</h1>
+      <h1 align="center">Deployment Repository for {{ .Values.tenant.name }}</h1>
 
       <p align="center">
         Declarative configuration for this tenant environment.<br/>
@@ -41,9 +41,9 @@ spec:
         <img src="https://img.shields.io/badge/tenant-environment-blue?style=flat" />
       </p>
 
-      This repository deploys {{ .Values.tenant.name }}.
-      ⚠️ **This file is automatically managed by Crossplane. Do not edit manually.**
-      It follows a GitOps workflow where changes are continuously reconciled to the cluster by Argo CD.
+      > ⚠️ **This file is automatically managed by Crossplane. Do not edit manually.**
+
+      > It follows a GitOps workflow where changes are continuously reconciled to the cluster by Argo CD.
 
       ## 🎯 Purpose
 
@@ -79,7 +79,7 @@ spec:
       ```bash
       .
       └── apps
-          └── payments
+          └── payment
               ├── dev
               ├── prod
               └── test
@@ -92,7 +92,7 @@ spec:
       ```bash
       .
       └── apps
-          └── payments
+          └── payment
               └── dev
                   ├── deployment.yaml
                   ├── service.yaml
@@ -103,7 +103,7 @@ spec:
 
       ```bash
       git add .
-      git commit -m "feat: add payments service"
+      git commit -m "feat: add payment service"
       git push
       ```
 
@@ -117,13 +117,13 @@ spec:
       - Changes are applied automatically by Argo CD
       - No manual kubectl or CI/CD pipelines required
 
+      ---
+
       ## 🌐 DNS
 
-      ```bash
       | Environment     | Hostname                                           |
       |-----------------|----------------------------------------------------|
       | Workload `wl`   | `*.{{ .Values.tenant.dnsName }}.wl.rezakara.demo` |
-      ```
 
       ---
 
@@ -139,6 +139,6 @@ spec:
           sectionName: https
       ```
 
-      Made with ❤️ and ✨ by **Platform team**.
+      Made with 🤓, 🐧 and 🍷.
 
 ---
