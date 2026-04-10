@@ -1,0 +1,68 @@
+{{- $repoURL := include "tenant.repoURL" $tenant.name }}
+{{- range $cluster := $.Values.argocd.clusters -}}
+
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: {{ $tenant.name | quote }}
+  namespace: "gitops-{{ $tenant.name }}"
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+        platform.rezakara.demo/tenant: "{{ $.Values.tenant.name | lower }}"
+        platform.rezakara.demo/rbac-group-id: "{{ $.Values.tenant.argocd.aadGroupId | lower }}"
+        platform.rezakara.demo/cluster: "{{ $cluster.clusterName | lower }}"
+spec:
+  goTemplate: true
+  goTemplateOptions:
+    - missingkey=error
+  generators:
+    - matrix:
+        generators:
+          - git:
+              repoURL: {{ $repoURL | quote }}
+              revision: HEAD
+              directories:
+                - path: apps/*
+          - clusters:
+              selector:
+                matchExpressions:
+                  - key: argocd.mgmt.rezakara.demo/cluster-type
+                    operator: In
+                    values: ["tenant"]
+                  - key: argocd.mgmt.rezakara.demo/environment
+                    operator: In
+                    values: ["wl", "dev","test","prod"]
+  template:
+    metadata:
+      name: '{{ `{{ .path.basename }}` }}-{{ `{{ index .metadata.labels "argocd.mgmt.rezakara.demo/environment" }}` }}'
+      namespace:  "argocd-{{ $tenant.name }}"
+      labels:
+      {{- include "common.labels" $ | indent 8 }}
+        platform.rezakara.demo/tenant: {{ $tenant.name | lower | quote }}
+    spec:
+      project: '{{ $tenant.name }}-{{ `{{ index .metadata.labels "argocd.mgmt.rezakara.demo/environment" }}` }}'
+      source:
+        repoURL: {{ $repoURL | quote }}
+        targetRevision: HEAD
+        path: '{{ `{{ .path.path }}/{{ index .metadata.labels "argocd.mgmt.rezakara.demo/environment" }}` }}'
+      destination:
+        name: '{{ `{{ .name }}` }}'
+        namespace: {{ $tenant.name | quote }}
+      syncPolicy:
+        automated:
+          enabled: true 
+          prune: false
+          selfHeal: true
+        syncOptions:
+        - ServerSideApply=true
+        - ApplyOutOfSyncOnly=true
+        - RespectIgnoreDifferences=true
+      ignoreDifferences:
+        - group: argoproj.io
+          kind: Application
+          jsonPointers:
+            - /spec/syncPolicy/automated
+            - /spec/source/targetRevision
+
+---
+{{- end }}

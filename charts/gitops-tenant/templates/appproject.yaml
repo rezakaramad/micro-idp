@@ -6,10 +6,10 @@ metadata:
   name: "{{ $.Values.tenant.name }}-{{ $cluster.environmentPrefix }}"
   namespace: argocd
   labels:
-{{ include "common.labels" . | nindent 4 }}
-    platform.rezakara.demo/tenant: "{{ $.Values.tenant.name | lower }}"
-    platform.rezakara.demo/rbac-group-id: "{{ $.Values.tenant.argocd.aadGroupId | lower }}"
-    platform.rezakara.demo/cluster: "{{ $cluster.clusterName | lower }}"
+    {{- include "common.labels" . | nindent 4 }}
+        platform.rezakara.demo/tenant: "{{ $.Values.tenant.name | lower }}"
+        platform.rezakara.demo/rbac-group-id: "{{ $.Values.tenant.argocd.aadGroupId | lower }}"
+        platform.rezakara.demo/cluster: "{{ $cluster.clusterName | lower }}"
 spec:
   sourceNamespaces:
     - "argocd-{{ $.Values.tenant.name }}"
