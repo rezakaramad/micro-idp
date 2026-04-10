@@ -1,7 +1,7 @@
 {{- if .Capabilities.APIVersions.Has "repo.github.upbound.io/v1alpha1/Repository" }}
 
 {{- $repoName := include "tenant.repoName" .Values.tenant.name }}
-{{- $githubOrganization := include "githubOrganization" $ }}
+{{- $githubOrg := include "deploy.githubOrg" $ }}
 
 apiVersion: repo.github.upbound.io/v1alpha1
 kind: Repository
@@ -11,13 +11,13 @@ metadata:
   labels:
 {{ include "common.labels" . | nindent 4 }}
     platform.rezakara.demo/tenant: {{ .Values.tenant.name | lower | quote }}
-    platform.rezakara.demo/github-org: {{ $githubOrganization | quote }}
+    platform.rezakara.demo/github-org: {{ $githubOrg | quote }}
 
 spec:
   deletionPolicy: Orphan
 
   providerConfigRef:
-    name: {{ printf "github-%s" $githubOrganization | quote }}
+    name: {{ printf "github-%s" $githubOrg | quote }}
 
   forProvider:
     name: {{ $repoName | quote }}
@@ -26,7 +26,7 @@ spec:
     autoInit: true
     defaultBranch: main
     template:
-      - owner: {{ $githubOrganization | quote }}
+      - owner: {{ $githubOrg | quote }}
         repository: platform-deploy-template
 
 ---
