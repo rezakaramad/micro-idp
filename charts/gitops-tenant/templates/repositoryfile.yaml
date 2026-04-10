@@ -13,7 +13,8 @@ metadata:
 
 spec:
   providerConfigRef:
-    name: "github-{{ $githubOrg }}"
+    kind: ClusterProviderConfig
+    name: {{ printf "github-%s" $githubOrg | quote }}
 
   forProvider:
     repository: {{ $repoName | quote }}
