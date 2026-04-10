@@ -5,7 +5,7 @@ apiVersion: repo.github.m.upbound.io/v1alpha1
 kind: Repository
 metadata:
   name: {{ $repoName | quote }}
-  namespace: "argocd-{{ .Values.tenant.name }}"
+  namespace: "gitops-{{ .Values.tenant.name }}"
   labels:
   {{- include "common.labels" . | nindent 4 }}
     platform.rezakara.demo/tenant: {{ .Values.tenant.name | lower | quote }}
