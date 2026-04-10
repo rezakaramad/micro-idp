@@ -27,10 +27,12 @@ spec:
         <img width="22%" src="./logo.png">
       </p>
 
-      <p align="center">
-        Deployment Repository for:
-        <strong>{{ .Values.tenant.name | replace "-" " " | title }}</strong>
-      </p>
+      <h2 align="center">
+        <span style="font-weight: 300;">Deployment Repository for:</span>
+        <strong style="margin-left: 6px;">
+          {{ .Values.tenant.name | replace "-" " " | title }}
+        </strong>
+      </h2>
 
       <p align="center">
         Declarative configuration for this tenant environment.<br/>
