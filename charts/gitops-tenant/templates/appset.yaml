@@ -1,11 +1,11 @@
-{{- $repoURL := include "tenant.repoURL" $tenant.name }}
+{{- $repoURL := include "tenant.repoURL" $.Values.tenant.name   }}
 {{- range $cluster := $.Values.argocd.clusters -}}
 
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: {{ $tenant.name | quote }}
-  namespace: "gitops-{{ $tenant.name }}"
+  name: {{ $.Values.tenant.name | quote }}
+  namespace: "gitops-{{ $.Values.tenant.name }}"
   labels:
     {{- include "common.labels" . | nindent 4 }}
         platform.rezakara.demo/tenant: "{{ $.Values.tenant.name | lower }}"
@@ -35,19 +35,19 @@ spec:
   template:
     metadata:
       name: '{{ `{{ .path.basename }}` }}-{{ `{{ index .metadata.labels "argocd.mgmt.rezakara.demo/environment" }}` }}'
-      namespace:  "argocd-{{ $tenant.name }}"
+      namespace:  "gitops-{{ $.Values.tenant.name }}"
       labels:
       {{- include "common.labels" $ | indent 8 }}
-        platform.rezakara.demo/tenant: {{ $tenant.name | lower | quote }}
+        platform.rezakara.demo/tenant: {{ $.Values.tenant.name | lower | quote }}
     spec:
-      project: '{{ $tenant.name }}-{{ `{{ index .metadata.labels "argocd.mgmt.rezakara.demo/environment" }}` }}'
+      project: '{{ $.Values.tenant.name }}-{{ `{{ index .metadata.labels "argocd.mgmt.rezakara.demo/environment" }}` }}'
       source:
         repoURL: {{ $repoURL | quote }}
         targetRevision: HEAD
         path: '{{ `{{ .path.path }}/{{ index .metadata.labels "argocd.mgmt.rezakara.demo/environment" }}` }}'
       destination:
         name: '{{ `{{ .name }}` }}'
-        namespace: {{ $tenant.name | quote }}
+        namespace: {{ $.Values.tenant.name | quote }}
       syncPolicy:
         automated:
           enabled: true 
