@@ -29,11 +29,13 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "📌 Version: $VERSION"
 
-      - name: 🔨 Build all plugins (multi-arch)
+      - name: 🔨 Build kubectl plugins
         run: |
           set -euo pipefail
 
           mkdir -p dist
+
+          found_any=0
 
           for dir in src/kubectl-plugins/*/; do
             [[ -d "$dir" ]] || continue
@@ -41,29 +43,47 @@ jobs:
 
             name=$(basename "$dir")
 
+            echo ""
+            echo "🔍 Inspecting plugin: $name"
+
+            # ✅ Ensure it's a CLI (must contain package main)
+            if ! grep -qr "^package main" "$dir"; then
+              echo "⚠️ Skipping $name (no main package)"
+              continue
+            fi
+
+            found_any=1
+
             for GOOS in linux darwin; do
               for GOARCH in amd64 arm64; do
                 output="dist/kubectl-$name-$GOOS-$GOARCH"
 
                 echo "🔨 Building $name for $GOOS/$GOARCH → $output"
 
-                GOOS=$GOOS GOARCH=$GOARCH \
-                  go build -C "$dir" -ldflags="-s -w" -o "$output"
-
-                # ✅ Minimal but correct validation
-                if [[ ! -s "$output" ]]; then
-                  echo "❌ Build failed: $output is empty"
+                if ! GOOS=$GOOS GOARCH=$GOARCH \
+                  go build -C "$dir" -ldflags="-s -w" -o "$output"; then
+                  echo "❌ Build failed for $name ($GOOS/$GOARCH)"
                   exit 1
                 fi
 
-                echo "🔍 Built artifact:"
-                file "$output" || true
+                # ✅ Validate output exists and is non-empty
+                if [[ ! -s "$output" ]]; then
+                  echo "❌ Build produced empty file: $output"
+                  exit 1
+                fi
+
+                echo "✅ Built $output"
               done
             done
           done
 
+          if [[ "$found_any" -eq 0 ]]; then
+            echo "❌ No valid kubectl plugins found (no package main)"
+            exit 1
+          fi
+
           echo ""
-          echo "📦 Built binaries:"
+          echo "📦 Final artifacts:"
           ls -lh dist/
 
       - name: 🔐 Generate checksums
