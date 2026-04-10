@@ -1,4 +1,3 @@
-{{- if .Capabilities.APIVersions.Has "github.m.upbound.io/v1beta1/ClusterProviderConfig" }}
 {{- if .Values.githubProvider.enabled }}
 
 apiVersion: github.m.upbound.io/v1beta1
@@ -17,5 +16,4 @@ spec:
       key: credentials
 
 ---
-{{- end }}
 {{- end }}
