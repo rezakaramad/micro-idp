@@ -32,10 +32,10 @@ spec:
 
     clientIdSecretRef:
       name: azure-oidc-management
-      key: client-id
+      key: client_id
     clientSecretSecretRef:
       name: azure-oidc-management
-      key: client-secret
+      key: client_secret
 
   providerConfigRef:
     kind: ProviderConfig
