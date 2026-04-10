@@ -21,7 +21,7 @@ spec:
   forProvider:
     name: {{ $repoName | quote }}
     description: "Tenant environment configuration managed via GitOps and continuously reconciled by Argo CD."
-    visibility: internal
+    visibility: private
     autoInit: true
     defaultBranch: main
     template:
