@@ -117,8 +117,8 @@ vault_login() {
 # GitHub App secret
 # ----------------------------------------------------------------------------
 
-create_github_app_secret() {
-  echo "🔐 Writing GitHub App secret..."
+create_github_app_secret_argocd() {
+  echo "🔐 Writing Argo CD GitHub App secret..."
 
   APP_ID=$(pass show private/github/apps/rezakaramad-argocd/app-id | head -n1)
   INSTALLATION_ID=$(pass show private/github/apps/rezakaramad-argocd/installation-id | head -n1)
@@ -432,7 +432,7 @@ trust_self_signed_ca_certificate() {
 # ----------------------------------------------------------------------------
 
 create_crossplane_azure_secret() {
-  echo "🔐 Writing Entra ID App secret..."
+  echo "🔐 Writing Crossplane Entra ID App secret..."
 
   VAULT_PATH="local/management/crossplane/azure/apps/rezakara-crossplane"
 
@@ -452,6 +452,26 @@ create_crossplane_azure_secret() {
 
   echo "✅ Entra ID client secret stored in Vault"
 }
+
+# ----------------------------------------------------------------------------
+# Crossplane credential in GitHub
+# ----------------------------------------------------------------------------
+
+create_github_app_secret_crossplane() {
+  echo "🔐 Writing Crossplane GitHub App secret..."
+
+  APP_ID=$(pass show private/github/apps/Crossplane-Managed-GitHub-Repos/app-id | head -n1)
+  INSTALLATION_ID=$(pass show private/github/apps/Crossplane-Managed-GitHub-Repos/installation-id | head -n1)
+  PRIVATE_KEY=$(pass show private/github/apps/Crossplane-Managed-GitHub-Repos/private-key)
+
+  vault kv put local/management/github/apps/crossplane-managed-github-repos \
+    app-id="$APP_ID" \
+    installation-id="$INSTALLATION_ID" \
+    private-key="$PRIVATE_KEY"
+
+  echo "✅ Crossplane GitHub App secret written to Vault"
+}
+
 
 # ----------------------------------------------------------------------------
 # TSIG secret for external-dns (RFC2136)
@@ -783,7 +803,7 @@ main() {
   update_hosts
   configure_resolved
   vault_login
-  create_github_app_secret
+  create_github_app_secret_argocd
   register_clusters_argocd
   create_keycloak_azure_secret_management_realm
   create_keycloak_bootstrap_secret
@@ -791,6 +811,7 @@ main() {
   trust_self_signed_ca_certificate
   create_crossplane_azure_secret
   install_kubectl_plugins
+  create_github_app_secret_crossplane
   create_external_dns_tsig_secret
   create_powerdns_secrets
   install_kubectl_plugins

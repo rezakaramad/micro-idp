@@ -78,6 +78,7 @@ helm_install () {
   # Example:
   #   before: name chart ns -f values.yaml
   #   after : -f values.yaml
+  local output        # Capture Helm output for logging and error handling
 
   if [[ $# -ge 4 ]]; then
     shift 4
@@ -87,12 +88,39 @@ helm_install () {
 
   echo ""
   echo "📦 Installing $name → namespace: $namespace (context: $profile)"
-  
-  helm upgrade --install "$name" "$CHARTS_DIR/$chart" \
+
+  # Try Helm upgrade first (handles both install and upgrade scenarios)
+  # If it fails, we attempt a recovery by uninstalling any existing release and trying a fresh install.
+  # This is a common pattern to handle cases where Helm gets into a bad state (e.g., failed upgrade, stuck release) that prevents subsequent upgrades from succeeding.
+  # By doing this, we can often recover from transient issues without manual intervention.
+  if output=$(helm upgrade --install "$name" "$CHARTS_DIR/$chart" \
+  -n "$namespace" \
+  --kube-context "$profile" \
+  --timeout 10m \
+  "$@" 2>&1); then
+    echo "$output"
+    echo "✅ Helm succeeded"
+  else
+    echo "$output"
+    echo "⚠️ Helm failed → attempting recovery"
+    # Cleanup
+    helm uninstall "$name" \
     -n "$namespace" \
-    --kube-context "$profile" \
-    --timeout 10m \
-    "$@" # Forward any additional Helm arguments
+    --kube-context "$profile" || true
+    # Retry installation
+    if output=$(helm install "$name" "$CHARTS_DIR/$chart" \
+      -n "$namespace" \
+      --kube-context "$profile" \
+      --timeout 10m \
+      "$@" 2>&1); then  # "$@" → Forward any additional Helm arguments
+        echo "$output"
+        echo "✅ Recovery install succeeded"
+    else
+      echo "$output"
+      echo "❌ Recovery install failed"
+      return 1
+    fi
+  fi
 }
 
 # -----------------------------------------------------------------------------

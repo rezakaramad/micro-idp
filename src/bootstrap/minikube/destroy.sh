@@ -24,7 +24,7 @@ done
 
 echo "🧨 Deleting all Minikube clusters..."
 
-minikube delete --all
+minikube delete --all --purge || true
 
 echo "🧼 Cleaning kubeconfig leftovers..."
 
