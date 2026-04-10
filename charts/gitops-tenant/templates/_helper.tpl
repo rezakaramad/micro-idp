@@ -24,12 +24,12 @@ platform.rezakara.demo/component: tenant-gateway
 {{- end }}
 
 {{/* Returns the GitHub organization where tenant deploy repositories are created */}}
-{{- define "deploy.githubOrg" -}}
-jysk-kubernetes
+{{- define "githubOrganization" -}}
+fluxdojo
 {{- end -}}
 
 {{/* Builds the repository name for a tenant (platform-deploy-<tenant>) */}}
-{{- define "tenant.repoName" -}}
+{{- define "deployRepositoryName" -}}
 platform-deploy-{{ . | lower }}
 {{- end -}}
 
