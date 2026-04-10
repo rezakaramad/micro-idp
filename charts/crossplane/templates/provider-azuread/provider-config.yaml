@@ -14,5 +14,6 @@ spec:
       name: crossplane-admin
       key: credentials
 
+---
 {{- end }}
 {{- end }}

@@ -1,4 +1,6 @@
+{{- if .Capabilities.APIVersions.Has "pkg.crossplane.io/v1/Provider" }}
 {{- if .Values.githubProvider.enabled }}
+
 apiVersion: pkg.crossplane.io/v1
 kind: Provider
 metadata:
@@ -6,4 +8,7 @@ metadata:
   namespace: crossplane
 spec:
   package: {{ .Values.githubProvider.providerPackage }}
+
+---
+{{- end }}
 {{- end }}

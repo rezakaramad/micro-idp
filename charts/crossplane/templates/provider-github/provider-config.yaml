@@ -1,4 +1,6 @@
+{{- if .Capabilities.APIVersions.Has "github.m.upbound.io/v1beta1/ClusterProviderConfig" }}
 {{- if .Values.githubProvider.enabled }}
+
 apiVersion: github.m.upbound.io/v1beta1
 kind: ClusterProviderConfig
 metadata:
@@ -13,4 +15,7 @@ spec:
       namespace: crossplane
       name: github-app-fluxdojo
       key: credentials
+
+---
+{{- end }}
 {{- end }}

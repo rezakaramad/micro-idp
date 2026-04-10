@@ -1,4 +1,6 @@
+{{- if .Capabilities.APIVersions.Has "apiextensions.crossplane.io/v1alpha1/ManagedResourceActivationPolicy" }}
 {{- if .Values.githubProvider.enabled }}
+
 apiVersion: apiextensions.crossplane.io/v1alpha1
 kind: ManagedResourceActivationPolicy
 metadata:
@@ -7,5 +9,7 @@ metadata:
     argocd.argoproj.io/sync-wave: "-5"
 spec:
   activate: {{ .Values.githubProvider.activatedResources | toYaml | nindent 4 }}
-{{- end }}
 
+---
+{{- end }}
+{{- end }}
