@@ -37,8 +37,12 @@ spec:
       name: '{{ `{{ .path.basename }}` }}-{{ `{{ index .metadata.labels "argocd.mgmt.rezakara.demo/environment" }}` }}'
       namespace:  "gitops-{{ $.Values.tenant.name }}"
       labels:
-      {{ include "common.labels" $ | indent 8 }}
-        platform.rezakara.demo/tenant: {{ $.Values.tenant.name | lower | quote }}
+      {{ include "common.labels" $ | nindent 8 }}
+      {{- with dict
+        "platform.rezakara.demo/tenant" ($.Values.tenant.name | lower)
+      }}
+      {{ toYaml . | nindent 8 }}
+      {{- end }}
     spec:
       project: '{{ $.Values.tenant.name }}-{{ `{{ index .metadata.labels "argocd.mgmt.rezakara.demo/environment" }}` }}'
       source:
