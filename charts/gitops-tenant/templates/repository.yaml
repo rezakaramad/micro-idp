@@ -1,5 +1,3 @@
-{{- if .Capabilities.APIVersions.Has "repo.github.m.upbound.io/v1alpha1" }}
-
 {{- $repoName := include "tenant.repoName" .Values.tenant.name }}
 {{- $githubOrg := include "deploy.githubOrg" $ }}
 
@@ -9,7 +7,7 @@ metadata:
   name: {{ $repoName | quote }}
   namespace: "argocd-{{ .Values.tenant.name }}"
   labels:
-{{ include "common.labels" . | nindent 4 }}
+  {{- include "common.labels" . | nindent 4 }}
     platform.rezakara.demo/tenant: {{ .Values.tenant.name | lower | quote }}
     platform.rezakara.demo/github-org: {{ $githubOrg | quote }}
 
@@ -31,4 +29,3 @@ spec:
         repository: platform-deploy-template
 
 ---
-{{- end }}
