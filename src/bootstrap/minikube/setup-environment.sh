@@ -4,8 +4,10 @@ set -euo pipefail
 # Compute repo root dynamically 
 # Returns absolute path to script location, in my case it's '/home/kara/github/r-karamad/kubepave/src/bootstrap/minikube'
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # Go three folders up from where the script lives, and give me that absolute path.
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+
 # Where kubectl plugins are placed
 KUBECTL_PLUGIN_DIR="$REPO_ROOT/src/kubectl-plugins"
 
@@ -42,10 +44,10 @@ get_minikube_tenant_profiles() {
       '
 }
 
+
 # ----------------------------------------------------------------------------
 # Networking
 # ----------------------------------------------------------------------------
-
 start_minikube_tunnel() {
   echo "🔌 Ensuring minikube tunnels are running..."
 
@@ -61,7 +63,6 @@ start_minikube_tunnel() {
 }
 
 update_hosts() {
-
   echo "⚙️  Updating /etc/hosts (requires sudo privileges)"
 
   # Wait for LoadBalancer IP
@@ -84,10 +85,10 @@ update_hosts() {
   } | sudo tee -a /etc/hosts >/dev/null
 }
 
+
 # ----------------------------------------------------------------------------
 # CLI Login to Vault 
 # ----------------------------------------------------------------------------
-
 vault_login() {
   local VAULT_NAMESPACE="vault"
 
@@ -113,30 +114,53 @@ vault_login() {
   vault secrets enable -path=local kv-v2 2>/dev/null || true
 }
 
-# ----------------------------------------------------------------------------
-# GitHub App secret
-# ----------------------------------------------------------------------------
 
+# ----------------------------------------------------------------------------
+# GitHub App secret for Argo CD
+# Two separate GitHub Apps are used in the current setup:
+# - One for 'rezakaramad' GitHub account to connect Argo CD to GitHub and deploy from repos in that account
+#   - This is due to the fact that the platform repository 'kubepave' is in the 'rezakaramad' account and we want to deploy from it.
+# - Another for 'fluxdojo' GitHub organization and deploy from repos in that org.
+#   - This is where Argo CD ApplicationSets are defined to deploy tenant clusters, and we want to deploy from that repo as well.
+# ----------------------------------------------------------------------------
 create_github_app_secret_argocd() {
   echo "🔐 Writing Argo CD GitHub App secret..."
 
+  # Access to https://github.com/rezakaramad
+  echo "🔐 Copying 'rezakaramad-argocd' GitHub App credentials from 'pass' local password store..."
   APP_ID=$(pass show private/github/apps/rezakaramad-argocd/app-id | head -n1)
   INSTALLATION_ID=$(pass show private/github/apps/rezakaramad-argocd/installation-id | head -n1)
   PRIVATE_KEY=$(pass show private/github/apps/rezakaramad-argocd/private-key)
 
-  vault kv put local/management/github/apps/argocd \
+  echo "🔐 Storing 'rezakaramad-argocd' GitHub App credentials in Vault..."
+  vault kv put local/management/github/apps/argocd/rezakaramad \
     app-id="$APP_ID" \
     installation-id="$INSTALLATION_ID" \
     private-key="$PRIVATE_KEY"
 
-  echo "✅ Argo CD GitHub App secret written to Vault"
+  echo "✅ Argo CD GitHub App secret for 'https://github.com/rezakaramad' written to Vault"
 
+  # Access to https://github.com/fluxdojo
+  echo "🔐 Copying 'fluxdojo-argocd' GitHub App credentials from 'pass' local password store..."
+  APP_ID=$(pass show private/github/apps/fluxdojo-argocd/app-id | head -n1)
+  INSTALLATION_ID=$(pass show private/github/apps/fluxdojo-argocd/installation-id | head -n1)
+  PRIVATE_KEY=$(pass show private/github/apps/fluxdojo-argocd/private-key)
+
+  echo "🔐 Storing 'fluxdojo-argocd' GitHub App credentials in Vault..."
+  vault kv put local/management/github/apps/argocd/fluxdojo \
+    app-id="$APP_ID" \
+    installation-id="$INSTALLATION_ID" \
+    private-key="$PRIVATE_KEY"
+
+  echo "✅ Argo CD GitHub App secret for 'https://github.com/fluxdojo' written to Vault"
+
+  echo "🎉 All Argo CD GitHub App secrets successfully stored in Vault so Argo CD can access GitHub repositories securely."
 }
+
 
 # ----------------------------------------------------------------------------
 # Argo CD cluster credentials
 # ----------------------------------------------------------------------------
-
 register_clusters_argocd() {
   echo "🔐 Writing Argo CD clusters credentials..."
 
@@ -195,10 +219,10 @@ EOF
   echo "🎉 All Argo CD cluster credentials stored in Vault"
 }
 
+
 # ----------------------------------------------------------------------------
 # Keycloak credentials
 # ----------------------------------------------------------------------------
-
 create_keycloak_azure_secret_management_realm() {
   echo "🔐 Writing Entra ID App secret..."
 
@@ -260,6 +284,11 @@ create_keycloak_administrator_secret() {
   echo "✅ Keycloak administrator credentials stored in Vault"
 }
 
+
+# ----------------------------------------------------------------------------
+# Trust self-signed CA certificate from Vault in
+# local trust stores (Java, browser, system) and distribute to tenant clusters
+# ----------------------------------------------------------------------------
 trust_self_signed_ca_certificate() {
   BASE_DIR="$HOME/.local/share/rezakara"
   CA_FILE="$BASE_DIR/ca.crt"
@@ -427,10 +456,10 @@ trust_self_signed_ca_certificate() {
   echo "🔐 Root CA secret distributed to workload clusters."
 }
 
+
 # ----------------------------------------------------------------------------
 # Crossplane credential in Azure
 # ----------------------------------------------------------------------------
-
 create_crossplane_azure_secret() {
   echo "🔐 Writing Crossplane Entra ID App secret..."
 
@@ -453,10 +482,10 @@ create_crossplane_azure_secret() {
   echo "✅ Entra ID client secret stored in Vault"
 }
 
+
 # ----------------------------------------------------------------------------
 # Crossplane credential in GitHub
 # ----------------------------------------------------------------------------
-
 create_github_app_secret_crossplane() {
   echo "🔐 Writing Crossplane GitHub App secret..."
 
@@ -476,7 +505,6 @@ create_github_app_secret_crossplane() {
 # ----------------------------------------------------------------------------
 # TSIG secret for external-dns (RFC2136)
 # ----------------------------------------------------------------------------
-
 create_external_dns_tsig_secret() {
   echo "🔐 Generating TSIG secret for external-dns..."
 
@@ -499,10 +527,10 @@ create_external_dns_tsig_secret() {
   echo "✅ TSIG secret stored in Vault at $VAULT_PATH"
 }
 
+
 # ----------------------------------------------------------------------------
 # TSIG secret for external-dns (RFC2136)
 # ----------------------------------------------------------------------------
-
 create_powerdns_secrets() {
   VAULT_BASE_PATH="local/powerdns"
   VAULT_DB_PATH="$VAULT_BASE_PATH/db"
@@ -526,6 +554,10 @@ create_powerdns_secrets() {
   echo "✅ Secrets stored in Vault"
 }
 
+
+# ----------------------------------------------------------------------------
+# Configure systemd-resolved to forward DNS queries for *.rezakara.demo to local PowerDNS instance
+# ----------------------------------------------------------------------------
 configure_resolved() {
   echo "Backing up existing config..."
   sudo cp /etc/systemd/resolved.conf /etc/systemd/resolved.conf.bak.$(date +%s)
@@ -547,10 +579,10 @@ EOF
   resolvectl status | grep -E "DNS Servers|DNS Domain"
 }
 
+
 # ----------------------------------------------------------------------------
 # Install kubectl plugins
 # ----------------------------------------------------------------------------
-
 install_kubectl_plugins() {
   local github_repo="${GITHUB_REPO:-rezakaramad/kubepave}"
   local release_ref="${KUBECTL_PLUGIN_RELEASE_REF:-latest}"
@@ -669,6 +701,7 @@ install_kubectl_plugins() {
   kubectl plugin list || true
 }
 
+
 # ----------------------------------------------------------------------------
 # Detect user shell for installing kubectl plugins
 # ----------------------------------------------------------------------------
@@ -685,10 +718,10 @@ detect_shell() {
   esac
 }
 
+
 # ----------------------------------------------------------------------------
 # Install shell completion for kubectl plugins
 # ----------------------------------------------------------------------------
-
 install_plugin_completion() {
   set -euo pipefail
 
@@ -790,10 +823,10 @@ install_plugin_completion() {
   echo "🎉 Completion setup complete"
 }
 
+
 # ----------------------------------------------------------------------------
 # Main
 # ----------------------------------------------------------------------------
-
 main() {
   start_minikube_tunnel
   # Updating /etc/hosts is necessary for bootstrapping because the management cluster's Traefik LoadBalancer IP is dynamic 
